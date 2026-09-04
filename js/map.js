@@ -17,6 +17,15 @@ export function initialiseMap() {
     map.on("mousemove", updateMousePosition);
 
     updateZoom();
+   L.DomEvent.disableClickPropagation(
+    document.getElementById("forecastControl")
+);
+
+L.DomEvent.disableScrollPropagation(
+    document.getElementById("forecastControl")
+);
+   
+    return map;
 }
 
 function updateZoom() {
