@@ -46,7 +46,80 @@ Weather Viewer
 
 </aside>
 
-<div id="map"></div>
+<div id="map">
+
+    <div id="temperatureLegend">
+
+        <div class="legendTitle">
+            Temperature
+        </div>
+
+        <div class="legendUnit">
+            2 m above ground
+        </div>
+
+        <div class="legendRow">
+            <span class="legendColour" style="background:#4b6cb7"></span>
+            <span class="legendLabel">&lt; 0°C</span>
+        </div>
+
+        <div class="legendRow">
+            <span class="legendColour" style="background:#6fa8dc"></span>
+            <span class="legendLabel">0–5°C</span>
+        </div>
+
+        <div class="legendRow">
+            <span class="legendColour" style="background:#9fc5e8"></span>
+            <span class="legendLabel">5–10°C</span>
+        </div>
+
+        <div class="legendRow">
+            <span class="legendColour" style="background:#b6d7a8"></span>
+            <span class="legendLabel">10–15°C</span>
+        </div>
+
+        <div class="legendRow">
+            <span class="legendColour" style="background:#ffd966"></span>
+            <span class="legendLabel">15–20°C</span>
+        </div>
+
+        <div class="legendRow">
+            <span class="legendColour" style="background:#f6b26b"></span>
+            <span class="legendLabel">20–25°C</span>
+        </div>
+
+        <div class="legendRow">
+            <span class="legendColour" style="background:#e06666"></span>
+            <span class="legendLabel">25–30°C</span>
+        </div>
+
+        <div class="legendRow">
+            <span class="legendColour" style="background:#cc0000"></span>
+            <span class="legendLabel">30–35°C</span>
+        </div>
+
+        <div class="legendRow">
+            <span class="legendColour" style="background:#990000"></span>
+            <span class="legendLabel">≥ 35°C</span>
+        </div>
+
+    </div>
+
+    <div id="forecastControl">
+
+        <span id="forecastControlLabel">
+            +000 h
+        </span>
+
+        <input
+            id="forecastSlider"
+            type="range"
+            min="0"
+            max="2"
+            step="1"
+            value="0">
+
+    </div>
 
 </div>
 
@@ -61,11 +134,9 @@ Forecast:
 
 |
 
-Time Zone:
+Valid:
 <span id="timezone">
-
-UTC
-
+--
 </span>
 
 |

@@ -84,3 +84,124 @@ padding:0 15px;
 font-size:13px;
 
 }
+#temperatureLegend {
+
+    position: absolute;
+
+    bottom: 50px;
+    right: 20px;
+
+    z-index: 10000;
+
+    background: rgba(20, 20, 20, 0.95);
+
+    padding: 12px;
+
+    border-radius: 5px;
+
+    font-size: 12px;
+
+    color: white;
+
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+
+}
+
+.legendTitle {
+
+    font-size: 15px;
+
+    font-weight: bold;
+
+    margin-bottom: 2px;
+
+}
+
+.legendUnit {
+
+    font-size: 11px;
+
+    color: #aaa;
+
+    margin-bottom: 8px;
+
+}
+
+.legendRow {
+
+    display: flex;
+
+    align-items: center;
+
+    height: 20px;
+
+}
+
+.legendColour {
+
+    width: 22px;
+
+    height: 16px;
+
+    margin-right: 7px;
+
+    display: inline-block;
+
+}
+
+.legendLabel {
+
+    white-space: nowrap;
+
+}
+
+#forecastControl {
+
+    position: absolute;
+
+    bottom: 45px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    z-index: 10000;
+
+    background: rgba(20, 20, 20, 0.95);
+
+    padding: 10px 15px;
+
+    border-radius: 5px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+
+    pointer-events: auto;
+}
+
+#forecastControlLabel {
+
+    font-size: 14px;
+
+    font-weight: bold;
+
+    min-width: 55px;
+
+    text-align: center;
+
+}
+
+#forecastSlider {
+
+    width: 300px;
+
+    cursor: pointer;
+
+    position: relative;
+    z-index: 10001;
+
+}
