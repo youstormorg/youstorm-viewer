@@ -62,8 +62,16 @@ print()
 print("Adding GFS files to Git...")
 
 subprocess.run(
-    ["git", "add", "data/gfs"],
+    ["git", "add", "data/gfs", "processing/update_gfs.py"],
     check=True
 )
 
 print("GFS files added to Git")
+
+print()
+print("Committing GFS update...")
+
+subprocess.run(
+    ["git", "commit", "-m", "Update GFS forecast"],
+    check=True
+)
