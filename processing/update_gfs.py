@@ -106,5 +106,3 @@ else:
     print("No changes detected.")
     print("Nothing to commit or push.")
 
-print()
-print("GFS update pushed to GitHub")
