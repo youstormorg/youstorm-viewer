@@ -1,5 +1,25 @@
 import subprocess
+import json
+from pathlib import Path
 
+def get_local_gfs_cycle():
+
+    json_file = Path(
+        "data/gfs/gfs_temp_europe_f000.json"
+    )
+
+    if not json_file.exists():
+        return None
+
+    with open(json_file) as f:
+        data = json.load(f)
+
+    initialisation = data["initialisation"]
+
+    return (
+        initialisation[0:10],
+        initialisation[11:13]
+    )
 
 print("Starting YouStorm GFS update")
 print("============================")
