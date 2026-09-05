@@ -69,19 +69,42 @@ subprocess.run(
 print("GFS files added to Git")
 
 print()
-print("Committing GFS update...")
+print("Checking for changes to commit...")
 
-subprocess.run(
-    ["git", "commit", "-m", "Update GFS forecast"],
+result = subprocess.run(
+    ["git", "status", "--porcelain"],
+    capture_output=True,
+    text=True,
     check=True
 )
-print()
-print("Pushing GFS update to GitHub...")
 
-subprocess.run(
-    ["git", "push"],
-    check=True
-)
+if result.stdout.strip():
+
+    print("Changes detected.")
+
+    print()
+    print("Committing GFS update...")
+
+    subprocess.run(
+        ["git", "commit", "-m", "Update GFS forecast"],
+        check=True
+    )
+
+    print()
+    print("Pushing GFS update to GitHub...")
+
+    subprocess.run(
+        ["git", "push"],
+        check=True
+    )
+
+    print()
+    print("GFS update pushed to GitHub")
+
+else:
+
+    print("No changes detected.")
+    print("Nothing to commit or push.")
 
 print()
 print("GFS update pushed to GitHub")
