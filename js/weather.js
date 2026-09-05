@@ -1,9 +1,8 @@
 let weatherData = null;
-let temperatureLayer = null;
-
+let temperatureImageLayer = null;
 
 // Forecast hours currently available
-const forecastHours = [0, 3, 6];
+const forecastHours = [0, 3, 6, 9, 12, 15, 18, 21, 24];
 
 
 // Temperature colour scale
@@ -109,103 +108,34 @@ export function displayTemperature(map, forecastIndex = 0) {
     }
 
 
-    // Remove the previous layer
-    if (temperatureLayer) {
-
-        map.removeLayer(temperatureLayer);
-
-    }
-
-
+    
     const data =
         weatherData[forecastIndex];
 
-    const grid =
-        data.grid;
+// TEMPERATURE TILE LAYER
 
-    const temperatures =
-        data.temperature;
+const forecastHour =
+    Number(data.forecast_hour);
 
+const tileFolder =
+    `temperature_tiles_f${forecastHour
+        .toString()
+        .padStart(3, "0")}_auto`;
 
-    const latStep =
-        grid.lat_step;
-
-    const lonStep =
-        grid.lon_step;
-
-
-    const rows =
-        temperatures.length;
-
-    const cols =
-        temperatures[0].length;
-
-
-    const cells = [];
-
-
-    for (let row = 0; row < rows; row++) {
-
-        const latitude =
-            grid.lat_min + row * latStep;
-
-
-        for (let col = 0; col < cols; col++) {
-
-            const longitude =
-                grid.lon_min + col * lonStep;
-
-
-            const temperature =
-                temperatures[row][col];
-
-
-            const bounds = [
-
-                [latitude, longitude],
-
-                [
-                    latitude + latStep,
-                    longitude + lonStep
-                ]
-
-            ];
-
-
-            const cell =
-                L.rectangle(
-
-                    bounds,
-
-                    {
-                        stroke: false,
-
-                        fillColor:
-                            temperatureColour(
-                                temperature
-                            ),
-
-                        fillOpacity: 0.65,
-
-                        interactive: false
-                    }
-
-                );
-
-
-            cells.push(cell);
-
+temperatureImageLayer =
+    L.tileLayer(
+        `./data/gfs/${tileFolder}/{z}/{x}/{y}.png`,
+        {
+            minZoom: 2,
+            maxZoom: 6,
+            maxNativeZoom: 4,
+            opacity: 0.65,
+            tileSize: 256,
+            interactive: false
         }
+    );
 
-    }
-
-
-    temperatureLayer =
-        L.layerGroup(cells);
-
-
-    temperatureLayer.addTo(map);
-
+temperatureImageLayer.addTo(map);
 
     updateForecastDisplay(data);
 
