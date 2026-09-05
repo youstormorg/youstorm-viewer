@@ -23,6 +23,9 @@ data/gfs/*_webmercator*.tif
 data/gfs/temperature_wgs84*.tif
 data/gfs/temperature_webmercator*.tif
 
+# Generated temperature PNGs
+data/gfs/temperature_f*.png
+
 # Temporary/test imagery
 data/gfs/temperature_test*.png
 data/gfs/temperature_tiles_test/
