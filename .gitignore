@@ -27,3 +27,7 @@ data/gfs/temperature_webmercator*.tif
 data/gfs/temperature_test*.png
 data/gfs/temperature_tiles_test/
 data/gfs/test_tiles_auto/
+
+# GDAL-generated tile metadata
+data/gfs/temperature_tiles_*/openlayers.html
+data/gfs/temperature_tiles_*/stacta.json

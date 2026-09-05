@@ -22,20 +22,10 @@ const temperatureScale = [
 // Load a single GFS forecast
 async function loadForecast(forecastHour) {
 
-   let filename;
-
-if (forecastHour === 0) {
-
-    filename = "./data/gfs/gfs_temp_europe.json";
-
-} else {
-
-    filename =
-        `./data/gfs/gfs_temp_europe_f${forecastHour
-            .toString()
-            .padStart(3, "0")}.json`;
-
-}
+const filename =
+    `./data/gfs/gfs_temp_europe_f${forecastHour
+        .toString()
+        .padStart(3, "0")}.json`;
 
     const response = await fetch(filename);
 
