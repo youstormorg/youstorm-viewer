@@ -17,9 +17,11 @@ def get_local_gfs_cycle():
     initialisation = data["initialisation"]
 
     return (
-        initialisation[0:10],
-        initialisation[11:13]
-    )
+    initialisation[0:4] +
+    initialisation[5:7] +
+    initialisation[8:10],
+    initialisation[11:13]
+)
 
 if __name__ == "__main__":
 
@@ -47,7 +49,7 @@ if __name__ == "__main__":
         else "Local GFS cycle: none"
     )
 
-    if local_cycle == (latest_date, latest_cycle):
+    if False:
 
         print()
         print("GFS is already up to date.")

@@ -80,64 +80,66 @@ def find_latest_cycle():
     raise RuntimeError(
         "No recent GFS cycle could be found"
     )
-date, cycle = find_latest_cycle()
-output_dir = Path("data/gfs")
-output_dir.mkdir(parents=True, exist_ok=True)
+if __name__ == "__main__":
+    date, cycle = find_latest_cycle()
+
+    output_dir = Path("data/gfs")
+    output_dir.mkdir(parents=True, exist_ok=True)
 
 
-# --------------------------------------------------
-# Download forecasts
-# --------------------------------------------------
+    # --------------------------------------------------
+    # Download forecasts
+    # --------------------------------------------------
 
-for forecast_hour in forecast_hours:
+    for forecast_hour in forecast_hours:
 
-    filename = (
-        f"gfs.t{cycle}z.pgrb2.0p25."
-        f"f{forecast_hour:03d}"
-    )
+        filename = (
+            f"gfs.t{cycle}z.pgrb2.0p25."
+            f"f{forecast_hour:03d}"
+        )
 
-    params = {
-        "file": filename,
-        "var_TMP": "on",
-        "lev_2_m_above_ground": "on",
-        "subregion": "",
-        "leftlon": left_lon,
-        "rightlon": right_lon,
-        "toplat": top_lat,
-        "bottomlat": bottom_lat,
-        "dir": f"/gfs.{date}/{cycle}/atmos"
-    }
+        params = {
+            "file": filename,
+            "var_TMP": "on",
+            "lev_2_m_above_ground": "on",
+            "subregion": "",
+            "leftlon": left_lon,
+            "rightlon": right_lon,
+            "toplat": top_lat,
+            "bottomlat": bottom_lat,
+            "dir": f"/gfs.{date}/{cycle}/atmos"
+        }
 
-    url = (
-        "https://nomads.ncep.noaa.gov/"
-        "cgi-bin/filter_gfs_0p25.pl"
-    )
+        url = (
+            "https://nomads.ncep.noaa.gov/"
+            "cgi-bin/filter_gfs_0p25.pl"
+        )
 
-    output_file = (
-        output_dir /
-        f"gfs_temp_europe_f{forecast_hour:03d}.grib2"
-    )
+        output_file = (
+            output_dir /
+            f"gfs_temp_europe_f{forecast_hour:03d}.grib2"
+        )
+
+        print()
+        print(
+            f"Downloading +{forecast_hour:03d} h"
+        )
+
+        response = requests.get(
+            url,
+            params=params,
+            timeout=60
+        )
+
+        response.raise_for_status()
+
+        output_file.write_bytes(
+            response.content
+        )
+
+        print(
+            f"Saved: {output_file}"
+        )
 
     print()
-    print(
-        f"Downloading +{forecast_hour:03d} h"
-    )
-
-    response = requests.get(
-        url,
-        params=params,
-        timeout=60
-    )
-
-    response.raise_for_status()
-
-    output_file.write_bytes(
-        response.content
-    )
-
-    print(
-        f"Saved: {output_file}"
-    )
-
-print()
-print("GFS download complete")
+    print("GFS download complete")
