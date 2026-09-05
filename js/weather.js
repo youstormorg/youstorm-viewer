@@ -112,6 +112,10 @@ const tileFolder =
         .toString()
         .padStart(3, "0")}_auto`;
 
+if (temperatureImageLayer) {
+    map.removeLayer(temperatureImageLayer);
+}
+
 temperatureImageLayer =
     L.tileLayer(
         `./data/gfs/${tileFolder}/{z}/{x}/{y}.png`,
