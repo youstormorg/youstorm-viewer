@@ -43,9 +43,8 @@ output = {
 
     "forecast_hour": forecast_hour,
 
-    "initialisation": str(ds["time"].values),
-
-    "valid_time": str(ds["valid_time"].values),
+    "initialisation": str(ds["time"].values)[:19] + "Z",
+    "valid_time": str(ds["valid_time"].values)[:19] + "Z",
 
     "grid": {
 
