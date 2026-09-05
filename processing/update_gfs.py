@@ -75,3 +75,13 @@ subprocess.run(
     ["git", "commit", "-m", "Update GFS forecast"],
     check=True
 )
+print()
+print("Pushing GFS update to GitHub...")
+
+subprocess.run(
+    ["git", "push"],
+    check=True
+)
+
+print()
+print("GFS update pushed to GitHub")
