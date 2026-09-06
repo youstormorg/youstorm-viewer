@@ -15,10 +15,10 @@ forecast_hours = [
     0, 3, 6, 9, 12, 15, 18, 21, 24
 ]
 
-left_lon = -15
-right_lon = 40
-top_lat = 72
-bottom_lat = 30
+left_lon = 0
+right_lon = 359.75
+top_lat = 90
+bottom_lat = -90
 
 def find_latest_cycle():
 
@@ -117,7 +117,7 @@ if __name__ == "__main__":
 
         output_file = (
             output_dir /
-            f"gfs_temp_europe_f{forecast_hour:03d}.grib2"
+            f"gfs_temp_global_f{forecast_hour:03d}.grib2"
         )
 
         print()

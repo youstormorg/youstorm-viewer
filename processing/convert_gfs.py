@@ -9,11 +9,11 @@ forecast_hour = int(sys.argv[1])
 
 # Create filenames from forecast hour
 input_file = (
-    f"data/gfs/gfs_temp_europe_f{forecast_hour:03d}.grib2"
+    f"data/gfs/gfs_temp_global_f{forecast_hour:03d}.grib2"
 )
 
 output_file = (
-    f"data/gfs/gfs_temp_europe_f{forecast_hour:03d}.json"
+    f"data/gfs/gfs_temp_global_f{forecast_hour:03d}.json"
 )
 
 

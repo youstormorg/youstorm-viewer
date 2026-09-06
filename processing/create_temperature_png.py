@@ -85,10 +85,13 @@ for row in range(height):
 
 
 # --------------------------------------------------
-# Correct latitude orientation
+# Correct latitude and longitude orientation
 # --------------------------------------------------
 
 image = np.flipud(image)
+
+# Shift longitude from 0–360° to -180–180°
+image = np.roll(image, width // 2, axis=1)
 
 
 # --------------------------------------------------
