@@ -49,7 +49,7 @@ if __name__ == "__main__":
         else "Local GFS cycle: none"
     )
 
-    if False:
+    if local_cycle == (latest_date, latest_cycle):
 
         print()
         print("GFS is already up to date.")
