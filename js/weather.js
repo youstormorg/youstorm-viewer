@@ -23,7 +23,7 @@ const temperatureScale = [
 async function loadForecast(forecastHour) {
 
 const filename =
-    `./data/gfs/gfs_temp_europe_f${forecastHour
+    `./data/gfs/gfs_temp_global_f${forecastHour
         .toString()
         .padStart(3, "0")}.json`;
 
