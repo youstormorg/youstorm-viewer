@@ -5,7 +5,7 @@ from pathlib import Path
 def get_local_gfs_cycle():
 
     json_file = Path(
-        "data/gfs/gfs_temp_europe_f000.json"
+        "data/gfs/gfs_temp_global_f000.json"
     )
 
     if not json_file.exists():
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     print("Adding GFS files to Git...")
 
     subprocess.run(
-        ["git", "add", "data/gfs", "processing/update_gfs.py"],
+       ["git", "add", "data/gfs", "processing/update_gfs.py", "processing/download_gfs.py"],
         check=True
     )
 

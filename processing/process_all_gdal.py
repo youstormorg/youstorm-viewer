@@ -1,5 +1,6 @@
 import subprocess
-
+import shutil
+import os
 
 gdal_translate = (
     r"C:\Users\youstorm\AppData\Local\Programs\OSGeo4W\bin\gdal_translate.exe"
@@ -61,8 +62,8 @@ for forecast_hour in forecast_hours:
             "-of", "GTiff",
             "-a_srs", "EPSG:4326",
             "-a_ullr",
-            "-15", "72",
-            "40", "30",
+            "-180", "90",
+            "180", "-90",
             png_file,
             wgs84_file
         ],
@@ -78,7 +79,9 @@ for forecast_hour in forecast_hours:
             f"PNG → WGS84 failed for +{forecast_hour:03d} h"
         )
 
-
+    # Remove old Web Mercator file before regenerating
+    if os.path.exists(webmercator_file):
+        os.remove(webmercator_file)
     # ----------------------------------------------
     # WGS84 → Web Mercator
     # ----------------------------------------------
@@ -114,7 +117,9 @@ for forecast_hour in forecast_hours:
 
     print()
     print("Web Mercator → XYZ tiles")
-
+    # Remove old tiles before regenerating
+    if os.path.exists(tile_folder):
+        shutil.rmtree(tile_folder)
     result = subprocess.run(
         [
             gdal,
