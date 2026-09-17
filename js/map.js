@@ -2,7 +2,13 @@ let map;
 
 export function initialiseMap() {
 
-    map = L.map("map").setView([20, 0], 2);
+    map = L.map("map", {
+        zoomControl: false
+    }).setView([20, 0], 2);
+
+    L.control.zoom({
+        position: "topright"
+    }).addTo(map);
 
     L.tileLayer(
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
