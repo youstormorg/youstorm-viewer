@@ -112,11 +112,7 @@ const tileFolder =
         .toString()
         .padStart(3, "0")}_auto`;
 
-if (temperatureImageLayer) {
-    map.removeLayer(temperatureImageLayer);
-}
-
-temperatureImageLayer =
+const newTemperatureLayer =
     L.tileLayer(
         `./data/gfs/${tileFolder}/{z}/{x}/{y}.png`,
         {
@@ -129,7 +125,19 @@ temperatureImageLayer =
         }
     );
 
-temperatureImageLayer.addTo(map);
+   newTemperatureLayer.addTo(map);
+
+const oldTemperatureLayer = temperatureImageLayer;
+
+temperatureImageLayer = newTemperatureLayer;
+
+setTimeout(() => {
+
+    if (oldTemperatureLayer) {
+        map.removeLayer(oldTemperatureLayer);
+    }
+
+}, 1000);
 
     updateForecastDisplay(data);
 
