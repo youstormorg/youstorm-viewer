@@ -92,6 +92,14 @@ if __name__ == "__main__":
     print()
     print("Temperature PNG creation complete")
 
+    subprocess.run(
+        ["python", "processing/create_all_precipitation_pngs.py"],
+        check=True
+    )
+
+
+    print()
+    print("Precipitation PNG creation complete")
 
     subprocess.run(
         ["python", "processing/process_all_gdal.py"],
