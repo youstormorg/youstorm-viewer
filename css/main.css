@@ -91,7 +91,8 @@ padding:0 15px;
 font-size:13px;
 z-index:10000;
 }
-#temperatureLegend {
+#temperatureLegend,
+#precipitationLegend {
 
     position: absolute;
 

@@ -3,29 +3,39 @@ import { initialiseUI } from "./ui.js";
 
 import {
     loadTemperatureData,
+    loadPrecipitationData,
     displayTemperature,
+    hideTemperature,
+    showTemperature,
+    displayPrecipitation,
+    hidePrecipitation,
+    showPrecipitation,
+    createPrecipitationLegend,
     getForecastCount
 } from "./weather.js";
 
 
 async function initialiseApplication() {
 
-    initialiseUI();
-
     const map =
-        initialiseMap();
+    initialiseMap();
+
+    initialiseUI(map);
 
 
     await loadTemperatureData();
-
-
+    await loadPrecipitationData();
+    createPrecipitationLegend();
+    document.getElementById(
+        "precipitationLegend"
+    ).style.display = "none";
     // Display the first forecast
     displayTemperature(
         map,
         0
     );
 
-
+   
     // Set up the forecast slider
     initialiseForecastSlider(map);
 
@@ -79,11 +89,42 @@ function initialiseForecastSlider(map) {
                 Number(slider.value);
 
 
-            displayTemperature(
-                map,
-                forecastIndex
-            );
+            const temperatureToggle =
+    document.getElementById(
+        "temperatureToggle"
+    );
 
+if (temperatureToggle.checked) {
+
+    displayTemperature(
+        map,
+        forecastIndex
+    );
+
+}
+
+            const precipitationToggle =
+    document.getElementById(
+        "precipitationToggle"
+    );
+
+if (
+    forecastIndex > 0 &&
+    precipitationToggle.checked
+) {
+
+    displayPrecipitation(
+        map,
+        forecastIndex - 1
+    );
+
+} else {
+
+    hidePrecipitation(
+        map
+    );
+
+}
 
             // Update the slider label
             const hours =

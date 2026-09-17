@@ -15,6 +15,10 @@ forecast_hours = [
     0, 3, 6, 9, 12, 15, 18, 21, 24
 ]
 
+precipitation_hours = [
+    3, 6, 9, 12, 15, 18, 21, 24
+]
+
 left_lon = 0
 right_lon = 359.75
 top_lat = 90
@@ -140,6 +144,47 @@ if __name__ == "__main__":
         print(
             f"Saved: {output_file}"
         )
+
+        # Download precipitation
+
+        if forecast_hour in precipitation_hours:
+
+            precip_params = {
+                "file": filename,
+                "var_APCP": "on",
+                "lev_surface": "on",
+                "subregion": "",
+                "leftlon": left_lon,
+                "rightlon": right_lon,
+                "toplat": top_lat,
+                "bottomlat": bottom_lat,
+                "dir": f"/gfs.{date}/{cycle}/atmos"
+            }
+
+            precip_output_file = (
+                output_dir /
+                f"gfs_precip_global_f{forecast_hour:03d}.grib2"
+            )
+
+            print(
+                f"Downloading precipitation +{forecast_hour:03d} h"
+            )
+
+            precip_response = requests.get(
+                url,
+                params=precip_params,
+                timeout=60
+            )
+
+            precip_response.raise_for_status()
+
+            precip_output_file.write_bytes(
+                precip_response.content
+            )
+
+            print(
+                f"Saved: {precip_output_file}"
+            )
 
     print()
     print("GFS download complete")

@@ -40,9 +40,24 @@ Weather Viewer
 <button id="layersToggle">Layers</button>
 <aside id="sidebar">
 
-<h2>Layers</h2>
+    <h2>Layers</h2>
 
-<p>Coming soon...</p>
+    <label>
+        <input
+            type="checkbox"
+            id="temperatureToggle"
+            checked
+        >
+        Temperature
+    </label>
+
+    <label>
+        <input
+            type="checkbox"
+            id="precipitationToggle"
+        >
+        Precipitation
+    </label>
 
 </aside>
 
@@ -104,6 +119,8 @@ Weather Viewer
         </div>
 
     </div>
+
+    <div id="precipitationLegend"></div>
 
     <div id="forecastControl">
 
