@@ -1,9 +1,11 @@
 let weatherData = null;
+let precipitationData = null;
 let temperatureImageLayer = null;
+let precipitationImageLayer = null;
 
 // Forecast hours currently available
 const forecastHours = [0, 3, 6, 9, 12, 15, 18, 21, 24];
-
+const precipitationHours = [3, 6, 9, 12, 15, 18, 21, 24];
 
 // Temperature colour scale
 const temperatureScale = [
@@ -18,6 +20,18 @@ const temperatureScale = [
     { colour: "#990000", label: "≥ 35°C" }
 ];
 
+const precipitationScale = [
+    { colour: "#ffffff", label: "< 0.1 mm" },
+    { colour: "#dcf5ff", label: "0.1–1 mm" },
+    { colour: "#aadcfa", label: "1–2.5 mm" },
+    { colour: "#64b4f0", label: "2.5–5 mm" },
+    { colour: "#1e82dc", label: "5–10 mm" },
+    { colour: "#14aa64", label: "10–20 mm" },
+    { colour: "#ffe63c", label: "20–30 mm" },
+    { colour: "#ff961e", label: "30–50 mm" },
+    { colour: "#f03c1e", label: "50–75 mm" },
+    { colour: "#b40000", label: "≥ 75 mm" }
+];
 
 // Load a single GFS forecast
 async function loadForecast(forecastHour) {
@@ -66,7 +80,51 @@ export async function loadTemperatureData() {
 
     return weatherData;
 }
+async function loadPrecipitationForecast(forecastHour) {
 
+    const filename =
+        `./data/gfs/gfs_precip_global_f${forecastHour
+            .toString()
+            .padStart(3, "0")}.json`;
+
+    const response =
+        await fetch(filename);
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Could not load precipitation data: ${response.status}`
+        );
+
+    }
+
+    return await response.json();
+}
+
+export async function loadPrecipitationData() {
+
+    precipitationData = [];
+
+    for (const forecastHour of precipitationHours) {
+
+        console.log(
+            `Loading precipitation forecast +${forecastHour
+                .toString()
+                .padStart(3, "0")} h`
+        );
+
+        const data =
+            await loadPrecipitationForecast(forecastHour);
+
+        precipitationData.push(data);
+    }
+
+    console.log(
+        `Loaded ${precipitationData.length} precipitation forecasts`
+    );
+
+    return precipitationData;
+}
 
 // Return a colour based on temperature
 function temperatureColour(temp) {
@@ -273,5 +331,177 @@ export function getForecastCount() {
     return weatherData
         ? weatherData.length
         : 0;
+
+}
+
+export function displayPrecipitation(map, forecastIndex = 0) {
+
+    if (!precipitationData || precipitationData.length === 0) {
+
+        console.error(
+            "Precipitation data has not been loaded"
+        );
+
+        return;
+
+    }
+
+    const data =
+        precipitationData[forecastIndex];
+
+    const forecastHour =
+        Number(data.forecast_hour);
+
+    const tileFolder =
+        `precipitation_tiles_f${forecastHour
+            .toString()
+            .padStart(3, "0")}_auto`;
+
+    const newPrecipitationLayer =
+        L.tileLayer(
+            `./data/gfs/${tileFolder}/{z}/{x}/{y}.png`,
+            {
+                minZoom: 2,
+                maxZoom: 6,
+                maxNativeZoom: 4,
+                opacity: 0.65,
+                tileSize: 256,
+                interactive: false
+            }
+        );
+
+    newPrecipitationLayer.addTo(map);
+
+    const oldPrecipitationLayer =
+        precipitationImageLayer;
+
+    precipitationImageLayer =
+        newPrecipitationLayer;
+
+    setTimeout(() => {
+
+        if (oldPrecipitationLayer) {
+            map.removeLayer(oldPrecipitationLayer);
+        }
+
+    }, 1000);
+
+    console.log(
+        `Precipitation layer displayed: +${data.forecast_hour
+            .toString()
+            .padStart(3, "0")} h`
+    );
+}
+
+export function hidePrecipitation(map) {
+
+    if (precipitationImageLayer) {
+
+        map.removeLayer(
+            precipitationImageLayer
+        );
+
+    }
+
+}
+
+export function hideTemperature(map) {
+
+    if (temperatureImageLayer) {
+
+        map.removeLayer(
+            temperatureImageLayer
+        );
+
+    }
+
+}
+
+export function showTemperature(map) {
+
+    if (temperatureImageLayer) {
+
+        temperatureImageLayer.addTo(
+            map
+        );
+
+    }
+
+}
+
+export function showPrecipitation(map) {
+
+    if (precipitationImageLayer) {
+
+        precipitationImageLayer.addTo(
+            map
+        );
+
+    } else {
+
+        displayPrecipitation(
+            map,
+            0
+        );
+
+    }
+
+}
+
+ export function createPrecipitationLegend() {
+
+    const legend =
+        document.getElementById(
+            "precipitationLegend"
+        );
+
+
+    if (!legend) {
+
+        console.error(
+            "Precipitation legend element not found"
+        );
+
+        return;
+
+    }
+
+
+    legend.innerHTML = `
+        <div class="legendTitle">
+            Precipitation
+        </div>
+
+        <div class="legendUnit">
+            6-hour accumulation
+        </div>
+    `;
+
+
+    precipitationScale.forEach(item => {
+
+        const row =
+            document.createElement("div");
+
+
+        row.className =
+            "legendRow";
+
+
+        row.innerHTML = `
+            <span
+                class="legendColour"
+                style="background:${item.colour}">
+            </span>
+
+            <span class="legendLabel">
+                ${item.label}
+            </span>
+        `;
+
+
+        legend.appendChild(row);
+
+    });
 
 }
