@@ -34,3 +34,5 @@ data/gfs/test_tiles_auto/
 # GDAL-generated tile metadata
 data/gfs/temperature_tiles_*/openlayers.html
 data/gfs/temperature_tiles_*/stacta.json
+# Python cache
+__pycache__/
