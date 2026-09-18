@@ -3,6 +3,9 @@ import { initialiseUI } from "./ui.js";
 
 import {
     loadTemperatureData,
+    loadECMWFMetadata,
+    setTemperatureModel,
+    getTemperatureForecastCount,
     loadPrecipitationData,
     displayTemperature,
     hideTemperature,
@@ -13,18 +16,19 @@ import {
     createPrecipitationLegend,
     getForecastCount
 } from "./weather.js";
-
+let map;
 
 async function initialiseApplication() {
 
-    const map =
-    initialiseMap();
+    map =
+        initialiseMap();
 
     initialiseUI(map);
 
 
     await loadTemperatureData();
     await loadPrecipitationData();
+    await loadECMWFMetadata();
     createPrecipitationLegend();
     document.getElementById(
         "precipitationLegend"
@@ -75,7 +79,7 @@ function initialiseForecastSlider(map) {
     slider.min = 0;
 
     slider.max =
-        getForecastCount() - 1;
+        getTemperatureForecastCount() - 1;
 
     slider.value = 0;
 
@@ -103,12 +107,13 @@ if (temperatureToggle.checked) {
 
 }
 
-            const precipitationToggle =
+   const precipitationToggle =
     document.getElementById(
         "precipitationToggle"
     );
 
 if (
+    selectedModel === "GFS" &&
     forecastIndex > 0 &&
     precipitationToggle.checked
 ) {
@@ -160,13 +165,41 @@ modelButtons.forEach(button => {
 
         button.classList.add("active");
 
-        selectedModel =
-            button.textContent.trim();
+        const model =
+    button.textContent.trim();
 
-        console.log(
-            `Selected model: ${selectedModel}`
-        );
+setTemperatureModel(model);
 
+const slider =
+    document.getElementById(
+        "forecastSlider"
+    );
+
+slider.max =
+    getTemperatureForecastCount() - 1;
+
+slider.value = 0;
+
+if (model === "ECMWF") {
+
+    displayTemperature(
+        map,
+        0
+    );
+    hidePrecipitation(
+        map
+    );
+}
+
+
+if (model === "GFS") {
+
+    displayTemperature(
+        map,
+        0
+    );
+
+}
     });
 
 });
