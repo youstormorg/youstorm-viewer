@@ -73,9 +73,32 @@ subprocess.run(
     check=True
 )
 
+print()
+print("Step 2: Kelvin → Celsius")
+
+celsius_file = (
+    Path("data/ecmwf")
+    / f"ecmwf_2t_f{hour}_celsius.tif"
+)
+
+subprocess.run(
+    [
+        gdal_translate,
+        "-scale",
+        "0",
+        "1",
+        "-273.15",
+        "-272.15",
+        "-ot",
+        "Float32",
+        str(wgs84_file),
+        str(celsius_file)
+    ],
+    check=True
+)
 
 print()
-print("Step 2: GeoTIFF → Web Mercator")
+print("Step 2: Celsius → Web Mercator")
 
 subprocess.run(
     [
@@ -90,7 +113,7 @@ subprocess.run(
         "-85",
         "180",
         "85",
-        str(wgs84_file),
+        str(celsius_file),
         str(webmercator_file)
     ],
     check=True

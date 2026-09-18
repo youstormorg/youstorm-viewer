@@ -44,6 +44,7 @@ data/ecmwf/*.grib2.*
 data/ecmwf/*_wgs84*.tif
 data/ecmwf/*_webmercator*.tif
 data/ecmwf/*_colored*.tif
+data/ecmwf/*_celsius*.tif
 
 # ECMWF numerical JSON
 data/ecmwf/ecmwf_2t_f*.json
