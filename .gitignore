@@ -36,3 +36,25 @@ data/gfs/temperature_tiles_*/openlayers.html
 data/gfs/temperature_tiles_*/stacta.json
 # Python cache
 __pycache__/
+# ECMWF source data
+data/ecmwf/*.grib2
+data/ecmwf/*.grib2.*
+
+# ECMWF intermediate processing files
+data/ecmwf/*_wgs84*.tif
+data/ecmwf/*_webmercator*.tif
+data/ecmwf/*_colored*.tif
+
+# ECMWF numerical JSON
+data/ecmwf/ecmwf_2t_f*.json
+
+# ECMWF temporary/test files
+data/ecmwf/*_test.*
+data/ecmwf/*_test_*
+data/ecmwf/temperature_test.txt
+
+# GDAL-generated tile metadata
+data/ecmwf/ecmwf_temperature_tiles_*/openlayers.html
+data/ecmwf/ecmwf_temperature_tiles_*/stacta.json
+data/ecmwf/ecmwf_temperature_tiles_*/leaflet.html
+data/ecmwf/ecmwf_temperature_tiles_*/mapml.mapml
