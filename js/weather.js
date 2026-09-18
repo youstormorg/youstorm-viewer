@@ -2,6 +2,28 @@ let weatherData = null;
 let precipitationData = null;
 let temperatureImageLayer = null;
 let precipitationImageLayer = null;
+let ecmwfMetadata = null;
+let selectedTemperatureModel = "GFS";
+export function setTemperatureModel(model) {
+
+    selectedTemperatureModel = model;
+
+    console.log(
+        `Temperature model set to: ${selectedTemperatureModel}`
+    );
+
+}
+export function getTemperatureForecastCount() {
+
+    if (selectedTemperatureModel === "ECMWF") {
+
+        return ecmwfMetadata.length;
+
+    }
+
+    return weatherData.length;
+
+}
 
 // Forecast hours currently available
 const forecastHours = [0, 3, 6, 9, 12, 15, 18, 21, 24];
@@ -80,6 +102,33 @@ export async function loadTemperatureData() {
 
     return weatherData;
 }
+
+export async function loadECMWFMetadata() {
+
+    const filename =
+        "./data/ecmwf/ecmwf_temperature_metadata.json";
+
+    const response =
+        await fetch(filename);
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Could not load ECMWF metadata: ${response.status}`
+        );
+
+    }
+
+    ecmwfMetadata =
+        await response.json();
+
+    console.log(
+        `Loaded ${ecmwfMetadata.length} ECMWF forecasts`
+    );
+
+    return ecmwfMetadata;
+}
+
 async function loadPrecipitationForecast(forecastHour) {
 
     const filename =
@@ -157,22 +206,44 @@ export function displayTemperature(map, forecastIndex = 0) {
 
 
     
-    const data =
-        weatherData[forecastIndex];
+    let data;
+let forecastHour;
+let tileFolder;
 
-// TEMPERATURE TILE LAYER
+if (selectedTemperatureModel === "ECMWF") {
 
-const forecastHour =
-    Number(data.forecast_hour);
+    data = ecmwfMetadata[forecastIndex];
 
-const tileFolder =
-    `temperature_tiles_f${forecastHour
-        .toString()
-        .padStart(3, "0")}_auto`;
+    forecastHour =
+        Number(data.forecast_hour);
+
+    tileFolder =
+        `ecmwf_temperature_tiles_f${forecastHour
+            .toString()
+            .padStart(3, "0")}_auto`;
+
+} else {
+
+    data = weatherData[forecastIndex];
+
+    forecastHour =
+        Number(data.forecast_hour);
+
+    tileFolder =
+        `temperature_tiles_f${forecastHour
+            .toString()
+            .padStart(3, "0")}_auto`;
+
+}
+
+const temperaturePath =
+    selectedTemperatureModel === "ECMWF"
+        ? "./data/ecmwf"
+        : "./data/gfs";
 
 const newTemperatureLayer =
     L.tileLayer(
-        `./data/gfs/${tileFolder}/{z}/{x}/{y}.png`,
+        `${temperaturePath}/${tileFolder}/{z}/{x}/{y}.png`,
         {
             minZoom: 2,
             maxZoom: 6,
