@@ -217,64 +217,72 @@ if ecmwf_needs_update:
     print()
     print("ECMWF metadata creation complete")
 
-    print()
-    print("============================")
-    print("YouStorm viewer update complete")
-    print("============================")
+print()
+print("============================")
+print("YouStorm viewer update complete")
+print("============================")
+
+print()
+print("Checking Git status...")
+
+subprocess.run(
+    ["git", "status"],
+    check=True
+)
+
+print()
+print("Adding viewer files to Git...")
+
+subprocess.run(
+    [
+        "git", "add", "-A",
+        "data/gfs",
+        "data/ecmwf",
+        "processing/update_gfs.py",
+        "processing/update_viewer.py",
+        "processing/download_gfs.py",
+        "processing/download_ecmwf.py"
+    ],
+    check=True
+)
+
+print("Viewer files added to Git")
+
+print()
+print("Checking for changes to commit...")
+
+result = subprocess.run(
+    ["git", "status", "--porcelain"],
+    capture_output=True,
+    text=True,
+    check=True
+)
+
+if result.stdout.strip():
+
+    print("Changes detected.")
 
     print()
-    print("Checking Git status...")
+    print("Committing GFS update...")
 
     subprocess.run(
-        ["git", "status"],
+        ["git", "commit", "-m", "Update GFS forecast"],
         check=True
     )
 
     print()
-    print("Adding viewer files to Git...")
+    print("Pushing GFS update to GitHub...")
 
     subprocess.run(
-       ["git", "add", "data/gfs", "processing/update_viewer.py", "processing/download_gfs.py"],
+        ["git", "push"],
         check=True
     )
-
-    print("Viewer files added to Git")
 
     print()
-    print("Checking for changes to commit...")
+    print("GFS update pushed to GitHub")
 
-    result = subprocess.run(
-        ["git", "status", "--porcelain"],
-        capture_output=True,
-        text=True,
-        check=True
-    )
+else:
 
-    if result.stdout.strip():
-
-        print("Changes detected.")
-
-        print()
-        print("Committing GFS update...")
-
-        subprocess.run(
-            ["git", "commit", "-m", "Update GFS forecast"],
-            check=True
-        )
-
-        print()
-        print("Pushing GFS update to GitHub...")
-
-        subprocess.run(
-            ["git", "push"],
-            check=True
-        )
-
-        print()
-        print("GFS update pushed to GitHub")
-
-    else:
-
-        print("No changes detected.")
-        print("Nothing to commit or push.")
+    print("No changes detected.")
+    print("Nothing to commit or push.")
 
