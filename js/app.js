@@ -143,3 +143,30 @@ if (
 
 
 initialiseApplication();
+
+
+let selectedModel = "GFS";
+
+const modelButtons =
+    document.querySelectorAll(".modelButton");
+
+modelButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        modelButtons.forEach(item => {
+            item.classList.remove("active");
+        });
+
+        button.classList.add("active");
+
+        selectedModel =
+            button.textContent.trim();
+
+        console.log(
+            `Selected model: ${selectedModel}`
+        );
+
+    });
+
+});

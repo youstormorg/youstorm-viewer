@@ -220,3 +220,43 @@ z-index:10000;
     left:10px;
     z-index:1100;
 }
+
+#modelSelector {
+
+    display: flex;
+
+    gap: 6px;
+
+}
+
+.modelButton {
+
+    background: transparent;
+
+    border: 1px solid #666;
+
+    color: white;
+
+    padding: 6px 12px;
+
+    border-radius: 4px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+}
+
+.modelButton.active {
+
+    background: white;
+
+    color: black;
+
+}
+
+.modelButton:hover {
+
+    background: #444;
+
+}
