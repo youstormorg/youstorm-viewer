@@ -238,7 +238,6 @@ subprocess.run(
         "git", "add", "-A",
         "data/gfs",
         "data/ecmwf",
-        "processing/update_gfs.py",
         "processing/update_viewer.py",
         "processing/download_gfs.py",
         "processing/download_ecmwf.py"
