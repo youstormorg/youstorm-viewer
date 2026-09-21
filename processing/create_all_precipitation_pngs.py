@@ -1,10 +1,9 @@
 import subprocess
 
 
-forecast_hours = [
-    3, 6, 9, 12, 15, 18, 21, 24
-]
-
+forecast_hours = list(
+    range(3, 145, 3)
+)
 
 for forecast_hour in forecast_hours:
 
