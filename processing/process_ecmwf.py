@@ -156,9 +156,9 @@ subprocess.run(
         "--min-zoom",
         "2",
         "--max-zoom",
-        "4",
+        "5",
         "--resampling",
-        "bilinear",
+        "nearest",
         "--output",
         str(tile_folder),
         str(colored_file)
