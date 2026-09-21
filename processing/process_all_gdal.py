@@ -15,13 +15,13 @@ gdal = (
 )
 
 
-forecast_hours = [
-    0, 3, 6, 9, 12, 15, 18, 21, 24
-]
+forecast_hours = list(
+    range(0, 145, 3)
+)
 
-precipitation_hours = [
-    3, 6, 9, 12, 15, 18, 21, 24
-]
+precipitation_hours = list(
+    range(3, 145, 3)
+)
 
 
 for forecast_hour in forecast_hours:
@@ -133,7 +133,7 @@ for forecast_hour in forecast_hours:
             "--output", tile_folder,
             "--tiling-scheme", "WebMercatorQuad",
             "--min-zoom", "2",
-            "--max-zoom", "4",
+            "--max-zoom", "5",
             "--resampling", "nearest"
         ],
         capture_output=True,
@@ -270,7 +270,7 @@ for forecast_hour in precipitation_hours:
             "--output", tile_folder,
             "--tiling-scheme", "WebMercatorQuad",
             "--min-zoom", "2",
-            "--max-zoom", "4",
+            "--max-zoom", "5",
             "--resampling", "nearest"
         ],
         capture_output=True,

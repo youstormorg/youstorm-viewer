@@ -53,7 +53,9 @@ tile_folder = (
     Path("data/ecmwf")
     / f"ecmwf_temperature_tiles_f{hour}_auto"
 )
-
+if tile_folder.exists():
+    import shutil
+    shutil.rmtree(tile_folder)
 
 print()
 print(f"Processing ECMWF +{hour} h")

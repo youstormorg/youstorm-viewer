@@ -26,8 +26,19 @@ export function getTemperatureForecastCount() {
 }
 
 // Forecast hours currently available
-const forecastHours = [0, 3, 6, 9, 12, 15, 18, 21, 24];
-const precipitationHours = [3, 6, 9, 12, 15, 18, 21, 24];
+const forecastHours = [
+    ...Array.from(
+        { length: 49 },
+        (_, i) => i * 3
+    )
+];
+
+const precipitationHours = [
+    ...Array.from(
+        { length: 48 },
+        (_, i) => (i + 1) * 3
+    )
+];
 
 // Temperature colour scale
 const temperatureScale = [
@@ -433,8 +444,8 @@ export function displayPrecipitation(map, forecastIndex = 0) {
             `./data/gfs/${tileFolder}/{z}/{x}/{y}.png`,
             {
                 minZoom: 2,
-                maxZoom: 6,
-                maxNativeZoom: 4,
+                maxZoom: 13,
+                maxNativeZoom: 5,
                 opacity: 0.65,
                 tileSize: 256,
                 interactive: false
