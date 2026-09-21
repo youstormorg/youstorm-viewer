@@ -246,8 +246,8 @@ const newTemperatureLayer =
         `${temperaturePath}/${tileFolder}/{z}/{x}/{y}.png`,
         {
             minZoom: 2,
-            maxZoom: 6,
-            maxNativeZoom: 4,
+            maxZoom: 13,
+            maxNativeZoom: 5,
             opacity: 0.65,
             tileSize: 256,
             interactive: false
