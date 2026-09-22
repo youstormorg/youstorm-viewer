@@ -41,7 +41,7 @@
     ]
   },
   "properties":{
-    "datetime":"2026-09-21T19:54:36Z",
+    "datetime":"2026-09-22T07:47:23Z",
     "start_datetime":"0001-01-01T00:00:00.000Z",
     "end_datetime":"9999-12-31T23:59:59.999Z",
     "tiles:tile_matrix_sets":{
@@ -102,19 +102,6 @@
             "tileHeight":256,
             "matrixWidth":16,
             "matrixHeight":16
-          },
-          {
-            "type":"TileMatrixType",
-            "identifier":"5",
-            "scaleDenominator":17471320.75089743,
-            "topLeftCorner":[
-              -20037508.342789244,
-              20037508.342789244
-            ],
-            "tileWidth":256,
-            "tileHeight":256,
-            "matrixWidth":32,
-            "matrixHeight":32
           }
         ]
       }
@@ -140,27 +127,21 @@
             "max_tile_col":15,
             "min_tile_row":0,
             "max_tile_row":15
-          },
-          "5":{
-            "min_tile_col":0,
-            "max_tile_col":31,
-            "min_tile_row":0,
-            "max_tile_row":31
           }
         }
       }
     },
     "proj:code":"EPSG:3857",
     "proj:shape":[
-      8192,
-      8192
+      4096,
+      4096
     ],
     "proj:transform":[
-      4891.9698102512803,
+      9783.9396205025605,
       0.0,
       -20037508.342789244,
       0.0,
-      -4891.9698102512803,
+      -9783.9396205025605,
       20037508.342789244,
       0.0,
       0.0,
