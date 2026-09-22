@@ -158,7 +158,7 @@ subprocess.run(
         "--min-zoom",
         "2",
         "--max-zoom",
-        "5",
+        "4",
         "--resampling",
         "nearest",
         "--output",
