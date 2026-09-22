@@ -133,7 +133,7 @@ for forecast_hour in forecast_hours:
             "--output", tile_folder,
             "--tiling-scheme", "WebMercatorQuad",
             "--min-zoom", "2",
-            "--max-zoom", "5",
+            "--max-zoom", "4",
             "--resampling", "nearest"
         ],
         capture_output=True,
@@ -270,7 +270,7 @@ for forecast_hour in precipitation_hours:
             "--output", tile_folder,
             "--tiling-scheme", "WebMercatorQuad",
             "--min-zoom", "2",
-            "--max-zoom", "5",
+            "--max-zoom", "4",
             "--resampling", "nearest"
         ],
         capture_output=True,

@@ -258,7 +258,7 @@ const newTemperatureLayer =
         {
             minZoom: 2,
             maxZoom: 13,
-            maxNativeZoom: 5,
+            maxNativeZoom: 4,
             opacity: 0.65,
             tileSize: 256,
             interactive: false
@@ -445,7 +445,7 @@ export function displayPrecipitation(map, forecastIndex = 0) {
             {
                 minZoom: 2,
                 maxZoom: 13,
-                maxNativeZoom: 5,
+                maxNativeZoom: 4,
                 opacity: 0.65,
                 tileSize: 256,
                 interactive: false
