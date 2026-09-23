@@ -33,31 +33,41 @@ temperatures = np.array(data["temperature"])
 
 def temperature_colour(temp):
 
-    if temp < 0:
-        return (75, 108, 183)
+    colour_stops = [
+        (0,  (75, 108, 183)),
+        (5,  (111, 168, 220)),
+        (10, (159, 197, 232)),
+        (15, (182, 215, 168)),
+        (20, (255, 217, 102)),
+        (25, (246, 178, 107)),
+        (30, (224, 102, 102)),
+        (35, (204, 0, 0)),
+        (40, (153, 0, 0))
+    ]
 
-    if temp < 5:
-        return (111, 168, 220)
+    if temp <= colour_stops[0][0]:
+        return colour_stops[0][1]
 
-    if temp < 10:
-        return (159, 197, 232)
+    if temp >= colour_stops[-1][0]:
+        return colour_stops[-1][1]
 
-    if temp < 15:
-        return (182, 215, 168)
+    for i in range(len(colour_stops) - 1):
 
-    if temp < 20:
-        return (255, 217, 102)
+        temp1, colour1 = colour_stops[i]
+        temp2, colour2 = colour_stops[i + 1]
 
-    if temp < 25:
-        return (246, 178, 107)
+        if temp < temp2:
 
-    if temp < 30:
-        return (224, 102, 102)
+            fraction = (temp - temp1) / (temp2 - temp1)
 
-    if temp < 35:
-        return (204, 0, 0)
-
-    return (153, 0, 0)
+            return tuple(
+                round(
+                    colour1[channel] +
+                    fraction *
+                    (colour2[channel] - colour1[channel])
+                )
+                for channel in range(3)
+            )
 
 
 # --------------------------------------------------
