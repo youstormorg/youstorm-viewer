@@ -67,19 +67,18 @@ const precipitationScale = [
 ];
 
 // Load a single GFS forecast
-async function loadForecast(forecastHour) {
+async function loadForecastMetadata() {
 
-const filename =
-    `./data/gfs/gfs_temp_global_f${forecastHour
-        .toString()
-        .padStart(3, "0")}.json`;
+    const filename =
+        "./data/gfs/gfs_temperature_metadata.json";
 
-    const response = await fetch(filename);
+    const response =
+        await fetch(filename);
 
     if (!response.ok) {
 
         throw new Error(
-            `Could not load GFS data: ${response.status}`
+            `Could not load GFS metadata: ${response.status}`
         );
 
     }
@@ -91,24 +90,11 @@ const filename =
 // Load all available forecasts
 export async function loadTemperatureData() {
 
-    weatherData = [];
-
-    for (const forecastHour of forecastHours) {
-
-        console.log(
-            `Loading GFS forecast +${forecastHour
-                .toString()
-                .padStart(3, "0")} h`
-        );
-
-        const data =
-            await loadForecast(forecastHour);
-
-        weatherData.push(data);
-    }
+    weatherData =
+        await loadForecastMetadata();
 
     console.log(
-        `Loaded ${weatherData.length} GFS forecasts`
+        `Loaded ${weatherData.length} GFS forecast metadata records`
     );
 
     return weatherData;
@@ -140,12 +126,10 @@ export async function loadECMWFMetadata() {
     return ecmwfMetadata;
 }
 
-async function loadPrecipitationForecast(forecastHour) {
+async function loadPrecipitationMetadata() {
 
     const filename =
-        `./data/gfs/gfs_precip_global_f${forecastHour
-            .toString()
-            .padStart(3, "0")}.json`;
+        "./data/gfs/gfs_precipitation_metadata.json";
 
     const response =
         await fetch(filename);
@@ -153,7 +137,7 @@ async function loadPrecipitationForecast(forecastHour) {
     if (!response.ok) {
 
         throw new Error(
-            `Could not load precipitation data: ${response.status}`
+            `Could not load precipitation metadata: ${response.status}`
         );
 
     }
@@ -163,24 +147,11 @@ async function loadPrecipitationForecast(forecastHour) {
 
 export async function loadPrecipitationData() {
 
-    precipitationData = [];
-
-    for (const forecastHour of precipitationHours) {
-
-        console.log(
-            `Loading precipitation forecast +${forecastHour
-                .toString()
-                .padStart(3, "0")} h`
-        );
-
-        const data =
-            await loadPrecipitationForecast(forecastHour);
-
-        precipitationData.push(data);
-    }
+    precipitationData =
+        await loadPrecipitationMetadata();
 
     console.log(
-        `Loaded ${precipitationData.length} precipitation forecasts`
+        `Loaded ${precipitationData.length} precipitation forecast metadata records`
     );
 
     return precipitationData;
@@ -205,10 +176,18 @@ function temperatureColour(temp) {
 // Display a particular forecast
 export function displayTemperature(map, forecastIndex = 0) {
 
-    if (!weatherData || weatherData.length === 0) {
+    const temperatureMetadata =
+        selectedTemperatureModel === "ECMWF"
+            ? ecmwfMetadata
+            : weatherData;
+
+    if (
+        !temperatureMetadata ||
+        temperatureMetadata.length === 0
+    ) {
 
         console.error(
-            "Temperature data has not been loaded"
+            "Temperature metadata has not been loaded"
         );
 
         return;
@@ -223,7 +202,8 @@ let tileFolder;
 
 if (selectedTemperatureModel === "ECMWF") {
 
-    data = ecmwfMetadata[forecastIndex];
+    data =
+        ecmwfMetadata[forecastIndex];
 
     forecastHour =
         Number(data.forecast_hour);
@@ -235,7 +215,8 @@ if (selectedTemperatureModel === "ECMWF") {
 
 } else {
 
-    data = weatherData[forecastIndex];
+    data =
+        weatherData[forecastIndex];
 
     forecastHour =
         Number(data.forecast_hour);
