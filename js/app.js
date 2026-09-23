@@ -203,3 +203,80 @@ if (model === "GFS") {
     });
 
 });
+
+let animationTimer = null;
+
+const forecastPlayButton =
+    document.getElementById(
+        "forecastPlayButton"
+    );
+
+const forecastSlider =
+    document.getElementById(
+        "forecastSlider"
+    );
+
+
+if (forecastPlayButton && forecastSlider) {
+
+    forecastPlayButton.addEventListener(
+        "click",
+        () => {
+
+            // Pause if animation is currently running
+            if (animationTimer !== null) {
+
+                clearInterval(animationTimer);
+
+                animationTimer = null;
+
+                forecastPlayButton.textContent = "▶";
+
+                return;
+
+            }
+
+            // Start animation
+            forecastPlayButton.textContent = "❚❚";
+
+            animationTimer =
+                setInterval(
+                    () => {
+
+                        const currentIndex =
+                            Number(forecastSlider.value);
+
+                        const maxIndex =
+                            Number(forecastSlider.max);
+
+
+                        // Stop at the end of the forecast
+                        if (currentIndex >= maxIndex) {
+
+                            clearInterval(animationTimer);
+
+                            animationTimer = null;
+
+                            forecastPlayButton.textContent = "▶";
+
+                            return;
+
+                        }
+
+
+                        forecastSlider.value =
+                            currentIndex + 1;
+
+
+                        forecastSlider.dispatchEvent(
+                            new Event("input")
+                        );
+
+                    },
+                    1000
+                );
+
+        }
+    );
+
+}
