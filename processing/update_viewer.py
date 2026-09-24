@@ -3,7 +3,26 @@ sys.dont_write_bytecode = True
 
 import subprocess
 import json
+import time
 from pathlib import Path
+def run_timed_stage(name, command):
+
+    print()
+    print(f"Starting: {name}")
+
+    start_time = time.perf_counter()
+
+    subprocess.run(
+        command,
+        check=True
+    )
+
+    elapsed = time.perf_counter() - start_time
+
+    print()
+    print(f"{name} completed in {elapsed / 60:.2f} minutes")
+
+    return elapsed
 
 def get_local_gfs_cycle():
 
@@ -51,6 +70,8 @@ def get_local_ecmwf_cycle():
     )
 
 if __name__ == "__main__":
+
+    total_start_time = time.perf_counter()
 
     print("Starting YouStorm viewer update")
     print("============================")
@@ -132,52 +153,46 @@ if gfs_needs_update:
     print("New GFS cycle detected.")
     print("Starting GFS download...")
 
-    subprocess.run(
-        ["python", "processing/download_gfs.py"],
-        check=True
+    run_timed_stage(
+        "GFS download",
+        ["python", "processing/download_gfs.py"]
     )
-
 
     print()
     print("GFS download complete")
 
-
-    subprocess.run(
-        ["python", "processing/convert_all_gfs.py"],
-        check=True
+    run_timed_stage(
+        "GFS conversion",
+        ["python", "processing/convert_all_gfs.py"]
     )
-
 
     print()
     print("GFS conversion complete")
 
-
-    subprocess.run(
-        ["python", "processing/create_all_temperature_pngs.py"],
-        check=True
+    run_timed_stage(
+        "Temperature PNG creation",
+        ["python", "processing/create_all_temperature_pngs.py"]
     )
-
 
     print()
     print("Temperature PNG creation complete")
 
-    subprocess.run(
-        ["python", "processing/create_all_precipitation_pngs.py"],
-        check=True
+    run_timed_stage(
+        "Precipitation PNG creation",
+        ["python", "processing/create_all_precipitation_pngs.py"]
     )
-
 
     print()
     print("Precipitation PNG creation complete")
 
-    subprocess.run(
-        ["python", "processing/process_all_gdal.py"],
-        check=True
+    run_timed_stage(
+        "GFS map tile processing",
+        ["python", "processing/process_all_gdal.py"]
     )
-
 
     print()
     print("GFS map tile processing complete")
+
 
 if ecmwf_needs_update:
 
@@ -185,42 +200,50 @@ if ecmwf_needs_update:
     print("New ECMWF cycle detected.")
     print("Starting ECMWF download...")
 
-    subprocess.run(
-        ["python", "processing/download_ecmwf.py"],
-        check=True
+    run_timed_stage(
+        "ECMWF download",
+        ["python", "processing/download_ecmwf.py"]
     )
 
     print()
     print("ECMWF download complete")
 
-    subprocess.run(
-        ["python", "processing/convert_ecmwf.py"],
-        check=True
+    run_timed_stage(
+        "ECMWF conversion",
+        ["python", "processing/convert_ecmwf.py"]
     )
 
     print()
     print("ECMWF conversion complete")
 
-    subprocess.run(
-        ["python", "processing/process_all_ecmwf.py"],
-        check=True
+    run_timed_stage(
+        "ECMWF map tile processing",
+        ["python", "processing/process_all_ecmwf.py"]
     )
 
     print()
     print("ECMWF map tile processing complete")
 
-    subprocess.run(
-        ["python", "processing/create_ecmwf_metadata.py"],
-        check=True
+    run_timed_stage(
+        "ECMWF metadata creation",
+        ["python", "processing/create_ecmwf_metadata.py"]
     )
 
     print()
     print("ECMWF metadata creation complete")
 
+total_elapsed = time.perf_counter() - total_start_time
+
 print()
 print("============================")
 print("YouStorm viewer update complete")
 print("============================")
+print()
+print(
+    f"Total update time: "
+    f"{total_elapsed / 60:.2f} minutes"
+)
+
 
 print()
 print("Checking Git status...")
@@ -233,7 +256,8 @@ subprocess.run(
 print()
 print("Adding viewer files to Git...")
 
-subprocess.run(
+run_timed_stage(
+    "Git add",
     [
         "git", "add", "-A",
         "data/gfs",
@@ -241,8 +265,7 @@ subprocess.run(
         "processing/update_viewer.py",
         "processing/download_gfs.py",
         "processing/download_ecmwf.py"
-    ],
-    check=True
+    ]
 )
 
 print("Viewer files added to Git")
@@ -264,17 +287,17 @@ if result.stdout.strip():
     print()
     print("Committing GFS update...")
 
-    subprocess.run(
-        ["git", "commit", "-m", "Update GFS forecast"],
-        check=True
+    run_timed_stage(
+        "Git commit",
+        ["git", "commit", "-m", "Update GFS forecast"]
     )
 
     print()
     print("Pushing GFS update to GitHub...")
 
-    subprocess.run(
-        ["git", "push"],
-        check=True
+    run_timed_stage(
+        "Git push",
+        ["git", "push"]
     )
 
     print()
