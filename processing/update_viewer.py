@@ -240,54 +240,6 @@ if ecmwf_needs_update:
     print()
     print("ECMWF metadata creation complete")
 
-total_elapsed = time.perf_counter() - total_start_time
-
-print()
-print("============================")
-print("YouStorm viewer update complete")
-print("============================")
-
-print()
-print("PERFORMANCE SUMMARY")
-print("----------------------------")
-
-stage_order = [
-    "GFS download",
-    "GFS conversion",
-    "Temperature PNG creation",
-    "Precipitation PNG creation",
-    "GFS map tile processing",
-    "ECMWF download",
-    "ECMWF conversion",
-    "ECMWF map tile processing",
-    "ECMWF metadata creation",
-    "Git add",
-    "Git commit",
-    "Git push"
-]
-
-for stage in stage_order:
-
-    if stage in stage_times:
-
-        print(
-            f"{stage}: "
-            f"{stage_times[stage] / 60:.2f} minutes"
-        )
-
-    else:
-
-        print(
-            f"{stage}: "
-            f"not run"
-        )
-
-print("----------------------------")
-print(
-    f"Total update time: "
-    f"{total_elapsed / 60:.2f} minutes"
-)
-
 
 print()
 print("Checking Git status...")
@@ -359,3 +311,50 @@ else:
     print("No changes detected.")
     print("Nothing to commit or push.")
 
+total_elapsed = time.perf_counter() - total_start_time
+
+print()
+print("============================")
+print("YouStorm viewer update complete")
+print("============================")
+
+print()
+print("PERFORMANCE SUMMARY")
+print("----------------------------")
+
+stage_order = [
+    "GFS download",
+    "GFS conversion",
+    "Temperature PNG creation",
+    "Precipitation PNG creation",
+    "GFS map tile processing",
+    "ECMWF download",
+    "ECMWF conversion",
+    "ECMWF map tile processing",
+    "ECMWF metadata creation",
+    "Git add",
+    "Git commit",
+    "Git push"
+]
+
+for stage in stage_order:
+
+    if stage in stage_times:
+
+        print(
+            f"{stage}: "
+            f"{stage_times[stage] / 60:.2f} minutes"
+        )
+
+    else:
+
+        print(
+            f"{stage}: "
+            f"not run"
+        )
+
+print("----------------------------")
+print(
+    f"Total update time: "
+    f"{total_elapsed / 60:.2f} minutes"
+)
