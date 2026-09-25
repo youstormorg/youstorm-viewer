@@ -4,7 +4,13 @@ sys.dont_write_bytecode = True
 import subprocess
 import json
 import time
+
 from pathlib import Path
+
+
+stage_times = {}
+
+
 def run_timed_stage(name, command):
 
     print()
@@ -18,6 +24,8 @@ def run_timed_stage(name, command):
     )
 
     elapsed = time.perf_counter() - start_time
+
+    stage_times[name] = elapsed
 
     print()
     print(f"{name} completed in {elapsed / 60:.2f} minutes")
@@ -238,7 +246,43 @@ print()
 print("============================")
 print("YouStorm viewer update complete")
 print("============================")
+
 print()
+print("PERFORMANCE SUMMARY")
+print("----------------------------")
+
+stage_order = [
+    "GFS download",
+    "GFS conversion",
+    "Temperature PNG creation",
+    "Precipitation PNG creation",
+    "GFS map tile processing",
+    "ECMWF download",
+    "ECMWF conversion",
+    "ECMWF map tile processing",
+    "ECMWF metadata creation",
+    "Git add",
+    "Git commit",
+    "Git push"
+]
+
+for stage in stage_order:
+
+    if stage in stage_times:
+
+        print(
+            f"{stage}: "
+            f"{stage_times[stage] / 60:.2f} minutes"
+        )
+
+    else:
+
+        print(
+            f"{stage}: "
+            f"not run"
+        )
+
+print("----------------------------")
 print(
     f"Total update time: "
     f"{total_elapsed / 60:.2f} minutes"
@@ -248,10 +292,17 @@ print(
 print()
 print("Checking Git status...")
 
-subprocess.run(
-    ["git", "status"],
+result = subprocess.run(
+    ["git", "status", "--porcelain"],
+    capture_output=True,
+    text=True,
     check=True
 )
+
+if result.stdout.strip():
+    print("Git working tree contains changes.")
+else:
+    print("Git working tree is clean.")
 
 print()
 print("Adding viewer files to Git...")
