@@ -1,6 +1,8 @@
 import subprocess
 import shutil
 import os
+import time
+import json 
 
 gdal_translate = (
     r"C:\Users\youstorm\AppData\Local\Programs\OSGeo4W\bin\gdal_translate.exe"
@@ -23,6 +25,7 @@ precipitation_hours = list(
     range(3, 145, 3)
 )
 
+temperature_start_time = time.perf_counter()
 
 for forecast_hour in forecast_hours:
 
@@ -60,6 +63,8 @@ for forecast_hour in forecast_hours:
     print()
     print("PNG → WGS84 GeoTIFF")
 
+    start_time = time.perf_counter()
+
     result = subprocess.run(
         [
             gdal_translate,
@@ -78,6 +83,9 @@ for forecast_hour in forecast_hours:
     print(result.stdout)
     print(result.stderr)
 
+    elapsed = time.perf_counter() - start_time
+    print(f"PNG → WGS84 took {elapsed:.3f} seconds")
+
     if result.returncode != 0:
         raise RuntimeError(
             f"PNG → WGS84 failed for +{forecast_hour:03d} h"
@@ -92,6 +100,7 @@ for forecast_hour in forecast_hours:
 
     print()
     print("WGS84 → Web Mercator")
+    start_time = time.perf_counter()
 
     result = subprocess.run(
         [
@@ -109,6 +118,9 @@ for forecast_hour in forecast_hours:
     print(result.stdout)
     print(result.stderr)
 
+    elapsed = time.perf_counter() - start_time
+    print(f"WGS84 → Web Mercator took {elapsed:.3f} seconds")
+
     if result.returncode != 0:
         raise RuntimeError(
             f"WGS84 → Web Mercator failed for +{forecast_hour:03d} h"
@@ -121,6 +133,9 @@ for forecast_hour in forecast_hours:
 
     print()
     print("Web Mercator → XYZ tiles")
+
+    start_time = time.perf_counter()
+
     # Remove old tiles before regenerating
     if os.path.exists(tile_folder):
         shutil.rmtree(tile_folder)
@@ -143,6 +158,9 @@ for forecast_hour in forecast_hours:
     print(result.stdout)
     print(result.stderr)
 
+    elapsed = time.perf_counter() - start_time
+    print(f"Web Mercator → XYZ tiles took {elapsed:.3f} seconds")
+
     if result.returncode != 0:
         raise RuntimeError(
             f"Tile generation failed for +{forecast_hour:03d} h"
@@ -152,9 +170,19 @@ for forecast_hour in forecast_hours:
     print()
     print(f"+{forecast_hour:03d} h complete")
 
+temperature_elapsed = time.perf_counter() - temperature_start_time
+
+print()
+print(
+    f"Total temperature tile processing: "
+    f"{temperature_elapsed / 60:.2f} minutes"
+)
+
 # ==================================================
 # Process precipitation
 # ==================================================
+
+precipitation_start_time = time.perf_counter()
 
 for forecast_hour in precipitation_hours:
 
@@ -289,7 +317,27 @@ for forecast_hour in precipitation_hours:
     print()
     print(f"Precipitation +{forecast_hour:03d} h complete")
 
+precipitation_elapsed = time.perf_counter() - precipitation_start_time
+
+print()
+print(
+    f"Total precipitation tile processing: "
+    f"{precipitation_elapsed / 60:.2f} minutes"
+)
+
 print()
 print("================================")
 print("ALL GFS GDAL PROCESSING COMPLETE")
 print("================================")
+
+gdal_timing_file = "processing/.gdal_timing.json"
+
+with open(gdal_timing_file, "w") as f:
+
+    json.dump(
+        {
+            "temperature": temperature_elapsed,
+            "precipitation": precipitation_elapsed
+        },
+        f
+    )

@@ -1,6 +1,6 @@
 import { initialiseMap } from "./map.js";
 import { initialiseUI } from "./ui.js";
-
+import { initialiseWebGL } from "./webgl.js";
 import {
     loadTemperatureData,
     loadECMWFMetadata,
@@ -17,12 +17,49 @@ import {
     getForecastCount
 } from "./weather.js";
 let map;
-
+let webgl;
 async function initialiseApplication() {
 
     map =
         initialiseMap();
 
+    webgl =
+        initialiseWebGL(map);
+        document.getElementById(
+            "webglTemperatureToggle"
+        ).addEventListener(
+            "change",
+            (event) => {
+
+                const canvas =
+                    document.getElementById(
+                        "weatherWebGL"
+                    );
+
+                canvas.style.display =
+                    event.target.checked
+                        ? "block"
+                        : "none";
+                if (event.target.checked) {
+
+                    webgl.loadForecast(
+                        Number(
+                            document.getElementById(
+                                "forecastSlider"
+                            ).value
+                        ) * 3
+                    );
+
+                }                       
+
+                console.log(
+                    "WebGL visibility:",
+                    event.target.checked,
+                    canvas.style.display
+                );
+
+            }
+        );
     initialiseUI(map);
 
 
@@ -86,26 +123,38 @@ function initialiseForecastSlider(map) {
 
     // Update the forecast when the slider moves
     slider.addEventListener(
-        "input",
-        () => {
+    "input",
+    () => {
 
-            const forecastIndex =
-                Number(slider.value);
+    const forecastIndex =
+        Number(slider.value);
 
+    if (
+        document.getElementById(
+            "webglTemperatureToggle"
+        ).checked
+    ) {
 
-            const temperatureToggle =
-    document.getElementById(
-        "temperatureToggle"
-    );
+        webgl.loadForecast(
+            forecastIndex * 3
+        );
 
-if (temperatureToggle.checked) {
+    }
 
-    displayTemperature(
-        map,
-        forecastIndex
-    );
+    const temperatureToggle =
+        document.getElementById(
+            "temperatureToggle"
+        );
 
-}
+    if (temperatureToggle.checked) {
+
+        displayTemperature(
+            map,
+            forecastIndex
+        );
+
+    }
+
 
    const precipitationToggle =
     document.getElementById(
