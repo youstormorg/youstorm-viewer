@@ -10,6 +10,7 @@ from pathlib import Path
 
 stage_times = {}
 
+gdal_timings = None
 
 def run_timed_stage(name, command):
 
@@ -76,6 +77,18 @@ def get_local_ecmwf_cycle():
         initialisation[8:10],
         initialisation[11:13]
     )
+
+def get_gdal_timings():
+
+    json_file = Path(
+        "processing/.gdal_timing.json"
+    )
+
+    if not json_file.exists():
+        return None
+
+    with open(json_file) as f:
+        return json.load(f)
 
 if __name__ == "__main__":
 
@@ -197,6 +210,8 @@ if gfs_needs_update:
         "GFS map tile processing",
         ["python", "processing/process_all_gdal.py"]
     )
+
+    gdal_timings = get_gdal_timings()
 
     print()
     print("GFS map tile processing complete")
@@ -354,6 +369,21 @@ for stage in stage_order:
         )
 
 print("----------------------------")
+
+if gdal_timings:
+
+    print(
+        f"Temperature tile processing: "
+        f"{gdal_timings['temperature'] / 60:.2f} minutes"
+    )
+
+    print(
+        f"Precipitation tile processing: "
+        f"{gdal_timings['precipitation'] / 60:.2f} minutes"
+    )
+
+    print("----------------------------")
+
 print(
     f"Total update time: "
     f"{total_elapsed / 60:.2f} minutes"
