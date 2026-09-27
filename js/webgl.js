@@ -246,7 +246,9 @@ gl.viewport(
 
 
     function draw() {
-
+        if (!temperatures) {
+            return;
+        }
         const width =
             canvas.clientWidth;
 
