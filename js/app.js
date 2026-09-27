@@ -3,6 +3,7 @@ import { initialiseUI } from "./ui.js";
 import { initialiseWebGL } from "./webgl.js";
 import {
     loadTemperatureData,
+    getTemperatureMetadata,
     loadECMWFMetadata,
     setTemperatureModel,
     getTemperatureForecastCount,
@@ -43,11 +44,13 @@ async function initialiseApplication() {
                 if (event.target.checked) {
 
                     webgl.loadForecast(
-                        Number(
-                            document.getElementById(
-                                "forecastSlider"
-                            ).value
-                        ) * 3
+                         getTemperatureMetadata()[
+                            Number(
+                                document.getElementById(
+                                    "forecastSlider"
+                                ).value
+                            )
+                        ].forecast_hour
                     );
 
                 }                       
@@ -64,6 +67,12 @@ async function initialiseApplication() {
 
 
     await loadTemperatureData();
+
+    console.log(
+        "Temperature metadata:",
+        getTemperatureMetadata()
+    );
+
     await loadPrecipitationData();
     await loadECMWFMetadata();
     createPrecipitationLegend();
@@ -136,7 +145,7 @@ function initialiseForecastSlider(map) {
     ) {
 
         webgl.loadForecast(
-            forecastIndex * 3
+            getTemperatureMetadata()[forecastIndex].forecast_hour
         );
 
     }

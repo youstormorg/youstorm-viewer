@@ -92,12 +92,23 @@ export async function loadTemperatureData() {
 
     weatherData =
         await loadForecastMetadata();
+        
+    console.log(
+        "First GFS forecast:",
+        weatherData[0]
+    );
 
     console.log(
         `Loaded ${weatherData.length} GFS forecast metadata records`
     );
 
     return weatherData;
+}
+
+export function getTemperatureMetadata() {
+
+    return weatherData;
+
 }
 
 export async function loadECMWFMetadata() {
