@@ -1,7 +1,8 @@
 const vertexShaderSource = `
     attribute vec2 position;
 
-    varying vec2 vTexCoord;
+    varying float vMercatorY;
+    varying float vLongitude;
 
     uniform vec2 mapOrigin;
     uniform vec2 mapScale;
@@ -38,11 +39,11 @@ const vertexShaderSource = `
             mapScale +
             mapOrigin;
 
-        vTexCoord =
-            vec2(
-                (longitude + 180.0) / 360.0,
-                (latitude + 90.0) / 180.0
-            );
+        vMercatorY =
+            mercatorY;
+
+        vLongitude =
+            longitude;
 
         gl_Position =
             vec4(
@@ -57,17 +58,37 @@ const vertexShaderSource = `
 const fragmentShaderSource = `
     precision mediump float;
 
-    varying vec2 vTexCoord;
+    varying float vMercatorY;
+    varying float vLongitude;
 
     uniform sampler2D temperatureTexture;
 
     void main() {
 
-        gl_FragColor =
-            texture2D(
-                temperatureTexture,
-                vTexCoord
-            );
+    float latitudeRadians =
+        atan(
+            (
+                exp(vMercatorY) -
+                exp(-vMercatorY)
+            ) / 2.0
+        );
+
+    float latitude =
+        latitudeRadians *
+        180.0 /
+        3.14159265359;
+
+    vec2 texCoord =
+        vec2(
+            (vLongitude + 180.0) / 360.0,
+            (latitude + 90.0) / 180.0
+        );
+
+    gl_FragColor =
+        texture2D(
+            temperatureTexture,
+            texCoord
+        );
 
     }
 `;
@@ -104,6 +125,13 @@ export function initialiseWebGL(map) {
 
 console.log(
     "WebGL is available."
+);
+
+console.log(
+    "WebGL maximum texture size:",
+    gl.getParameter(
+        gl.MAX_TEXTURE_SIZE
+    )
 );
 
 function prepareTextureData() {
@@ -296,6 +324,26 @@ function prepareGridVertexData(
     return data;
 }
 
+function prepareQuadVertexData() {
+
+    return new Float32Array([
+        -180, -85.05112878,
+         180, -85.05112878,
+        -180,  85.05112878,
+         180,  85.05112878
+    ]);
+
+}
+
+function prepareQuadIndexData() {
+
+    return new Uint16Array([
+        0, 1, 2,
+        2, 1, 3
+    ]);
+
+}
+
 function loadWebGLForecast(
     forecastHour
 ) {
@@ -344,6 +392,24 @@ function loadWebGLForecast(
                     temperatures[0].length
                 );  
                 
+            const quadVertexData =
+                prepareQuadVertexData();
+
+            console.log(
+                "WebGL quad vertex buffer size:",
+                quadVertexData.byteLength,
+                "bytes"
+            );
+
+            const quadIndexData =
+                prepareQuadIndexData();
+
+            console.log(
+                "WebGL quad index buffer size:",
+                quadIndexData.byteLength,
+                "bytes"
+            );           
+
             gl.bindBuffer(
                 gl.ARRAY_BUFFER,
                 buffer
@@ -351,9 +417,29 @@ function loadWebGLForecast(
 
             gl.bufferData(
                 gl.ARRAY_BUFFER,
-                gridVertexData,
+                quadVertexData,
                 gl.STATIC_DRAW
-            );                
+            );   
+            
+            console.log(
+                "WebGL index buffer size:",
+                indexData.byteLength,
+                "bytes"
+            );
+
+            console.log(
+                "WebGL vertex buffer size:",
+                gridVertexData.byteLength,
+                "bytes"
+            );   
+            
+            console.log(
+                "WebGL temperature texture data size:",
+                temperatures.length *
+                temperatures[0].length *
+                3,
+                "bytes"
+            );            
 
             indexBuffer =
                 gl.createBuffer();
@@ -365,7 +451,7 @@ function loadWebGLForecast(
 
             gl.bufferData(
                 gl.ELEMENT_ARRAY_BUFFER,
-                indexData,
+                quadIndexData,
                 gl.STATIC_DRAW
             );
 
@@ -745,8 +831,8 @@ gl.viewport(
 
         gl.drawElements(
             gl.TRIANGLES,
-            indexData.length,
-            gl.UNSIGNED_INT,
+            6,
+            gl.UNSIGNED_SHORT,
             0
         );
         console.log(
