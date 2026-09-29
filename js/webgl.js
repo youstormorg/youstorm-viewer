@@ -1,8 +1,7 @@
 const vertexShaderSource = `
     attribute vec2 position;
-    attribute vec3 colour;
 
-    varying vec3 vColour;
+    varying vec2 vTexCoord;
 
     uniform vec2 mapOrigin;
     uniform vec2 mapScale;
@@ -39,15 +38,18 @@ const vertexShaderSource = `
             mapScale +
             mapOrigin;
 
+        vTexCoord =
+            vec2(
+                (longitude + 180.0) / 360.0,
+                (latitude + 90.0) / 180.0
+            );
+
         gl_Position =
             vec4(
                 screenPosition,
                 0.0,
                 1.0
             );
-
-        vColour = colour;
-
     }
 `;
 
@@ -55,12 +57,17 @@ const vertexShaderSource = `
 const fragmentShaderSource = `
     precision mediump float;
 
-    varying vec3 vColour;
+    varying vec2 vTexCoord;
+
+    uniform sampler2D temperatureTexture;
 
     void main() {
 
         gl_FragColor =
-            vec4(vColour, 1.0);
+            texture2D(
+                temperatureTexture,
+                vTexCoord
+            );
 
     }
 `;
@@ -99,141 +106,19 @@ console.log(
     "WebGL is available."
 );
 
-function prepareColourData() {
+function prepareTextureData() {
 
     const rows =
-        temperatureColours.length;
+        temperatures.length;
 
     const columns =
-        temperatureColours[0].length;
-
-    const longitudeOffset =
-        Math.floor(columns / 2);
-
-    const cellRows =
-        rows - 1;
-
-    const cellColumns =
-        columns - 1;
-
-    const data =
-        new Float32Array(
-            cellRows *
-            cellColumns *
-            6 *
-            3
-        );
-
-    let index = 0;
-
-    for (
-        let row = 0;
-        row < cellRows;
-        row++
-    ) {
-
-        for (
-            let column = 0;
-            column < cellColumns;
-            column++
-        ) {
-
-            const shiftedColumn =
-                (column -
-                    longitudeOffset +
-                    columns) %
-                columns;
-
-            const shiftedColumnNext =
-                (column + 1 -
-                    longitudeOffset +
-                    columns) %
-                columns;
-
-            const colour1 =
-                temperatureColours[
-                    row
-                ][
-                    shiftedColumn
-                ];
-
-            const colour2 =
-                temperatureColours[
-                    row
-                ][
-                    shiftedColumnNext
-                ];
-
-            const colour3 =
-                temperatureColours[
-                    row + 1
-                ][
-                    shiftedColumn
-                ];
-
-            const colour4 =
-                temperatureColours[
-                    row + 1
-                ][
-                    shiftedColumnNext
-                ];
-
-            data.set(
-                colour3,
-                index
-            );
-            index += 3;
-
-            data.set(
-                colour4,
-                index
-            );
-            index += 3;
-
-            data.set(
-                colour1,
-                index
-            );
-            index += 3;
-
-            data.set(
-                colour1,
-                index
-            );
-            index += 3;
-
-            data.set(
-                colour4,
-                index
-            );
-            index += 3;
-
-            data.set(
-                colour2,
-                index
-            );
-            index += 3;
-
-        }
-
-    }
-
-    return data;
-}
-
-function prepareGridColourData() {
-
-    const rows =
-        temperatureColours.length;
-
-    const columns =
-        temperatureColours[0].length;
+        temperatures[0].length;
 
     const longitudeOffset =
         Math.floor(columns / 2);
 
     const data =
-        new Float32Array(
+        new Uint8Array(
             rows *
             columns *
             3
@@ -259,19 +144,32 @@ function prepareGridColourData() {
                     columns) %
                 columns;
 
-            const colour =
-                temperatureColours[
+            const temperature =
+                temperatures[
                     row
                 ][
                     shiftedColumn
                 ];
 
-            data.set(
-                colour,
-                index
-            );
+            const colour =
+                temperatureColour(
+                    temperature
+                );
 
-            index += 3;
+            data[index++] =
+                Math.round(
+                    colour[0] * 255
+                );
+
+            data[index++] =
+                Math.round(
+                    colour[1] * 255
+                );
+
+            data[index++] =
+                Math.round(
+                    colour[2] * 255
+                );
         }
     }
 
@@ -435,20 +333,6 @@ function loadWebGLForecast(
             temperatures =
                 data.temperature;
 
-            temperatureColours =
-                temperatures.map(
-                    row =>
-                        row.map(
-                            temperature =>
-                                temperatureColour(
-                                    temperature
-                                )
-                        )
-                );   
-
-            colourData =
-                prepareGridColourData();
-
             indexData =
                 prepareIndexData(
                     temperatures.length,
@@ -485,25 +369,77 @@ function loadWebGLForecast(
                 gl.STATIC_DRAW
             );
 
-            colourBuffer =
-                gl.createBuffer();
+            const textureStart =
+                performance.now();
 
-            gl.bindBuffer(
-                gl.ARRAY_BUFFER,
-                colourBuffer
+            const textureData =
+                prepareTextureData();
+
+            console.log(
+                "Texture preparation time:",
+                (performance.now() - textureStart).toFixed(1),
+                "ms"
             );
 
-            gl.bufferData(
-                gl.ARRAY_BUFFER,
-                colourData,
-                gl.STATIC_DRAW
+            temperatureTexture =
+                gl.createTexture();
+
+            gl.bindTexture(
+                gl.TEXTURE_2D,
+                temperatureTexture
+            );
+
+            const textureUploadStart =
+                performance.now();
+
+            gl.texImage2D(
+                gl.TEXTURE_2D,
+                0,
+                gl.RGB,
+                temperatures[0].length,
+                temperatures.length,
+                0,
+                gl.RGB,
+                gl.UNSIGNED_BYTE,
+                textureData
             );
 
             console.log(
-                "Colour buffer uploaded:",
-                colourData.length
+                "Texture upload time:",
+                (performance.now() - textureUploadStart).toFixed(1),
+                "ms"
             );
 
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_MIN_FILTER,
+                gl.NEAREST
+            );
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_MAG_FILTER,
+                gl.NEAREST
+            );
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_WRAP_S,
+                gl.CLAMP_TO_EDGE
+            );
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_WRAP_T,
+                gl.CLAMP_TO_EDGE
+            );
+
+            console.log(
+                "Temperature texture uploaded:",
+                temperatures[0].length,
+                "×",
+                temperatures.length
+            );
             console.log(
                 "WebGL forecast first temperature:",
                 temperatures[0][0]
@@ -603,12 +539,6 @@ gl.viewport(
             "position"
         );
 
-    const colour =
-        gl.getAttribLocation(
-            program,
-            "colour"
-        );
-
     const mapOrigin =
         gl.getUniformLocation(
             program,
@@ -622,11 +552,8 @@ gl.viewport(
         );
 
     let temperatures = null;
-    let temperatureColours = null;
-    let weatherVertexData = null;
-    let colourBuffer = null;
-    let colourData = null;
     let indexBuffer = null;
+    let temperatureTexture = null;
     let indexData = null;
     let gridVertexData = null;
     function temperatureColour(
@@ -805,34 +732,6 @@ gl.viewport(
         gl.vertexAttribPointer(
             position,
             2,
-            gl.FLOAT,
-            false,
-            0,
-            0
-        );
-
-
-        // Colour buffer
-
-        if (!colourBuffer) {
-
-            colourBuffer =
-                gl.createBuffer();
-
-        }
-
-        gl.bindBuffer(
-            gl.ARRAY_BUFFER,
-            colourBuffer
-        );
-
-        gl.enableVertexAttribArray(
-            colour
-        );
-
-        gl.vertexAttribPointer(
-            colour,
-            3,
             gl.FLOAT,
             false,
             0,
