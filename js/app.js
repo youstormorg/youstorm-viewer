@@ -15,7 +15,8 @@ import {
     hidePrecipitation,
     showPrecipitation,
     createPrecipitationLegend,
-    getForecastCount
+    getForecastCount,
+    updateForecastDisplay,
 } from "./weather.js";
 let map;
 let webgl;
@@ -144,8 +145,15 @@ function initialiseForecastSlider(map) {
         ).checked
     ) {
 
+        const data =
+            getTemperatureMetadata()[forecastIndex];
+
         webgl.loadForecast(
-            getTemperatureMetadata()[forecastIndex].forecast_hour
+            data.forecast_hour
+        );
+
+        updateForecastDisplay(
+            data
         );
 
     }

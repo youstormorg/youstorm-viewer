@@ -284,7 +284,7 @@ setTimeout(() => {
 
 
 // Update the forecast information in the footer
-function updateForecastDisplay(data) {
+export function updateForecastDisplay(data) {
 
     const forecastElement =
         document.getElementById("forecastHour");
