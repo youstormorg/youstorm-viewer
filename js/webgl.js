@@ -204,126 +204,6 @@ function prepareTextureData() {
     return data;
 }
 
-function prepareIndexData(
-    rows,
-    columns
-) {
-
-    const cellRows =
-        rows - 1;
-
-    const cellColumns =
-        columns - 1;
-
-    const indices =
-        new Uint32Array(
-            cellRows *
-            cellColumns *
-            6
-        );
-
-    let index = 0;
-
-    for (
-        let row = 0;
-        row < cellRows;
-        row++
-    ) {
-
-        for (
-            let column = 0;
-            column < cellColumns;
-            column++
-        ) {
-
-            const topLeft =
-                row * columns + column;
-
-            const topRight =
-                topLeft + 1;
-
-            const bottomLeft =
-                (row + 1) * columns + column;
-
-            const bottomRight =
-                bottomLeft + 1;
-
-            indices[index++] =
-                topLeft;
-
-            indices[index++] =
-                topRight;
-
-            indices[index++] =
-                bottomLeft;
-
-            indices[index++] =
-                bottomLeft;
-
-            indices[index++] =
-                topRight;
-
-            indices[index++] =
-                bottomRight;
-
-        }
-
-    }
-
-    return indices;
-}
-
-function prepareGridVertexData(
-    rows,
-    columns
-) {
-
-    const data =
-        new Float32Array(
-            rows *
-            columns *
-            2
-        );
-
-    let index = 0;
-
-    for (
-        let row = 0;
-        row < rows;
-        row++
-    ) {
-
-        const latitude =
-            -90 +
-            180 *
-            row /
-            (rows - 1);
-
-        for (
-            let column = 0;
-            column < columns;
-            column++
-        ) {
-
-            const longitude =
-                -180 +
-                360 *
-                column /
-                (columns - 1);
-
-            data[index++] =
-                longitude;
-
-            data[index++] =
-                latitude;
-
-        }
-
-    }
-
-    return data;
-}
-
 function prepareQuadVertexData() {
 
     return new Float32Array([
@@ -380,18 +260,7 @@ function loadWebGLForecast(
             );
             temperatures =
                 data.temperature;
-
-            indexData =
-                prepareIndexData(
-                    temperatures.length,
-                    temperatures[0].length
-                );
-            gridVertexData =
-                prepareGridVertexData(
-                    temperatures.length,
-                    temperatures[0].length
-                );  
-                
+              
             const quadVertexData =
                 prepareQuadVertexData();
 
@@ -419,18 +288,6 @@ function loadWebGLForecast(
                 gl.ARRAY_BUFFER,
                 quadVertexData,
                 gl.STATIC_DRAW
-            );   
-            
-            console.log(
-                "WebGL index buffer size:",
-                indexData.byteLength,
-                "bytes"
-            );
-
-            console.log(
-                "WebGL vertex buffer size:",
-                gridVertexData.byteLength,
-                "bytes"
             );   
             
             console.log(
@@ -640,8 +497,6 @@ gl.viewport(
     let temperatures = null;
     let indexBuffer = null;
     let temperatureTexture = null;
-    let indexData = null;
-    let gridVertexData = null;
     function temperatureColour(
         temperature
     ) {
