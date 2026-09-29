@@ -733,19 +733,30 @@ gl.viewport(
             program
         );
 
+        const zoom =
+            map.getZoom();
+
         const originPoint =
             map.latLngToContainerPoint(
                 [0, 0]
             );
 
-        const longitudePoint =
-            map.latLngToContainerPoint(
-                [0, 1]
+        const projectedOrigin =
+            map.project(
+                [0, 0],
+                zoom
             );
 
-        const latitudePoint =
-            map.latLngToContainerPoint(
-                [1, 0]
+        const projectedLongitude =
+            map.project(
+                [0, 1],
+                zoom
+            );
+
+        const projectedLatitude =
+            map.project(
+                [1, 0],
+                zoom
             );
 
         const mapOriginX =
@@ -757,15 +768,15 @@ gl.viewport(
 
         const mapScaleX =
             (
-                (longitudePoint.x -
-                    originPoint.x) /
+                (projectedLongitude.x -
+                    projectedOrigin.x) /
                 width
             ) * 2 * 180;
 
         const mapScaleY =
             -(
-                (latitudePoint.y -
-                    originPoint.y) /
+                (projectedLatitude.y -
+                    projectedOrigin.y) /
                 height
             ) * 2 * 57.295779513;
 
