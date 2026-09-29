@@ -47,7 +47,6 @@ data/ecmwf/*_colored*.tif
 data/ecmwf/*_celsius*.tif
 
 # ECMWF numerical JSON
-data/ecmwf/ecmwf_2t_f*.json
 
 # ECMWF temporary/test files
 data/ecmwf/*_test.*
