@@ -61,8 +61,9 @@ const fragmentShaderSource = `
     varying float vMercatorY;
     varying float vLongitude;
 
-    uniform sampler2D temperatureTexture;
-
+    uniform sampler2D temperatureDataTexture;
+    uniform float flipLatitude;
+    uniform float shiftLongitude;
     void main() {
 
     float latitudeRadians =
@@ -84,10 +85,88 @@ const fragmentShaderSource = `
             (latitude + 90.0) / 180.0
         );
 
-    gl_FragColor =
+    float dataY =
+        flipLatitude > 0.5
+            ? 1.0 - texCoord.y
+            : texCoord.y;
+
+    float dataX =
+        shiftLongitude > 0.5
+            ? fract(texCoord.x + 0.5)
+            : texCoord.x;
+
+    vec2 dataTexCoord =
+        vec2(
+            dataX,
+            dataY
+        );
+
+    float temperature =
         texture2D(
-            temperatureTexture,
-            texCoord
+            temperatureDataTexture,
+            dataTexCoord
+        ).r;
+
+    float minimum =
+        -5.0;
+
+    float maximum =
+        35.0;
+
+    float t =
+        (temperature - minimum) /
+        (maximum - minimum);
+
+    t =
+        clamp(
+            t,
+            0.0,
+            1.0
+        );
+
+    vec3 colour;
+
+    if (t < 0.33) {
+
+        float p =
+            t / 0.33;
+
+        colour =
+            vec3(
+                0.1 + p * 0.2,
+                0.2 + p * 0.5,
+                0.8 + p * 0.1
+            );
+
+    } else if (t < 0.66) {
+
+        float p =
+            (t - 0.33) / 0.33;
+
+        colour =
+            vec3(
+                0.3 + p * 0.6,
+                0.7 + p * 0.1,
+                0.9 - p * 0.6
+            );
+
+    } else {
+
+        float p =
+            (t - 0.66) / 0.34;
+
+        colour =
+            vec3(
+                0.9,
+                0.8 - p * 0.6,
+                0.3 - p * 0.2
+            );
+    }
+
+    gl_FragColor =
+        vec4(
+            colour,
+            1.0
         );
 
     }
@@ -101,6 +180,17 @@ export function initialiseWebGL(map) {
 
     const gl =
         canvas.getContext("webgl");
+
+    const floatTextureExtension =
+        gl.getExtension(
+            "OES_texture_float"
+        );
+
+    console.log(
+        "WebGL floating-point textures:",
+        Boolean(floatTextureExtension)
+    );
+
     const indexExtension =
         gl.getExtension(
             "OES_element_index_uint"
@@ -134,76 +224,6 @@ console.log(
     )
 );
 
-function prepareTextureData() {
-
-    const rows =
-        temperatures.length;
-
-    const columns =
-        temperatures[0].length;
-
-    const longitudeOffset =
-        Math.floor(columns / 2);
-
-    const data =
-        new Uint8Array(
-            rows *
-            columns *
-            3
-        );
-
-    let index = 0;
-
-    for (
-        let row = 0;
-        row < rows;
-        row++
-    ) {
-
-        for (
-            let column = 0;
-            column < columns;
-            column++
-        ) {
-
-            const shiftedColumn =
-                (column -
-                    longitudeOffset +
-                    columns) %
-                columns;
-
-            const temperature =
-                temperatures[
-                    row
-                ][
-                    shiftedColumn
-                ];
-
-            const colour =
-                temperatureColour(
-                    temperature
-                );
-
-            data[index++] =
-                Math.round(
-                    colour[0] * 255
-                );
-
-            data[index++] =
-                Math.round(
-                    colour[1] * 255
-                );
-
-            data[index++] =
-                Math.round(
-                    colour[2] * 255
-                );
-        }
-    }
-
-    return data;
-}
-
 function prepareQuadVertexData() {
 
     return new Float32Array([
@@ -225,18 +245,41 @@ function prepareQuadIndexData() {
 }
 
 function loadWebGLForecast(
-    forecastHour
+    forecastHour,
+    model = "GFS"
 ) {
+    currentModel =
+        model;
 
-    const filename =
-        "data/gfs/gfs_temp_global_f" +
-        String(forecastHour).padStart(3, "0") +
-        ".json";
+    let filename;
+
+    if (model === "ECMWF") {
+
+        filename =
+            "data/ecmwf/ecmwf_2t_f" +
+            String(forecastHour).padStart(3, "0") +
+            ".json";
+
+    } else {
+
+        filename =
+            "data/gfs/gfs_temp_global_f" +
+            String(forecastHour).padStart(3, "0") +
+            ".json";
+
+    }
 
     console.log(
         "Loading WebGL forecast:",
         filename
     );
+
+    console.log(
+        "WebGL model:",
+        model,
+        "forecast hour:",
+        forecastHour
+    );    
 
     fetch(filename)
     .then(response => {
@@ -259,7 +302,9 @@ function loadWebGLForecast(
                 data
             );
             temperatures =
-                data.temperature;
+                model === "ECMWF"
+                    ? data.values
+                    : data.temperature;
               
             const quadVertexData =
                 prepareQuadVertexData();
@@ -312,44 +357,41 @@ function loadWebGLForecast(
                 gl.STATIC_DRAW
             );
 
-            const textureStart =
-                performance.now();
+ 
+            // NEW: numerical temperature texture
 
-            const textureData =
-                prepareTextureData();
-
-            console.log(
-                "Texture preparation time:",
-                (performance.now() - textureStart).toFixed(1),
-                "ms"
-            );
-
-            temperatureTexture =
+            temperatureDataTexture =
                 gl.createTexture();
+
+            gl.activeTexture(
+                gl.TEXTURE1
+            );
 
             gl.bindTexture(
                 gl.TEXTURE_2D,
-                temperatureTexture
+                temperatureDataTexture
             );
 
-            const textureUploadStart =
+            const dataTextureUploadStart =
                 performance.now();
 
             gl.texImage2D(
                 gl.TEXTURE_2D,
                 0,
-                gl.RGB,
+                gl.LUMINANCE,
                 temperatures[0].length,
                 temperatures.length,
                 0,
-                gl.RGB,
-                gl.UNSIGNED_BYTE,
-                textureData
+                gl.LUMINANCE,
+                gl.FLOAT,
+                new Float32Array(
+                    temperatures.flat()
+                )
             );
 
             console.log(
-                "Texture upload time:",
-                (performance.now() - textureUploadStart).toFixed(1),
+                "Numerical texture upload time:",
+                (performance.now() - dataTextureUploadStart).toFixed(1),
                 "ms"
             );
 
@@ -377,12 +419,18 @@ function loadWebGLForecast(
                 gl.CLAMP_TO_EDGE
             );
 
+            gl.activeTexture(
+                gl.TEXTURE0
+            );            
+
             console.log(
                 "Temperature texture uploaded:",
                 temperatures[0].length,
                 "×",
                 temperatures.length
             );
+
+
             console.log(
                 "WebGL forecast first temperature:",
                 temperatures[0][0]
@@ -494,9 +542,28 @@ gl.viewport(
             "mapScale"
         );
 
+    const temperatureDataTextureLocation =
+        gl.getUniformLocation(
+            program,
+            "temperatureDataTexture"
+        );
+
+    const flipLatitudeLocation =
+        gl.getUniformLocation(
+            program,
+            "flipLatitude"
+        );   
+
+    const shiftLongitudeLocation =
+        gl.getUniformLocation(
+            program,
+            "shiftLongitude"
+        );
+
     let temperatures = null;
     let indexBuffer = null;
-    let temperatureTexture = null;
+    let temperatureDataTexture = null;
+    let currentModel = "GFS";
     function temperatureColour(
         temperature
     ) {
@@ -557,9 +624,11 @@ gl.viewport(
 
 
     function draw() {
+
         if (!temperatures) {
             return;
         }
+
         console.log(
             "WebGL draw triggered"
         );
@@ -596,9 +665,27 @@ gl.viewport(
             gl.COLOR_BUFFER_BIT
         );
 
-
         gl.useProgram(
             program
+        );
+
+        gl.uniform1i(
+            temperatureDataTextureLocation,
+            1
+        );
+
+        gl.uniform1f(
+            flipLatitudeLocation,
+            currentModel === "ECMWF"
+                ? 1.0
+                : 0.0
+        );    
+
+        gl.uniform1f(
+            shiftLongitudeLocation,
+            currentModel === "ECMWF"
+                ? 0.0
+                : 1.0
         );
 
         const zoom =
