@@ -13,6 +13,13 @@ export function setTemperatureModel(model) {
     );
 
 }
+
+export function getTemperatureModel() {
+
+    return selectedTemperatureModel;
+
+}
+
 export function getTemperatureForecastCount() {
 
     if (selectedTemperatureModel === "ECMWF") {
@@ -108,6 +115,12 @@ export async function loadTemperatureData() {
 export function getTemperatureMetadata() {
 
     return weatherData;
+
+}
+
+export function getECMWFMetadata() {
+
+    return ecmwfMetadata;
 
 }
 

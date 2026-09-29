@@ -4,8 +4,10 @@ import { initialiseWebGL } from "./webgl.js";
 import {
     loadTemperatureData,
     getTemperatureMetadata,
+    getECMWFMetadata,
     loadECMWFMetadata,
     setTemperatureModel,
+    getTemperatureModel,
     getTemperatureForecastCount,
     loadPrecipitationData,
     displayTemperature,
@@ -44,15 +46,16 @@ async function initialiseApplication() {
                         : "none";
                 if (event.target.checked) {
 
-                    webgl.loadForecast(
-                         getTemperatureMetadata()[
-                            Number(
-                                document.getElementById(
-                                    "forecastSlider"
-                                ).value
-                            )
-                        ].forecast_hour
-                    );
+                webgl.loadForecast(
+                    getTemperatureMetadata()[
+                        Number(
+                            document.getElementById(
+                                "forecastSlider"
+                            ).value
+                        )
+                    ].forecast_hour,
+                    getTemperatureModel()
+                );
 
                 }                       
 
@@ -146,7 +149,9 @@ function initialiseForecastSlider(map) {
     ) {
 
         const data =
-            getTemperatureMetadata()[forecastIndex];
+            getTemperatureModel() === "ECMWF"
+                ? getECMWFMetadata()[forecastIndex]
+                : getTemperatureMetadata()[forecastIndex];
 
         webgl.loadForecast(
             data.forecast_hour
@@ -198,14 +203,15 @@ if (
 }
 
             // Update the slider label
-            const hours =
-                forecastIndex * 3;
+        const forecastHour =
+            getTemperatureModel() === "ECMWF"
+                ? getECMWFMetadata()[forecastIndex].forecast_hour
+                : getTemperatureMetadata()[forecastIndex].forecast_hour;
 
-
-            label.textContent =
-                `+${hours
-                    .toString()
-                    .padStart(3, "0")} h`;
+        label.textContent =
+            `+${Number(forecastHour)
+                .toString()
+                .padStart(3, "0")} h`;
 
         }
     );
@@ -245,6 +251,44 @@ slider.max =
     getTemperatureForecastCount() - 1;
 
 slider.value = 0;
+
+if (
+    document.getElementById(
+        "webglTemperatureToggle"
+    ).checked
+) {
+
+    const forecastIndex =
+        Number(
+            document.getElementById(
+                "forecastSlider"
+            ).value
+        );
+
+    const forecastData =
+        model === "ECMWF"
+            ? getECMWFMetadata()[forecastIndex]
+            : getTemperatureMetadata()[forecastIndex];
+
+    webgl.loadForecast(
+        forecastData.forecast_hour,
+        model
+    );
+
+}
+
+const firstForecastHour =
+    model === "ECMWF"
+        ? getECMWFMetadata()[0].forecast_hour
+        : getTemperatureMetadata()[0].forecast_hour;
+
+document.getElementById(
+    "forecastControlLabel"
+).textContent =
+    `+${Number(firstForecastHour)
+        .toString()
+        .padStart(3, "0")} h`;
+
 
 if (model === "ECMWF") {
 
