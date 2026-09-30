@@ -36,7 +36,7 @@ def run_timed_stage(name, command):
 def get_local_gfs_cycle():
 
     json_file = Path(
-        "data/gfs/gfs_temp_global_f000.json"
+        "data/gfs/gfs_temperature_metadata.json"
     )
 
     if not json_file.exists():
@@ -45,7 +45,7 @@ def get_local_gfs_cycle():
     with open(json_file) as f:
         data = json.load(f)
 
-    initialisation = data["initialisation"]
+    initialisation = data[0]["initialisation"]
 
     return (
     initialisation[0:4] +

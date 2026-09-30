@@ -1,5 +1,6 @@
 import subprocess
 import json
+import xarray as xr
 from pathlib import Path
 
 forecast_hours = list(
@@ -54,23 +55,23 @@ for forecast_hour in forecast_hours:
 
     input_file = (
         Path("data/gfs")
-        / f"gfs_temp_global_f{forecast_hour:03d}.json"
+        / f"gfs_temp_global_f{forecast_hour:03d}.grib2"
     )
 
-    with input_file.open(
-        "r",
-        encoding="utf-8"
-    ) as f:
+    with xr.open_dataset(
+        input_file,
+        engine="cfgrib"
+    ) as ds:
 
-        data = json.load(f)
-
-    temperature_metadata.append(
-        {
-            "forecast_hour": data["forecast_hour"],
-            "initialisation": data["initialisation"],
-            "valid_time": data["valid_time"]
-        }
-    )
+        temperature_metadata.append(
+            {
+                "forecast_hour": forecast_hour,
+                "initialisation":
+                    str(ds["time"].values)[:19] + "Z",
+                "valid_time":
+                    str(ds["valid_time"].values)[:19] + "Z"
+            }
+        )
 
 
 temperature_metadata_file = (
