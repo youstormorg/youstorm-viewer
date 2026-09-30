@@ -16,6 +16,10 @@ output_file = (
     f"data/gfs/gfs_temp_global_f{forecast_hour:03d}.json"
 )
 
+binary_output_file = (
+    f"data/gfs/gfs_temp_global_f{forecast_hour:03d}.bin"
+)
+
 
 # Open GFS GRIB2 file
 ds = xr.open_dataset(
@@ -31,6 +35,13 @@ temperature = ds["t2m"]
 # Convert Kelvin to Celsius
 temperature_c = temperature - 273.15
 
+# Create compact binary temperature data
+binary_temperature = \
+    (temperature_c.values * 10).round().astype("int16")
+
+binary_temperature.tofile(
+    binary_output_file
+)
 
 # Build web data structure
 output = {
@@ -82,6 +93,7 @@ print("-----------------------")
 print(f"Forecast: +{forecast_hour:03d} h")
 print(f"Input:    {input_file}")
 print(f"Output:   {output_file}")
+print(f"Binary:   {binary_output_file}")
 print(
     f"Grid:     "
     f"{temperature.shape[0]} x "

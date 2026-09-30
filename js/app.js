@@ -154,7 +154,8 @@ function initialiseForecastSlider(map) {
                 : getTemperatureMetadata()[forecastIndex];
 
         webgl.loadForecast(
-            data.forecast_hour
+            data.forecast_hour,
+            getTemperatureModel()
         );
 
         updateForecastDisplay(

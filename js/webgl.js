@@ -258,7 +258,7 @@ function loadWebGLForecast(
         filename =
             "data/ecmwf/ecmwf_2t_f" +
             String(forecastHour).padStart(3, "0") +
-            ".json";
+            ".bin";
 
     } else {
 
@@ -292,7 +292,9 @@ function loadWebGLForecast(
 
         }
 
-        return response.json();
+        return model === "ECMWF"
+            ? response.arrayBuffer()
+            : response.json();
 
     })
     .then(data => {
@@ -301,10 +303,47 @@ function loadWebGLForecast(
                 "WebGL forecast loaded:",
                 data
             );
-            temperatures =
-                model === "ECMWF"
-                    ? data.values
-                    : data.temperature;
+
+            if (model === "ECMWF") {
+
+                console.log(
+                    "ECMWF binary values:",
+                    new Int16Array(data).length
+                );
+
+            }
+
+            if (model === "ECMWF") {
+
+                const encoded =
+                    new Int16Array(data);
+
+                temperatures = [];
+
+                for (
+                    let row = 0;
+                    row < 721;
+                    row++
+                ) {
+
+                    temperatures.push(
+                        Array.from(
+                            encoded.slice(
+                                row * 1440,
+                                (row + 1) * 1440
+                            ),
+                            value => value / 10
+                        )
+                    );
+
+                }
+
+            } else {
+
+                temperatures =
+                    data.temperature;
+
+            }
               
             const quadVertexData =
                 prepareQuadVertexData();
@@ -447,6 +486,7 @@ function loadWebGLForecast(
         });
 
 }
+
 canvas.width =
     canvas.clientWidth;
 
