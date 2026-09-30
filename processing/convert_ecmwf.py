@@ -1,5 +1,4 @@
 import xarray as xr
-import json
 
 forecast_hours = list(
     range(0, 145, 3)
@@ -15,11 +14,6 @@ for forecast_hour in forecast_hours:
     input_file = (
         f"data/ecmwf/"
         f"ecmwf_2t_f{forecast_hour:03d}.grib2"
-    )
-
-    output_file = (
-        f"data/ecmwf/"
-        f"ecmwf_2t_f{forecast_hour:03d}.json"
     )
 
     binary_output_file = (
@@ -41,34 +35,6 @@ for forecast_hour in forecast_hours:
         binary_output_file
     )
 
-    output = {
-        "model": "ECMWF",
-        "variable": "temperature",
-        "forecast_hour": forecast_hour,
-        "initialisation":
-            str(ds["time"].values)[:19] + "Z",
-        "valid_time":
-            str(ds["valid_time"].values)[:19] + "Z",
-        "latitude":
-            ds["latitude"].values.tolist(),
-        "longitude":
-            ds["longitude"].values.tolist(),
-        "values":
-            temperature.values.tolist()
-    }
-
-    with open(
-        output_file,
-        "w"
-    ) as f:
-        json.dump(
-            output,
-            f
-        )
-
-    print(
-        f"Created {output_file}"
-    )
     print(
         f"Created {binary_output_file}"
     )
