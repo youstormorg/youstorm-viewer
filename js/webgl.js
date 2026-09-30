@@ -265,7 +265,7 @@ function loadWebGLForecast(
         filename =
             "data/gfs/gfs_temp_global_f" +
             String(forecastHour).padStart(3, "0") +
-            ".json";
+            ".bin";
 
     }
 
@@ -292,9 +292,7 @@ function loadWebGLForecast(
 
         }
 
-        return model === "ECMWF"
-            ? response.arrayBuffer()
-            : response.json();
+        return response.arrayBuffer();
 
     })
     .then(data => {
@@ -313,35 +311,26 @@ function loadWebGLForecast(
 
             }
 
-            if (model === "ECMWF") {
+            const encoded =
+                new Int16Array(data);
 
-                const encoded =
-                    new Int16Array(data);
+            temperatures = [];
 
-                temperatures = [];
+            for (
+                let row = 0;
+                row < 721;
+                row++
+            ) {
 
-                for (
-                    let row = 0;
-                    row < 721;
-                    row++
-                ) {
-
-                    temperatures.push(
-                        Array.from(
-                            encoded.slice(
-                                row * 1440,
-                                (row + 1) * 1440
-                            ),
-                            value => value / 10
-                        )
-                    );
-
-                }
-
-            } else {
-
-                temperatures =
-                    data.temperature;
+                temperatures.push(
+                    Array.from(
+                        encoded.slice(
+                            row * 1440,
+                            (row + 1) * 1440
+                        ),
+                        value => value / 10
+                    )
+                );
 
             }
               
