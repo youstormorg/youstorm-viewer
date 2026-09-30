@@ -40,10 +40,18 @@ async function initialiseApplication() {
                         "weatherWebGL"
                     );
 
-                canvas.style.display =
+                webgl.setTemperatureVisible(
                     event.target.checked
+                );
+
+                canvas.style.display =
+                    event.target.checked ||
+                    document.getElementById(
+                        "webglPrecipitationToggle"
+                    ).checked
                         ? "block"
                         : "none";
+
                 if (event.target.checked) {
 
                 webgl.loadForecast(
@@ -67,6 +75,46 @@ async function initialiseApplication() {
 
             }
         );
+
+        document.getElementById(
+            "webglPrecipitationToggle"
+        ).addEventListener(
+            "change",
+            (event) => {
+
+        const canvas =
+            document.getElementById(
+                "weatherWebGL"
+            );
+
+        if (event.target.checked) {
+
+            webgl.loadPrecipitation(
+                3
+            );
+
+        }
+
+        webgl.setPrecipitationVisible(
+            event.target.checked
+        );
+
+            canvas.style.display =
+                event.target.checked ||
+                document.getElementById(
+                    "webglTemperatureToggle"
+                ).checked
+                    ? "block"
+                    : "none";
+
+                console.log(
+                    "WebGL precipitation visibility:",
+                    event.target.checked
+                );
+
+            }
+        );
+
     initialiseUI(map);
 
 

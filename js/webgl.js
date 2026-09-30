@@ -62,8 +62,10 @@ const fragmentShaderSource = `
     varying float vLongitude;
 
     uniform sampler2D temperatureDataTexture;
+    uniform sampler2D precipitationDataTexture;
     uniform float flipLatitude;
     uniform float shiftLongitude;
+    uniform float weatherField;
     void main() {
 
     float latitudeRadians =
@@ -107,6 +109,21 @@ const fragmentShaderSource = `
             dataTexCoord
         ).r;
 
+    float precipitationValue =
+        texture2D(
+            precipitationDataTexture,
+            dataTexCoord
+        ).r;
+
+    float fieldValue =
+        weatherField < 0.5
+            ? temperature
+            : precipitationValue;
+
+vec3 colour;
+
+if (weatherField < 0.5) {
+
     float minimum =
         -5.0;
 
@@ -123,8 +140,6 @@ const fragmentShaderSource = `
             0.0,
             1.0
         );
-
-    vec3 colour;
 
     if (t < 0.33) {
 
@@ -162,6 +177,100 @@ const fragmentShaderSource = `
                 0.3 - p * 0.2
             );
     }
+
+} else {
+
+    if (precipitationValue < 0.1) {
+
+        colour =
+            vec3(
+                1.0,
+                1.0,
+                1.0
+            );
+
+    } else if (precipitationValue < 1.0) {
+
+        colour =
+            vec3(
+                220.0 / 255.0,
+                245.0 / 255.0,
+                255.0 / 255.0
+            );
+
+    } else if (precipitationValue < 2.5) {
+
+        colour =
+            vec3(
+                170.0 / 255.0,
+                220.0 / 255.0,
+                250.0 / 255.0
+            );
+
+    } else if (precipitationValue < 5.0) {
+
+        colour =
+            vec3(
+                100.0 / 255.0,
+                180.0 / 255.0,
+                240.0 / 255.0
+            );
+
+    } else if (precipitationValue < 10.0) {
+
+        colour =
+            vec3(
+                30.0 / 255.0,
+                130.0 / 255.0,
+                220.0 / 255.0
+            );
+
+    } else if (precipitationValue < 20.0) {
+
+        colour =
+            vec3(
+                20.0 / 255.0,
+                170.0 / 255.0,
+                100.0 / 255.0
+            );
+
+    } else if (precipitationValue < 30.0) {
+
+        colour =
+            vec3(
+                255.0 / 255.0,
+                230.0 / 255.0,
+                60.0 / 255.0
+            );
+
+    } else if (precipitationValue < 50.0) {
+
+        colour =
+            vec3(
+                255.0 / 255.0,
+                150.0 / 255.0,
+                30.0 / 255.0
+            );
+
+    } else if (precipitationValue < 75.0) {
+
+        colour =
+            vec3(
+                240.0 / 255.0,
+                60.0 / 255.0,
+                30.0 / 255.0
+            );
+
+    } else {
+
+        colour =
+            vec3(
+                180.0 / 255.0,
+                0.0,
+                0.0
+            );
+    }
+}
 
     gl_FragColor =
         vec4(
@@ -241,6 +350,149 @@ function prepareQuadIndexData() {
         0, 1, 2,
         2, 1, 3
     ]);
+
+}
+
+function loadWebGLPrecipitation(
+    forecastHour
+) {
+
+    const filename =
+        "data/gfs/gfs_precip_global_f" +
+        String(forecastHour).padStart(3, "0") +
+        ".bin";
+
+    console.log(
+        "Loading WebGL precipitation:",
+        filename
+    );
+
+    fetch(filename)
+        .then(response => {
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `WebGL precipitation file not found: ${filename}`
+                );
+
+            }
+
+            return response.arrayBuffer();
+
+        })
+        .then(data => {
+
+            precipitation =
+                new Float32Array(data);
+
+            precipitationDataTexture =
+                gl.createTexture();
+
+            gl.activeTexture(
+                gl.TEXTURE2
+            );
+
+            gl.bindTexture(
+                gl.TEXTURE_2D,
+                precipitationDataTexture
+            );
+
+            gl.texImage2D(
+                gl.TEXTURE_2D,
+                0,
+                gl.LUMINANCE,
+                1440,
+                721,
+                0,
+                gl.LUMINANCE,
+                gl.FLOAT,
+                precipitation
+            );
+
+            console.log(
+                "WebGL error after precipitation texture upload:",
+                gl.getError()
+            );            
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_MIN_FILTER,
+                gl.NEAREST
+            );
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_MAG_FILTER,
+                gl.NEAREST
+            );
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_WRAP_S,
+                gl.CLAMP_TO_EDGE
+            );
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_WRAP_T,
+                gl.CLAMP_TO_EDGE
+            );
+
+            gl.activeTexture(
+                gl.TEXTURE0
+            );
+
+            console.log(
+                "WebGL precipitation texture uploaded:",
+                1440,
+                "×",
+                721
+            );
+
+            console.log(
+                "WebGL precipitation loaded:",
+                precipitation
+            );
+
+            console.log(
+                "WebGL precipitation values:",
+                precipitation.length
+            );
+
+            console.log(
+                "WebGL precipitation first value:",
+                precipitation[0]
+            );
+
+            let precipitationMaximum =
+                0;
+
+            for (
+                let i = 0;
+                i < precipitation.length;
+                i++
+            ) {
+
+                if (
+                    precipitation[i] >
+                    precipitationMaximum
+                ) {
+
+                    precipitationMaximum =
+                        precipitation[i];
+
+                }
+
+            }
+
+            console.log(
+                "WebGL precipitation maximum:",
+                precipitationMaximum
+            );
+
+            draw();
+        });
 
 }
 
@@ -577,6 +829,23 @@ gl.viewport(
             "temperatureDataTexture"
         );
 
+    const precipitationDataTextureLocation =
+        gl.getUniformLocation(
+            program,
+            "precipitationDataTexture"
+        );
+
+    const weatherFieldLocation =
+        gl.getUniformLocation(
+            program,
+            "weatherField"
+        );   
+        
+    console.log(
+        "weatherField uniform location:",
+        weatherFieldLocation
+    );        
+
     const flipLatitudeLocation =
         gl.getUniformLocation(
             program,
@@ -590,8 +859,14 @@ gl.viewport(
         );
 
     let temperatures = null;
+    let precipitation = null;
+
+    let temperatureVisible = false;
+    let precipitationVisible = false;
+
     let indexBuffer = null;
     let temperatureDataTexture = null;
+    let precipitationDataTexture = null;
     let currentModel = "GFS";
     function temperatureColour(
         temperature
@@ -654,7 +929,10 @@ gl.viewport(
 
     function draw() {
 
-        if (!temperatures) {
+        if (
+            !temperatures &&
+            !precipitationDataTexture
+        ) {
             return;
         }
 
@@ -684,10 +962,10 @@ gl.viewport(
 
 
         gl.clearColor(
-            0.0,
-            0.0,
-            0.0,
-            0.0
+            1,
+            1,
+            1,
+            0,
         );
 
         gl.clear(
@@ -697,12 +975,29 @@ gl.viewport(
         gl.useProgram(
             program
         );
+        gl.enable(
+            gl.BLEND
+        );
 
         gl.uniform1i(
             temperatureDataTextureLocation,
             1
         );
 
+        gl.uniform1i(
+            precipitationDataTextureLocation,
+            2
+        );    
+        
+        gl.uniform1f(
+            weatherFieldLocation,
+            0.0
+        );        
+        console.log(
+            "WebGL layers:",
+            "temperature =", temperatureVisible,
+            "precipitation =", precipitationVisible
+        );
         gl.uniform1f(
             flipLatitudeLocation,
             currentModel === "ECMWF"
@@ -795,17 +1090,64 @@ gl.viewport(
             0
         );
 
-        gl.bindBuffer(
-            gl.ELEMENT_ARRAY_BUFFER,
-            indexBuffer
-        );
+        if (!indexBuffer) {
 
-        gl.drawElements(
-            gl.TRIANGLES,
-            6,
-            gl.UNSIGNED_SHORT,
-            0
-        );
+            indexBuffer =
+                gl.createBuffer();
+
+            gl.bindBuffer(
+                gl.ELEMENT_ARRAY_BUFFER,
+                indexBuffer
+            );
+
+            const quadIndexData =
+                prepareQuadIndexData();
+
+            gl.bufferData(
+                gl.ELEMENT_ARRAY_BUFFER,
+                quadIndexData,
+                gl.STATIC_DRAW
+            );
+
+        } else {
+
+            gl.bindBuffer(
+                gl.ELEMENT_ARRAY_BUFFER,
+                indexBuffer
+            );
+
+        }
+
+        if (temperatureVisible) {
+
+            gl.drawElements(
+                gl.TRIANGLES,
+                6,
+                gl.UNSIGNED_SHORT,
+                0
+            );
+
+        }
+
+        if (
+            precipitationVisible &&
+            precipitationDataTexture
+        ) {
+
+            gl.uniform1f(
+                weatherFieldLocation,
+                1.0
+            );
+
+            gl.drawElements(
+                gl.TRIANGLES,
+                6,
+                gl.UNSIGNED_SHORT,
+                0
+            );
+
+        }
+
         console.log(
             "WebGL draw time:",
             (performance.now() - drawStart).toFixed(1),
@@ -825,6 +1167,25 @@ gl.viewport(
 
     return {
         gl: gl,
-        loadForecast: loadWebGLForecast
+        loadForecast: loadWebGLForecast,
+
+        loadPrecipitation:
+            loadWebGLPrecipitation,
+
+        setTemperatureVisible:
+            (visible) => {
+                temperatureVisible =
+                    visible;
+
+                draw();
+            },
+
+        setPrecipitationVisible:
+            (visible) => {
+                precipitationVisible =
+                    visible;
+
+                draw();
+            }
     };
 }
