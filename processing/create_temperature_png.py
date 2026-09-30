@@ -1,4 +1,3 @@
-import json
 import sys
 import numpy as np
 from PIL import Image
@@ -21,11 +20,15 @@ output_file = sys.argv[2]
 # Load GFS temperature data
 # --------------------------------------------------
 
-with open(input_file) as f:
-    data = json.load(f)
+encoded = np.fromfile(
+    input_file,
+    dtype=np.int16
+)
 
-temperatures = np.array(data["temperature"])
-
+temperatures = encoded.reshape(
+    721,
+    1440
+) / 10
 
 # --------------------------------------------------
 # Temperature colour scale
