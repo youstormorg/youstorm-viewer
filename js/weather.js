@@ -181,6 +181,10 @@ export async function loadPrecipitationData() {
     return precipitationData;
 }
 
+export function getPrecipitationMetadata() {
+    return precipitationData;
+}
+
 // Return a colour based on temperature
 function temperatureColour(temp) {
 

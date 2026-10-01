@@ -10,6 +10,7 @@ import {
     getTemperatureModel,
     getTemperatureForecastCount,
     loadPrecipitationData,
+    getPrecipitationMetadata,
     displayTemperature,
     hideTemperature,
     showTemperature,
@@ -65,6 +66,26 @@ async function initialiseApplication() {
                     getTemperatureModel()
                 );
 
+                const forecastIndex =
+                    Number(
+                        document.getElementById(
+                            "forecastSlider"
+                        ).value
+                    );
+
+                const temperatureData =
+                    getTemperatureModel() === "ECMWF"
+                        ? getECMWFMetadata()[forecastIndex]
+                        : getTemperatureMetadata()[forecastIndex];
+
+                document.getElementById(
+                    "forecastControlLabel"
+                ).textContent =
+                    `+${Number(
+                        temperatureData.forecast_hour
+                    )
+                        .toString()
+                        .padStart(3, "0")} h`;
                 }                       
 
                 console.log(
@@ -89,12 +110,34 @@ async function initialiseApplication() {
 
         if (event.target.checked) {
 
-            webgl.loadPrecipitation(
-                3
-            );
+            const forecastIndex =
+                Number(
+                    document.getElementById(
+                        "forecastSlider"
+                    ).value
+                );
 
-        }
+            const precipitationData =
+                findMetadataByValidTime(
+                    getPrecipitationMetadata()
+                );
 
+            if (precipitationData) {
+
+                webgl.loadPrecipitation(
+                    precipitationData.forecast_hour
+                );
+
+                document.getElementById(
+                    "forecastControlLabel"
+                ).textContent =
+                    `+${Number(
+                        precipitationData.forecast_hour
+                    )
+                        .toString()
+                        .padStart(3, "0")} h`;
+            }
+        }    
         webgl.setPrecipitationVisible(
             event.target.checked
         );
@@ -119,6 +162,9 @@ async function initialiseApplication() {
 
 
     await loadTemperatureData();
+
+    currentValidTime =
+        getTemperatureMetadata()[0].valid_time;
 
     console.log(
         "Temperature metadata:",
@@ -190,6 +236,24 @@ function initialiseForecastSlider(map) {
     const forecastIndex =
         Number(slider.value);
 
+    const temperatureData =
+        getTemperatureModel() === "ECMWF"
+            ? getECMWFMetadata()[forecastIndex]
+            : getTemperatureMetadata()[forecastIndex];
+
+    setCurrentValidTime(
+        temperatureData.valid_time
+    );
+
+    document.getElementById(
+        "forecastUTCTime"
+    ).textContent =
+        new Date(
+            currentValidTime
+        ).toISOString()
+            .replace("T", " ")
+            .replace(".000Z", " UTC"); 
+
     if (
         document.getElementById(
             "webglTemperatureToggle"
@@ -253,42 +317,106 @@ if (
 
 if (
     selectedModel === "GFS" &&
-    forecastIndex > 0 &&
     document.getElementById(
         "webglPrecipitationToggle"
     ).checked
 ) {
 
-    const precipitationForecastHour =
-        getTemperatureMetadata()[
-            forecastIndex
-        ].forecast_hour;
+    const precipitationData =
+        findMetadataByValidTime(
+            getPrecipitationMetadata()
+        );
 
-    webgl.loadPrecipitation(
-        precipitationForecastHour
-    );
+    if (precipitationData) {
+
+        webgl.loadPrecipitation(
+            precipitationData.forecast_hour
+        );
+
+        webgl.setPrecipitationVisible(
+            true
+        );
+
+    } else {
+
+        webgl.setPrecipitationVisible(
+            false
+        );
+
+    }
 
 }
 
-            // Update the slider label
-        const forecastHour =
-            getTemperatureModel() === "ECMWF"
-                ? getECMWFMetadata()[forecastIndex].forecast_hour
-                : getTemperatureMetadata()[forecastIndex].forecast_hour;
+    // Update the slider label
+    let displayHour;
 
-        label.textContent =
-            `+${Number(forecastHour)
-                .toString()
-                .padStart(3, "0")} h`;
+        if (
+            document.getElementById(
+                "webglPrecipitationToggle"
+            ).checked &&
+            getTemperatureModel() === "GFS"
+        ) {
+
+            const precipitationData =
+                findMetadataByValidTime(
+                    getPrecipitationMetadata()
+                );
+
+            displayHour =
+                precipitationData
+                    ? precipitationData.forecast_hour
+                    : getTemperatureMetadata()[
+                        forecastIndex
+                    ].forecast_hour;
+
+        } else {
+
+        displayHour =
+            getTemperatureModel() === "ECMWF"
+                ? getECMWFMetadata()[
+                    forecastIndex
+                ].forecast_hour
+                : getTemperatureMetadata()[
+                    forecastIndex
+                ].forecast_hour;
+    }
+
+    label.textContent =
+        `+${Number(displayHour)
+            .toString()
+            .padStart(3, "0")} h`;
 
         }
     );
 
+    slider.dispatchEvent(
+        new Event("input")
+    );
 }
 
 
 initialiseApplication();
 
+let currentValidTime = null;
+
+function setCurrentValidTime(validTime) {
+
+    currentValidTime =
+        validTime;
+
+}
+
+function findMetadataByValidTime(
+    metadata
+) {
+
+    return metadata.find(
+        item =>
+            item.valid_time ===
+            currentValidTime
+    );
+
+}
 
 let selectedModel = "GFS";
 
