@@ -251,6 +251,25 @@ if (
 
 }
 
+if (
+    selectedModel === "GFS" &&
+    forecastIndex > 0 &&
+    document.getElementById(
+        "webglPrecipitationToggle"
+    ).checked
+) {
+
+    const precipitationForecastHour =
+        getTemperatureMetadata()[
+            forecastIndex
+        ].forecast_hour;
+
+    webgl.loadPrecipitation(
+        precipitationForecastHour
+    );
+
+}
+
             // Update the slider label
         const forecastHour =
             getTemperatureModel() === "ECMWF"
