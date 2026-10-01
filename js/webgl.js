@@ -954,12 +954,29 @@ gl.viewport(
             height
         );
 
+        console.log(
+            "WebGL viewport:",
+            width,
+            height
+        );
+
+        console.log(
+            "Canvas:",
+            canvas.width,
+            canvas.height
+        );
+
+        console.log(
+            "Window:",
+            window.innerWidth,
+            window.innerHeight
+        );        
 
         gl.clearColor(
-            1,
-            1,
-            1,
-            0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
         );
 
         gl.clear(
@@ -969,6 +986,7 @@ gl.viewport(
         gl.useProgram(
             program
         );
+
         gl.enable(
             gl.BLEND
         );
