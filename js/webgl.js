@@ -1060,6 +1060,11 @@ gl.viewport(
                 1.0
             );
 
+            gl.uniform1f(
+                worldOffset,
+                -worldWidth
+            );
+
             gl.drawElements(
                 gl.TRIANGLES,
                 6,
@@ -1067,6 +1072,29 @@ gl.viewport(
                 0
             );
 
+            gl.uniform1f(
+                worldOffset,
+                0.0
+            );
+
+            gl.drawElements(
+                gl.TRIANGLES,
+                6,
+                gl.UNSIGNED_SHORT,
+                0
+            );
+
+            gl.uniform1f(
+                worldOffset,
+                worldWidth
+            );
+
+            gl.drawElements(
+                gl.TRIANGLES,
+                6,
+                gl.UNSIGNED_SHORT,
+                0
+            );
         }
 
     }
