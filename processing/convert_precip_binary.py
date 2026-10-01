@@ -28,11 +28,59 @@ output_file = (
 
 ds = xr.open_dataset(
     input_file,
-    engine="cfgrib"
+    engine="cfgrib",
+    backend_kwargs={
+        "read_keys": [
+            "startStep",
+            "endStep"
+        ]
+    }
 )
 
 
 precipitation = ds["tp"].values
+
+
+start_step = int(
+    ds["tp"].attrs["GRIB_startStep"]
+)
+
+end_step = int(
+    ds["tp"].attrs["GRIB_endStep"]
+)
+
+
+if end_step - start_step == 6:
+
+    previous_hour = forecast_hour - 3
+
+    previous_file = (
+        f"data/gfs/"
+        f"gfs_precip_global_f{previous_hour:03d}.grib2"
+    )
+
+    previous_ds = xr.open_dataset(
+        previous_file,
+        engine="cfgrib"
+    )
+
+    previous_precipitation = (
+        previous_ds["tp"].values
+    )
+
+    precipitation = (
+        precipitation -
+        previous_precipitation
+    )
+
+
+print(
+    f"Accumulation: {start_step}-{end_step} h"
+)
+
+print(
+    f"Output field: {forecast_hour - 3}-{forecast_hour} h"
+)
 
 
 precipitation.tofile(
