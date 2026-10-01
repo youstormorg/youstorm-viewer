@@ -586,15 +586,6 @@ function loadWebGLForecast(
 
             }
               
-            const quadVertexData =
-                prepareQuadVertexData();
-
-            console.log(
-                "WebGL quad vertex buffer size:",
-                quadVertexData.byteLength,
-                "bytes"
-            );
-
             const quadIndexData =
                 prepareQuadIndexData();
 
@@ -604,17 +595,7 @@ function loadWebGLForecast(
                 "bytes"
             );           
 
-            gl.bindBuffer(
-                gl.ARRAY_BUFFER,
-                buffer
-            );
-
-            gl.bufferData(
-                gl.ARRAY_BUFFER,
-                quadVertexData,
-                gl.STATIC_DRAW
-            );   
-            
+          
             console.log(
                 "WebGL temperature texture data size:",
                 temperatures.length *
@@ -926,6 +907,19 @@ gl.viewport(
     const buffer =
         gl.createBuffer();
 
+    const quadVertexData =
+        prepareQuadVertexData();
+
+    gl.bindBuffer(
+        gl.ARRAY_BUFFER,
+        buffer
+    );
+
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        quadVertexData,
+        gl.STATIC_DRAW
+    );        
 
     function draw() {
 
