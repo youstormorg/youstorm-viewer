@@ -3,8 +3,9 @@ let map;
 export function initialiseMap() {
 
     map = L.map("map", {
-        zoomControl: false
-    }).setView([20, 0], 2);
+        zoomControl: false,
+        minZoom: 2
+    }).setView([20,0],2);
 
     L.control.zoom({
         position: "topright"
