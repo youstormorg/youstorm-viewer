@@ -443,54 +443,6 @@ function loadWebGLPrecipitation(
                 gl.TEXTURE0
             );
 
-            console.log(
-                "WebGL precipitation texture uploaded:",
-                1440,
-                "×",
-                721
-            );
-
-            console.log(
-                "WebGL precipitation loaded:",
-                precipitation
-            );
-
-            console.log(
-                "WebGL precipitation values:",
-                precipitation.length
-            );
-
-            console.log(
-                "WebGL precipitation first value:",
-                precipitation[0]
-            );
-
-            let precipitationMaximum =
-                0;
-
-            for (
-                let i = 0;
-                i < precipitation.length;
-                i++
-            ) {
-
-                if (
-                    precipitation[i] >
-                    precipitationMaximum
-                ) {
-
-                    precipitationMaximum =
-                        precipitation[i];
-
-                }
-
-            }
-
-            console.log(
-                "WebGL precipitation maximum:",
-                precipitationMaximum
-            );
-
             draw();
         });
 
@@ -549,20 +501,6 @@ function loadWebGLForecast(
     })
     .then(data => {
 
-            console.log(
-                "WebGL forecast loaded:",
-                data
-            );
-
-            if (model === "ECMWF") {
-
-                console.log(
-                    "ECMWF binary values:",
-                    new Int16Array(data).length
-                );
-
-            }
-
             const encoded =
                 new Int16Array(data);
 
@@ -588,22 +526,7 @@ function loadWebGLForecast(
               
             const quadIndexData =
                 prepareQuadIndexData();
-
-            console.log(
-                "WebGL quad index buffer size:",
-                quadIndexData.byteLength,
-                "bytes"
-            );           
-
           
-            console.log(
-                "WebGL temperature texture data size:",
-                temperatures.length *
-                temperatures[0].length *
-                3,
-                "bytes"
-            );            
-
             indexBuffer =
                 gl.createBuffer();
 
@@ -633,9 +556,6 @@ function loadWebGLForecast(
                 temperatureDataTexture
             );
 
-            const dataTextureUploadStart =
-                performance.now();
-
             gl.texImage2D(
                 gl.TEXTURE_2D,
                 0,
@@ -648,12 +568,6 @@ function loadWebGLForecast(
                 new Float32Array(
                     temperatures.flat()
                 )
-            );
-
-            console.log(
-                "Numerical texture upload time:",
-                (performance.now() - dataTextureUploadStart).toFixed(1),
-                "ms"
             );
 
             gl.texParameteri(
@@ -683,26 +597,6 @@ function loadWebGLForecast(
             gl.activeTexture(
                 gl.TEXTURE0
             );            
-
-            console.log(
-                "Temperature texture uploaded:",
-                temperatures[0].length,
-                "×",
-                temperatures.length
-            );
-
-
-            console.log(
-                "WebGL forecast first temperature:",
-                temperatures[0][0]
-            );
-            console.log(
-                "WebGL grid:",
-                temperatures.length,
-                "rows ×",
-                temperatures[0].length,
-                "columns"
-            );
 
             draw();
         });
@@ -822,11 +716,6 @@ gl.viewport(
             "weatherField"
         );   
         
-    console.log(
-        "weatherField uniform location:",
-        weatherFieldLocation
-    );        
-
     const flipLatitudeLocation =
         gl.getUniformLocation(
             program,
@@ -930,12 +819,6 @@ gl.viewport(
             return;
         }
 
-        console.log(
-            "WebGL draw triggered"
-        );
-        const drawStart =
-            performance.now();
-
         const width =
             canvas.clientWidth;
 
@@ -946,31 +829,12 @@ gl.viewport(
         canvas.width = width;
         canvas.height = height;
 
-
         gl.viewport(
             0,
             0,
             width,
             height
         );
-
-        console.log(
-            "WebGL viewport:",
-            width,
-            height
-        );
-
-        console.log(
-            "Canvas:",
-            canvas.width,
-            canvas.height
-        );
-
-        console.log(
-            "Window:",
-            window.innerWidth,
-            window.innerHeight
-        );        
 
         gl.clearColor(
             0.0,
@@ -1159,12 +1023,6 @@ gl.viewport(
             );
 
         }
-
-        console.log(
-            "WebGL draw time:",
-            (performance.now() - drawStart).toFixed(1),
-            "ms"
-        );        
 
     }
 
