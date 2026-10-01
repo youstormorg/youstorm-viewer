@@ -4,7 +4,11 @@ export function initialiseMap() {
 
     map = L.map("map", {
         zoomControl: false,
-        minZoom: 2
+        minZoom: 2,
+        maxBounds: [
+            [-85, -540],
+            [85, 540]
+        ]
     }).setView([20,0],2);
 
     L.control.zoom({

@@ -6,6 +6,7 @@ const vertexShaderSource = `
 
     uniform vec2 mapOrigin;
     uniform vec2 mapScale;
+    uniform float worldOffset;
 
     void main() {
 
@@ -38,6 +39,9 @@ const vertexShaderSource = `
             projectedPosition *
             mapScale +
             mapOrigin;
+
+        screenPosition.x +=
+            worldOffset;
 
         vMercatorY =
             mercatorY;
@@ -698,6 +702,12 @@ gl.viewport(
             "mapScale"
         );
 
+    const worldOffset =
+        gl.getUniformLocation(
+            program,
+            "worldOffset"
+        );
+
     const temperatureDataTextureLocation =
         gl.getUniformLocation(
             program,
@@ -928,6 +938,9 @@ gl.viewport(
                 width
             ) * 2 * 180;
 
+        const worldWidth =
+            mapScaleX * 2;
+
         const mapScaleY =
             -(
                 (projectedLatitude.y -
@@ -947,6 +960,10 @@ gl.viewport(
             mapScaleY
         );
 
+        gl.uniform1f(
+            worldOffset,
+            0.0
+        );
  
         gl.bindBuffer(
             gl.ARRAY_BUFFER,
@@ -996,6 +1013,11 @@ gl.viewport(
 
         if (temperatureVisible) {
 
+            gl.uniform1f(
+                worldOffset,
+                -worldWidth
+            );
+
             gl.drawElements(
                 gl.TRIANGLES,
                 6,
@@ -1003,6 +1025,29 @@ gl.viewport(
                 0
             );
 
+            gl.uniform1f(
+                worldOffset,
+                0.0
+            );
+
+            gl.drawElements(
+                gl.TRIANGLES,
+                6,
+                gl.UNSIGNED_SHORT,
+                0
+            );
+
+            gl.uniform1f(
+                worldOffset,
+                worldWidth
+            );
+
+            gl.drawElements(
+                gl.TRIANGLES,
+                6,
+                gl.UNSIGNED_SHORT,
+                0
+            );
         }
 
         if (
