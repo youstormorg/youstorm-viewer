@@ -10,8 +10,6 @@ from pathlib import Path
 
 stage_times = {}
 
-gdal_timings = None
-
 def run_timed_stage(name, command):
 
     print()
@@ -77,18 +75,6 @@ def get_local_ecmwf_cycle():
         initialisation[8:10],
         initialisation[11:13]
     )
-
-def get_gdal_timings():
-
-    json_file = Path(
-        "processing/.gdal_timing.json"
-    )
-
-    if not json_file.exists():
-        return None
-
-    with open(json_file) as f:
-        return json.load(f)
 
 if __name__ == "__main__":
 
@@ -190,33 +176,6 @@ if gfs_needs_update:
     print()
     print("GFS conversion complete")
 
-    run_timed_stage(
-        "Temperature PNG creation",
-        ["python", "processing/create_all_temperature_pngs.py"]
-    )
-
-    print()
-    print("Temperature PNG creation complete")
-
-    run_timed_stage(
-        "Precipitation PNG creation",
-        ["python", "processing/create_all_precipitation_pngs.py"]
-    )
-
-    print()
-    print("Precipitation PNG creation complete")
-
-    run_timed_stage(
-        "GFS map tile processing",
-        ["python", "processing/process_all_gdal.py"]
-    )
-
-    gdal_timings = get_gdal_timings()
-
-    print()
-    print("GFS map tile processing complete")
-
-
 if ecmwf_needs_update:
 
     print()
@@ -238,14 +197,6 @@ if ecmwf_needs_update:
 
     print()
     print("ECMWF conversion complete")
-
-    run_timed_stage(
-        "ECMWF map tile processing",
-        ["python", "processing/process_all_ecmwf.py"]
-    )
-
-    print()
-    print("ECMWF map tile processing complete")
 
     run_timed_stage(
         "ECMWF metadata creation",
@@ -340,12 +291,8 @@ print("----------------------------")
 stage_order = [
     "GFS download",
     "GFS conversion",
-    "Temperature PNG creation",
-    "Precipitation PNG creation",
-    "GFS map tile processing",
     "ECMWF download",
     "ECMWF conversion",
-    "ECMWF map tile processing",
     "ECMWF metadata creation",
     "Git add",
     "Git commit",
@@ -369,20 +316,6 @@ for stage in stage_order:
         )
 
 print("----------------------------")
-
-if gdal_timings:
-
-    print(
-        f"Temperature tile processing: "
-        f"{gdal_timings['temperature'] / 60:.2f} minutes"
-    )
-
-    print(
-        f"Precipitation tile processing: "
-        f"{gdal_timings['precipitation'] / 60:.2f} minutes"
-    )
-
-    print("----------------------------")
 
 print(
     f"Total update time: "

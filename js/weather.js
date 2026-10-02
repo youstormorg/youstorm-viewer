@@ -1,7 +1,5 @@
 let weatherData = null;
 let precipitationData = null;
-let temperatureImageLayer = null;
-let precipitationImageLayer = null;
 let ecmwfMetadata = null;
 let selectedTemperatureModel = "GFS";
 export function setTemperatureModel(model) {
@@ -200,15 +198,6 @@ function temperatureColour(temp) {
     return "#990000";
 }
 
-
-// Display a particular forecast
-export function displayTemperature(map, forecastIndex = 0) {
-
-    // Temperature is now rendered by WebGL.
-
-}
-
-
 // Update the forecast information in the footer
 export function updateForecastDisplay(data) {
 
@@ -331,67 +320,6 @@ export function getForecastCount() {
     return weatherData
         ? weatherData.length
         : 0;
-
-}
-
-export function displayPrecipitation(map, forecastIndex = 0) {
-
-    // Precipitation is now rendered by WebGL.
-
-}
-
-export function hidePrecipitation(map) {
-
-    if (precipitationImageLayer) {
-
-        map.removeLayer(
-            precipitationImageLayer
-        );
-
-    }
-
-}
-
-export function hideTemperature(map) {
-
-    if (temperatureImageLayer) {
-
-        map.removeLayer(
-            temperatureImageLayer
-        );
-
-    }
-
-}
-
-export function showTemperature(map) {
-
-    if (temperatureImageLayer) {
-
-        temperatureImageLayer.addTo(
-            map
-        );
-
-    }
-
-}
-
-export function showPrecipitation(map) {
-
-    if (precipitationImageLayer) {
-
-        precipitationImageLayer.addTo(
-            map
-        );
-
-    } else {
-
-        displayPrecipitation(
-            map,
-            0
-        );
-
-    }
 
 }
 

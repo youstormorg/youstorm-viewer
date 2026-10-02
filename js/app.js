@@ -11,12 +11,6 @@ import {
     getTemperatureForecastCount,
     loadPrecipitationData,
     getPrecipitationMetadata,
-    displayTemperature,
-    hideTemperature,
-    showTemperature,
-    displayPrecipitation,
-    hidePrecipitation,
-    showPrecipitation,
     createPrecipitationLegend,
     getForecastCount,
     updateForecastDisplay,
@@ -177,23 +171,15 @@ async function initialiseApplication() {
     document.getElementById(
         "precipitationLegend"
     ).style.display = "none";
-    // Display the first forecast
-    displayTemperature(
-        map,
-        0
-    );
-
    
     // Set up the forecast slider
     initialiseForecastSlider(map);
-
 
     console.log(
         "YouStorm started"
     );
 
 }
-
 
 function initialiseForecastSlider(map) {
 
@@ -280,40 +266,6 @@ function initialiseForecastSlider(map) {
         document.getElementById(
             "temperatureToggle"
         );
-
-    if (temperatureToggle.checked) {
-
-        displayTemperature(
-            map,
-            forecastIndex
-        );
-
-    }
-
-
-   const precipitationToggle =
-    document.getElementById(
-        "precipitationToggle"
-    );
-
-if (
-    selectedModel === "GFS" &&
-    forecastIndex > 0 &&
-    precipitationToggle.checked
-) {
-
-    displayPrecipitation(
-        map,
-        forecastIndex - 1
-    );
-
-} else {
-
-    hidePrecipitation(
-        map
-    );
-
-}
 
 if (
     selectedModel === "GFS" &&
@@ -485,27 +437,6 @@ document.getElementById(
         .toString()
         .padStart(3, "0")} h`;
 
-
-if (model === "ECMWF") {
-
-    displayTemperature(
-        map,
-        0
-    );
-    hidePrecipitation(
-        map
-    );
-}
-
-
-if (model === "GFS") {
-
-    displayTemperature(
-        map,
-        0
-    );
-
-}
     });
 
 });
