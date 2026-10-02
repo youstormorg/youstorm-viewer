@@ -204,98 +204,7 @@ function temperatureColour(temp) {
 // Display a particular forecast
 export function displayTemperature(map, forecastIndex = 0) {
 
-    const temperatureMetadata =
-        selectedTemperatureModel === "ECMWF"
-            ? ecmwfMetadata
-            : weatherData;
-
-    if (
-        !temperatureMetadata ||
-        temperatureMetadata.length === 0
-    ) {
-
-        console.error(
-            "Temperature metadata has not been loaded"
-        );
-
-        return;
-
-    }
-
-
-    
-    let data;
-let forecastHour;
-let tileFolder;
-
-if (selectedTemperatureModel === "ECMWF") {
-
-    data =
-        ecmwfMetadata[forecastIndex];
-
-    forecastHour =
-        Number(data.forecast_hour);
-
-    tileFolder =
-        `ecmwf_temperature_tiles_f${forecastHour
-            .toString()
-            .padStart(3, "0")}_auto`;
-
-} else {
-
-    data =
-        weatherData[forecastIndex];
-
-    forecastHour =
-        Number(data.forecast_hour);
-
-    tileFolder =
-        `temperature_tiles_f${forecastHour
-            .toString()
-            .padStart(3, "0")}_auto`;
-
-}
-
-const temperaturePath =
-    selectedTemperatureModel === "ECMWF"
-        ? "./data/ecmwf"
-        : "./data/gfs";
-
-const newTemperatureLayer =
-    L.tileLayer(
-        `${temperaturePath}/${tileFolder}/{z}/{x}/{y}.png`,
-        {
-            minZoom: 2,
-            maxZoom: 13,
-            maxNativeZoom: 4,
-            opacity: 0.65,
-            tileSize: 256,
-            interactive: false
-        }
-    );
-
-   newTemperatureLayer.addTo(map);
-
-const oldTemperatureLayer = temperatureImageLayer;
-
-temperatureImageLayer = newTemperatureLayer;
-
-setTimeout(() => {
-
-    if (oldTemperatureLayer) {
-        map.removeLayer(oldTemperatureLayer);
-    }
-
-}, 1000);
-
-    updateForecastDisplay(data);
-
-
-    console.log(
-        `Temperature layer displayed: +${data.forecast_hour
-            .toString()
-            .padStart(3, "0")} h`
-    );
+    // Temperature is now rendered by WebGL.
 
 }
 
@@ -427,61 +336,8 @@ export function getForecastCount() {
 
 export function displayPrecipitation(map, forecastIndex = 0) {
 
-    if (!precipitationData || precipitationData.length === 0) {
+    // Precipitation is now rendered by WebGL.
 
-        console.error(
-            "Precipitation data has not been loaded"
-        );
-
-        return;
-
-    }
-
-    const data =
-        precipitationData[forecastIndex];
-
-    const forecastHour =
-        Number(data.forecast_hour);
-
-    const tileFolder =
-        `precipitation_tiles_f${forecastHour
-            .toString()
-            .padStart(3, "0")}_auto`;
-
-    const newPrecipitationLayer =
-        L.tileLayer(
-            `./data/gfs/${tileFolder}/{z}/{x}/{y}.png`,
-            {
-                minZoom: 2,
-                maxZoom: 13,
-                maxNativeZoom: 4,
-                opacity: 0.65,
-                tileSize: 256,
-                interactive: false
-            }
-        );
-
-    newPrecipitationLayer.addTo(map);
-
-    const oldPrecipitationLayer =
-        precipitationImageLayer;
-
-    precipitationImageLayer =
-        newPrecipitationLayer;
-
-    setTimeout(() => {
-
-        if (oldPrecipitationLayer) {
-            map.removeLayer(oldPrecipitationLayer);
-        }
-
-    }, 1000);
-
-    console.log(
-        `Precipitation layer displayed: +${data.forecast_hour
-            .toString()
-            .padStart(3, "0")} h`
-    );
 }
 
 export function hidePrecipitation(map) {
