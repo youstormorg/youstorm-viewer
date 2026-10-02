@@ -81,7 +81,7 @@ async function initialiseApplication() {
                 document.getElementById(
                     "forecastControlLabel"
                 ).textContent =
-                    `+${Number(
+                    `${Number(
                         temperatureData.forecast_hour
                     )
                         .toString()
@@ -131,7 +131,7 @@ async function initialiseApplication() {
                 document.getElementById(
                     "forecastControlLabel"
                 ).textContent =
-                    `+${Number(
+                    `${Number(
                         precipitationData.forecast_hour
                     )
                         .toString()
@@ -252,7 +252,7 @@ function initialiseForecastSlider(map) {
             currentValidTime
         ).toISOString()
             .replace("T", " ")
-            .replace(".000Z", " UTC"); 
+            .replace(":00:00.000Z", " UTC"); 
 
     if (
         document.getElementById(
@@ -382,7 +382,7 @@ if (
     }
 
     label.textContent =
-        `+${Number(displayHour)
+        `${Number(displayHour)
             .toString()
             .padStart(3, "0")} h`;
 
@@ -481,7 +481,7 @@ const firstForecastHour =
 document.getElementById(
     "forecastControlLabel"
 ).textContent =
-    `+${Number(firstForecastHour)
+    `${Number(firstForecastHour)
         .toString()
         .padStart(3, "0")} h`;
 
