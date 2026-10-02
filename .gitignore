@@ -23,17 +23,14 @@ data/gfs/*_webmercator*.tif
 data/gfs/temperature_wgs84*.tif
 data/gfs/temperature_webmercator*.tif
 
-# Generated temperature PNGs
-data/gfs/temperature_f*.png
+# Obsolete generated weather imagery
+data/gfs/**/*.png
+data/gfs/**/*_tiles_*/
+data/gfs/**/*_tiles_*/**/*
 
-# Temporary/test imagery
-data/gfs/temperature_test*.png
-data/gfs/temperature_tiles_test/
-data/gfs/test_tiles_auto/
+# Obsolete generated weather imagery
+data/gfs/**/*.png
 
-# GDAL-generated tile metadata
-data/gfs/temperature_tiles_*/openlayers.html
-data/gfs/temperature_tiles_*/stacta.json
 # Python cache
 __pycache__/
 # ECMWF source data
