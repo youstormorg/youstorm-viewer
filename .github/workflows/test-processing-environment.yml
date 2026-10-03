@@ -62,3 +62,11 @@ jobs:
           cp /tmp/gfs_precip_f006.grib2 data/gfs/gfs_precip_global_f006.grib2
           python processing/convert_precip_binary.py 6
           ls -lh data/gfs/gfs_precip_global_f006.bin
+
+      - name: Test ECMWF temperature download and conversion
+        run: |
+          python processing/download_ecmwf.py
+          ls -lh data/ecmwf/ecmwf_2t_f000.grib2
+          python -c "import xarray as xr; ds = xr.open_dataset('data/ecmwf/ecmwf_2t_f000.grib2', engine='cfgrib'); print('Dimensions:', dict(ds.sizes)); print('Variables:', list(ds.data_vars)); print('t2m shape:', ds['t2m'].shape); print('t2m min:', float(ds['t2m'].min())); print('t2m max:', float(ds['t2m'].max()))"
+          python processing/convert_ecmwf.py 0
+          ls -lh data/ecmwf/ecmwf_2t_f000.bin
