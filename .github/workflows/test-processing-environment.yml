@@ -1,0 +1,37 @@
+name: Test Processing Environment
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install processing packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install xarray==2026.7.0
+          pip install cfgrib==0.9.15.1
+          pip install eccodes==2.48.0
+          pip install ecmwf-opendata==0.3.34
+          pip install requests==2.34.2
+
+      - name: Test imports
+        run: |
+          python -c "import xarray; print('xarray', xarray.__version__)"
+          python -c "import cfgrib; print('cfgrib', cfgrib.__version__)"
+          python -c "import eccodes; print('eccodes', eccodes.__version__)"
+          python -c "import ecmwf.opendata; print('ecmwf-opendata imported')"
+          python -c "import requests; print('requests', requests.__version__)"
