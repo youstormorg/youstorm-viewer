@@ -210,22 +210,6 @@ if ecmwf_needs_update:
     print()
     print("ECMWF metadata creation complete")
 
-
-print()
-print("Checking Git status...")
-
-result = subprocess.run(
-    ["git", "status", "--porcelain"],
-    capture_output=True,
-    text=True,
-    check=True
-)
-
-if result.stdout.strip():
-    print("Git working tree contains changes.")
-else:
-    print("Git working tree is clean.")
-
 total_elapsed = time.perf_counter() - total_start_time
 
 print()
