@@ -43,3 +43,7 @@ jobs:
       - name: Test GFS cycle discovery
         run: |
           python -c "from processing.download_gfs import find_latest_cycle; date, cycle = find_latest_cycle(); print(f'Latest GFS cycle: {date} {cycle}Z')"
+
+      - name: Test GFS GRIB download and reading
+        run: |
+          python -c "import requests; import xarray as xr; from processing.download_gfs import find_latest_cycle; date, cycle = find_latest_cycle(); filename = f'gfs.t{cycle}z.pgrb2.0p25.f000'; params = {'file': filename, 'var_TMP': 'on', 'lev_2_m_above_ground': 'on', 'subregion': '', 'leftlon': 0, 'rightlon': 359.75, 'toplat': 90, 'bottomlat': -90, 'dir': f'/gfs.{date}/{cycle}/atmos'}; url = 'https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl'; response = requests.get(url, params=params, timeout=120); response.raise_for_status(); open('/tmp/gfs_test.grib2', 'wb').write(response.content); print('Downloaded bytes:', len(response.content)); ds = xr.open_dataset('/tmp/gfs_test.grib2', engine='cfgrib'); print('Dimensions:', dict(ds.sizes)); print('Variables:', list(ds.data_vars)); print('t2m shape:', ds['t2m'].shape); print('t2m min:', float(ds['t2m'].min())); print('t2m max:', float(ds['t2m'].max()))"
