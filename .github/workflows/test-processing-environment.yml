@@ -35,3 +35,7 @@ jobs:
           python -c "import eccodes; print('eccodes', eccodes.__version__)"
           python -c "import ecmwf.opendata; print('ecmwf-opendata imported')"
           python -c "import requests; print('requests', requests.__version__)"
+
+      - name: Test ecCodes
+        run: |
+          python -c "from eccodes import codes_grib_new_from_samples, codes_release; gid = codes_grib_new_from_samples('GRIB2'); print('ecCodes GRIB2 sample created successfully'); codes_release(gid)"
