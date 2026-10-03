@@ -54,3 +54,11 @@ jobs:
           cp /tmp/gfs_test.grib2 data/gfs/gfs_temp_global_f000.grib2
           python processing/convert_gfs.py 0
           ls -lh data/gfs/gfs_temp_global_f000.bin
+
+      - name: Test GFS precipitation conversion
+        run: |
+          python -c "import requests; from processing.download_gfs import find_latest_cycle; date, cycle = find_latest_cycle(); url = 'https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl'; base = {'var_APCP': 'on', 'lev_surface': 'on', 'subregion': '', 'leftlon': 0, 'rightlon': 359.75, 'toplat': 90, 'bottomlat': -90, 'dir': f'/gfs.{date}/{cycle}/atmos'}; [((r := requests.get(url, params={**base, 'file': f'gfs.t{cycle}z.pgrb2.0p25.f{hour:03d}'}, timeout=120)).raise_for_status(), open(f'/tmp/gfs_precip_f{hour:03d}.grib2', 'wb').write(r.content)) for hour in (3, 6)]; print('Downloaded precipitation test files')"
+          cp /tmp/gfs_precip_f003.grib2 data/gfs/gfs_precip_global_f003.grib2
+          cp /tmp/gfs_precip_f006.grib2 data/gfs/gfs_precip_global_f006.grib2
+          python processing/convert_precip_binary.py 6
+          ls -lh data/gfs/gfs_precip_global_f006.bin
