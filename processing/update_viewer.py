@@ -226,61 +226,6 @@ if result.stdout.strip():
 else:
     print("Git working tree is clean.")
 
-print()
-print("Adding viewer files to Git...")
-
-run_timed_stage(
-    "Git add",
-    [
-        "git", "add", "-A",
-        "data/gfs",
-        "data/ecmwf",
-        "processing/update_viewer.py",
-        "processing/download_gfs.py",
-        "processing/download_ecmwf.py"
-    ]
-)
-
-print("Viewer files added to Git")
-
-print()
-print("Checking for changes to commit...")
-
-result = subprocess.run(
-    ["git", "status", "--porcelain"],
-    capture_output=True,
-    text=True,
-    check=True
-)
-
-if result.stdout.strip():
-
-    print("Changes detected.")
-
-    print()
-    print("Committing GFS update...")
-
-    run_timed_stage(
-        "Git commit",
-        ["git", "commit", "-m", "Update GFS forecast"]
-    )
-
-    print()
-    print("Pushing GFS update to GitHub...")
-
-    run_timed_stage(
-        "Git push",
-        ["git", "push"]
-    )
-
-    print()
-    print("GFS update pushed to GitHub")
-
-else:
-
-    print("No changes detected.")
-    print("Nothing to commit or push.")
-
 total_elapsed = time.perf_counter() - total_start_time
 
 print()
@@ -298,9 +243,6 @@ stage_order = [
     "ECMWF download",
     "ECMWF conversion",
     "ECMWF metadata creation",
-    "Git add",
-    "Git commit",
-    "Git push"
 ]
 
 for stage in stage_order:
