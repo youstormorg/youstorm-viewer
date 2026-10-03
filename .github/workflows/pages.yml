@@ -3,7 +3,7 @@ name: Deploy YouStorm to GitHub Pages
 on:
   push:
     branches:
-      - test-pages-actions
+      - master
 
 permissions:
   contents: read
