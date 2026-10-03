@@ -1,12 +1,11 @@
-import subprocess
-import re
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-
-gdalinfo = (
-    r"C:\Users\youstorm\AppData\Local\Programs\OSGeo4W\bin"
-    r"\gdalinfo.exe"
+from eccodes import (
+    codes_grib_new_from_file,
+    codes_get,
+    codes_release,
 )
 
 
@@ -31,48 +30,56 @@ for forecast_hour in forecast_hours:
         f"Reading ECMWF +{hour} h"
     )
 
-    result = subprocess.run(
-        [
-            gdalinfo,
-            str(input_file)
-        ],
-        capture_output=True,
-        text=True,
-        check=True
-    )
+    with open(input_file, "rb") as f:
 
-    output = result.stdout
+        gid = codes_grib_new_from_file(f)
 
-    ref_time = re.search(
-        r"REF_TIME=(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)",
-        output
-    )
+        if gid is None:
+            raise RuntimeError(
+                f"Could not read GRIB metadata from {input_file}"
+            )
 
-    forecast_seconds = re.search(
-        r"GRIB_FORECAST_SECONDS=(\d+)",
-        output
-    )
-
-    if not ref_time or not forecast_seconds:
-        raise RuntimeError(
-            f"Could not read metadata from {input_file}"
+        data_date = codes_get(
+            gid,
+            "dataDate"
         )
 
-    valid_time = (
-        ref_time.group(1)
-    )
+        data_time = codes_get(
+            gid,
+            "dataTime"
+        )
 
-    # Add forecast duration to initialisation time
-    from datetime import datetime, timedelta
+        forecast_step = codes_get(
+            gid,
+            "step"
+        )
 
-    initialisation = datetime.fromisoformat(
-        ref_time.group(1).replace("Z", "+00:00")
+        step_units = codes_get(
+            gid,
+            "stepUnits"
+        )
+
+        codes_release(gid)
+
+    if step_units != 1:
+        raise RuntimeError(
+            f"Unexpected ECMWF step units for {input_file}: "
+            f"{step_units}"
+        )
+
+    initialisation = datetime(
+        data_date // 10000,
+        (data_date // 100) % 100,
+        data_date % 100,
+        data_time // 100,
+        data_time % 100,
+        tzinfo=timezone.utc
     )
 
     valid = (
         initialisation
         + timedelta(
-            seconds=int(forecast_seconds.group(1))
+            hours=forecast_step
         )
     )
 
@@ -82,7 +89,9 @@ for forecast_hour in forecast_hours:
             "variable": "temperature_2m",
             "forecast_hour": forecast_hour,
             "initialisation":
-                ref_time.group(1),
+                initialisation.strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ),
             "valid_time":
                 valid.strftime(
                     "%Y-%m-%dT%H:%M:%SZ"
