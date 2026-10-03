@@ -39,12 +39,35 @@ for forecast_hour in precipitation_hours:
     subprocess.run(
         [
             "python",
-            "processing/convert_precip.py",
+            "processing/convert_precip_binary.py",
             str(forecast_hour)
         ],
         check=True
     )
 
+precipitation_metadata = []
+
+for forecast_hour in precipitation_hours:
+
+    input_file = (
+        Path("data/gfs")
+        / f"gfs_precip_global_f{forecast_hour:03d}.grib2"
+    )
+
+    with xr.open_dataset(
+        input_file,
+        engine="cfgrib"
+    ) as ds:
+
+        precipitation_metadata.append(
+            {
+                "forecast_hour": forecast_hour,
+                "initialisation":
+                    str(ds["time"].values)[:19] + "Z",
+                "valid_time":
+                    str(ds["valid_time"].values)[:19] + "Z"
+            }
+        )
 
 print()
 print("Creating GFS metadata")
@@ -87,32 +110,6 @@ temperature_metadata_file.write_text(
     encoding="utf-8"
 )
 
-
-precipitation_metadata = []
-
-for forecast_hour in precipitation_hours:
-
-    input_file = (
-        Path("data/gfs")
-        / f"gfs_precip_global_f{forecast_hour:03d}.json"
-    )
-
-    with input_file.open(
-        "r",
-        encoding="utf-8"
-    ) as f:
-
-        data = json.load(f)
-
-    precipitation_metadata.append(
-        {
-            "forecast_hour": data["forecast_hour"],
-            "initialisation": data["initialisation"],
-            "valid_time": data["valid_time"]
-        }
-    )
-
-
 precipitation_metadata_file = (
     Path("data/gfs")
     / "gfs_precipitation_metadata.json"
@@ -125,7 +122,6 @@ precipitation_metadata_file.write_text(
     ),
     encoding="utf-8"
 )
-
 
 print()
 print(
