@@ -5,6 +5,8 @@ import subprocess
 import json
 import time
 
+force_update = "--force" in sys.argv
+
 from pathlib import Path
 
 
@@ -128,12 +130,14 @@ if __name__ == "__main__":
     )
 
     gfs_needs_update = (
-    local_cycle != (latest_date, latest_cycle)
-)
+        force_update
+        or local_cycle != (latest_date, latest_cycle)
+    )
 
-ecmwf_needs_update = (
-    local_ecmwf_cycle != latest_ecmwf_cycle
-)
+    ecmwf_needs_update = (
+        force_update
+        or local_ecmwf_cycle != latest_ecmwf_cycle
+    )
 
 print()
 
