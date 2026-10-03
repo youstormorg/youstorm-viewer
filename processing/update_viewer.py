@@ -86,58 +86,67 @@ if __name__ == "__main__":
     print("============================")
 
 
-    print()
-    print("Checking for a new GFS cycle...")
+    if force_update:
 
-    from download_gfs import find_latest_cycle
+        print()
+        print("Force update requested.")
+        print("Skipping local forecast cycle checks.")
 
-    latest_date, latest_cycle = find_latest_cycle()
+        gfs_needs_update = True
+        ecmwf_needs_update = True
 
-    local_cycle = get_local_gfs_cycle()
+    else:
 
-    from download_ecmwf import get_latest_ecmwf_cycle
+        print()
+        print("Checking for a new GFS cycle...")
 
-    latest_ecmwf_datetime = get_latest_ecmwf_cycle()
+        from download_gfs import find_latest_cycle
 
-    latest_ecmwf_cycle = (
-        latest_ecmwf_datetime.strftime("%Y%m%d"),
-        latest_ecmwf_datetime.strftime("%H")
-    )
+        latest_date, latest_cycle = find_latest_cycle()
 
-    local_ecmwf_cycle = get_local_ecmwf_cycle()
+        local_cycle = get_local_gfs_cycle()
 
-    print(
-        f"Latest available: {latest_date} {latest_cycle}Z"
-    )
+        from download_ecmwf import get_latest_ecmwf_cycle
 
-    print(
-        f"Local GFS cycle:  "
-        f"{local_cycle[0]} {local_cycle[1]}Z"
-        if local_cycle
-        else "Local GFS cycle: none"
-    )
+        latest_ecmwf_datetime = get_latest_ecmwf_cycle()
 
-    print(
-        f"Latest ECMWF cycle: "
-        f"{latest_ecmwf_cycle}"
-    )
+        latest_ecmwf_cycle = (
+            latest_ecmwf_datetime.strftime("%Y%m%d"),
+            latest_ecmwf_datetime.strftime("%H")
+        )
 
-    print(
-        f"Local ECMWF cycle:  "
-        f"{local_ecmwf_cycle[0]} {local_ecmwf_cycle[1]}Z"
-        if local_ecmwf_cycle
-        else "Local ECMWF cycle: none"
-    )
+        local_ecmwf_cycle = get_local_ecmwf_cycle()
 
-    gfs_needs_update = (
-        force_update
-        or local_cycle != (latest_date, latest_cycle)
-    )
+        print(
+            f"Latest available: {latest_date} {latest_cycle}Z"
+        )
 
-    ecmwf_needs_update = (
-        force_update
-        or local_ecmwf_cycle != latest_ecmwf_cycle
-    )
+        print(
+            f"Local GFS cycle:  "
+            f"{local_cycle[0]} {local_cycle[1]}Z"
+            if local_cycle
+            else "Local GFS cycle: none"
+        )
+
+        print(
+            f"Latest ECMWF cycle: "
+            f"{latest_ecmwf_cycle}"
+        )
+
+        print(
+            f"Local ECMWF cycle:  "
+            f"{local_ecmwf_cycle[0]} {local_ecmwf_cycle[1]}Z"
+            if local_ecmwf_cycle
+            else "Local ECMWF cycle: none"
+        )
+
+        gfs_needs_update = (
+            local_cycle != (latest_date, latest_cycle)
+        )
+
+        ecmwf_needs_update = (
+            local_ecmwf_cycle != latest_ecmwf_cycle
+        )
 
 print()
 
