@@ -33,6 +33,37 @@ jobs:
           python processing/download_ecmwf.py
           ls -lh data/ecmwf/*.grib2
 
+      - name: Test ECMWF GRIB metadata with ecCodes
+        run: |
+          python - <<'PY'
+          from eccodes import (
+              codes_grib_new_from_file,
+              codes_get,
+              codes_release,
+          )
+
+          for hour in (0, 24, 72, 144):
+              filename = f"data/ecmwf/ecmwf_2t_f{hour:03d}.grib2"
+
+              with open(filename, "rb") as f:
+                  gid = codes_grib_new_from_file(f)
+
+                  data_date = codes_get(gid, "dataDate")
+                  data_time = codes_get(gid, "dataTime")
+                  step = codes_get(gid, "step")
+                  step_units = codes_get(gid, "stepUnits")
+
+                  print(
+                      f"f{hour:03d}: "
+                      f"dataDate={data_date}, "
+                      f"dataTime={data_time}, "
+                      f"step={step}, "
+                      f"stepUnits={step_units}"
+                  )
+
+                  codes_release(gid)
+          PY
+
       - name: Test ECMWF metadata generation
         run: |
           python processing/create_ecmwf_metadata.py
