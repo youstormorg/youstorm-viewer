@@ -70,3 +70,8 @@ jobs:
           python -c "import xarray as xr; ds = xr.open_dataset('data/ecmwf/ecmwf_2t_f000.grib2', engine='cfgrib'); print('Dimensions:', dict(ds.sizes)); print('Variables:', list(ds.data_vars)); print('t2m shape:', ds['t2m'].shape); print('t2m min:', float(ds['t2m'].min())); print('t2m max:', float(ds['t2m'].max()))"
           python processing/convert_ecmwf.py 0
           ls -lh data/ecmwf/ecmwf_2t_f000.bin
+
+      - name: Test ECMWF metadata generation
+        run: |
+          python processing/create_ecmwf_metadata.py
+          python -c "import json; data=json.load(open('data/ecmwf/ecmwf_temperature_metadata.json')); print('Metadata records:', len(data)); print('First:', data[0]); print('Last:', data[-1])"
