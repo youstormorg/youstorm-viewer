@@ -39,3 +39,7 @@ jobs:
       - name: Test ecCodes
         run: |
           python -c "from eccodes import codes_grib_new_from_samples, codes_release; gid = codes_grib_new_from_samples('GRIB2'); print('ecCodes GRIB2 sample created successfully'); codes_release(gid)"
+
+      - name: Test GFS cycle discovery
+        run: |
+          python -c "from processing.download_gfs import find_latest_cycle; date, cycle = find_latest_cycle(); print(f'Latest GFS cycle: {date} {cycle}Z')"
