@@ -38,7 +38,12 @@ async function initialiseApplication() {
                 webgl.setTemperatureVisible(
                     event.target.checked
                 );
-
+                document.getElementById(
+                    "temperatureLegend"
+                ).style.display =
+                    event.target.checked
+                        ? "block"
+                        : "none";
                 canvas.style.display =
                     event.target.checked ||
                     document.getElementById(
@@ -135,7 +140,12 @@ async function initialiseApplication() {
         webgl.setPrecipitationVisible(
             event.target.checked
         );
-
+            document.getElementById(
+                "precipitationLegend"
+            ).style.display =
+                event.target.checked
+                    ? "block"
+                    : "none";
             canvas.style.display =
                 event.target.checked ||
                 document.getElementById(
@@ -156,6 +166,19 @@ async function initialiseApplication() {
 
 
     await loadTemperatureData();
+
+    const temperatureToggle =
+        document.getElementById(
+            "webglTemperatureToggle"
+        );
+
+    if (temperatureToggle.checked) {
+
+        temperatureToggle.dispatchEvent(
+            new Event("change")
+        );
+
+    }
 
     currentValidTime =
         getTemperatureMetadata()[0].valid_time;
@@ -231,14 +254,22 @@ function initialiseForecastSlider(map) {
         temperatureData.valid_time
     );
 
+const forecastDate =
+    new Date(currentValidTime);
+
     document.getElementById(
         "forecastUTCTime"
     ).textContent =
-        new Date(
-            currentValidTime
-        ).toISOString()
-            .replace("T", " ")
-            .replace(":00:00.000Z", " UTC"); 
+        `${forecastDate.getUTCDate()} ${
+            forecastDate.toLocaleString(
+                "en-GB",
+                { month: "short", timeZone: "UTC" }
+            )
+        } ${
+            forecastDate.getUTCHours()
+                .toString()
+                .padStart(2, "0")
+        } UTC`;
 
     if (
         document.getElementById(
@@ -261,11 +292,6 @@ function initialiseForecastSlider(map) {
         );
 
     }
-
-    const temperatureToggle =
-        document.getElementById(
-            "temperatureToggle"
-        );
 
 if (
     selectedModel === "GFS" &&

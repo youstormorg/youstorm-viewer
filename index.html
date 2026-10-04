@@ -44,12 +44,6 @@ href="css/main.css">
 
 </div>
 
-<div id="headerRight">
-
-Weather Viewer
-
-</div>
-
 </header>
 
 <div id="mainContainer">
@@ -58,34 +52,19 @@ Weather Viewer
 
     <h2>Layers</h2>
 
-    <label>
-        <input
-            type="checkbox"
-            id="temperatureToggle"
-            checked
-        >
-        Temperature
-    </label>
-    <label>
+     <label>
         <input
             type="checkbox"
             id="webglTemperatureToggle"
+            checked
         >
-        WebGL Temperature
+        Temperature
     </label>
 
     <label>
         <input
             type="checkbox"
             id="webglPrecipitationToggle"
-        >
-        WebGL Precipitation
-    </label>
-
-    <label>
-        <input
-            type="checkbox"
-            id="precipitationToggle"
         >
         Precipitation
     </label>
@@ -96,86 +75,48 @@ Weather Viewer
 
 <canvas id="weatherWebGL"></canvas>
 
-    <div id="temperatureLegend">
+<div id="temperatureLegend">
 
-        <div class="legendTitle">
-            Temperature
-        </div>
+    <div class="legendTitle">
+        Temperature
+    </div>
 
-        <div class="legendUnit">
-            2 m above ground
-        </div>
+    <div class="legendUnit">
+        2 m above ground
+    </div>
 
-        <div class="legendRow">
-            <span class="legendColour" style="background:#4b6cb7"></span>
-            <span class="legendLabel">&lt; 0°C</span>
-        </div>
+    <div class="temperatureGradient"></div>
 
-        <div class="legendRow">
-            <span class="legendColour" style="background:#6fa8dc"></span>
-            <span class="legendLabel">0–5°C</span>
-        </div>
-
-        <div class="legendRow">
-            <span class="legendColour" style="background:#9fc5e8"></span>
-            <span class="legendLabel">5–10°C</span>
-        </div>
-
-        <div class="legendRow">
-            <span class="legendColour" style="background:#b6d7a8"></span>
-            <span class="legendLabel">10–15°C</span>
-        </div>
-
-        <div class="legendRow">
-            <span class="legendColour" style="background:#ffd966"></span>
-            <span class="legendLabel">15–20°C</span>
-        </div>
-
-        <div class="legendRow">
-            <span class="legendColour" style="background:#f6b26b"></span>
-            <span class="legendLabel">20–25°C</span>
-        </div>
-
-        <div class="legendRow">
-            <span class="legendColour" style="background:#e06666"></span>
-            <span class="legendLabel">25–30°C</span>
-        </div>
-
-        <div class="legendRow">
-            <span class="legendColour" style="background:#cc0000"></span>
-            <span class="legendLabel">30–35°C</span>
-        </div>
-
-        <div class="legendRow">
-            <span class="legendColour" style="background:#990000"></span>
-            <span class="legendLabel">≥ 35°C</span>
-        </div>
+    <div class="temperatureGradientLabels">
+        <span>-5°C</span>
+        <span>35°C</span>
+    </div>
 
     </div>
 
-    <div id="precipitationLegend"></div>
+        <div id="precipitationLegend"></div>
 
-    <div id="forecastControl">
+        <div id="forecastControl">
 
-    <span id="forecastControlLabel">
-        +000 h
-    </span>
+        <span id="forecastControlLabel">
+            +000 h
+        </span>
 
-    <button id="forecastPlayButton">
-        ▶
-    </button>
+        <button id="forecastPlayButton">
+            ▶
+        </button>
 
-    <input
-        id="forecastSlider"
-        type="range"
-        min="0"
-        max="2"
-        step="1"
-        value="0">
+        <input
+            id="forecastSlider"
+            type="range"
+            min="0"
+            max="2"
+            step="1"
+            value="0">
 
-    <div id="forecastUTCTime"></div>
-    
-</div>
+        <div id="forecastUTCTime"></div>
+        
+    </div>
 
 </div>
 

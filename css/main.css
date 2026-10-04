@@ -154,6 +154,35 @@ z-index:10000;
 
 }
 
+.temperatureGradient {
+
+    width: 180px;
+    height: 12px;
+
+    background: linear-gradient(
+        to right,
+        #1a33cc 0%,
+        #4db3e6 33%,
+        #e6cc4d 66%,
+        #e6331a 100%
+    );
+
+    margin-bottom: 4px;
+
+}
+
+.temperatureGradientLabels {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    width: 180px;
+
+    font-size: 11px;
+
+}
+
 .legendRow {
 
     display: flex;

@@ -257,37 +257,16 @@ export function createTemperatureLegend() {
         <div class="legendUnit">
             2 m above ground
         </div>
+
+        <div class="temperatureGradient"></div>
+
+        <div class="temperatureGradientLabels">
+            <span>-5°C</span>
+            <span>35°C</span>
+        </div>
     `;
 
-
-    temperatureScale.forEach(item => {
-
-        const row =
-            document.createElement("div");
-
-
-        row.className =
-            "legendRow";
-
-
-        row.innerHTML = `
-            <span
-                class="legendColour"
-                style="background:${item.colour}">
-            </span>
-
-            <span class="legendLabel">
-                ${item.label}
-            </span>
-        `;
-
-
-        legend.appendChild(row);
-
-    });
-
 }
-
 
 // Return the number of available forecasts
 export function getForecastCount() {
@@ -323,7 +302,7 @@ export function getForecastCount() {
         </div>
 
         <div class="legendUnit">
-            6-hour accumulation
+            3-hour accumulation
         </div>
     `;
 
