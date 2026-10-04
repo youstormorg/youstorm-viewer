@@ -36,10 +36,6 @@ jobs:
             ecmwf-opendata==0.3.34 \
             requests==2.34.2
 
-      - name: Build forecast
-        run: |
-          python processing/update_viewer.py --force
-
       - name: Assemble Pages site
         run: |
           rm -rf _site
