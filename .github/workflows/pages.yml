@@ -47,13 +47,30 @@ jobs:
           mkdir -p _site/data/gfs
           mkdir -p _site/data/ecmwf
 
-          cp data/gfs/gfs_temp_global_*.bin _site/data/gfs/
-          cp data/gfs/gfs_precip_global_*.bin _site/data/gfs/
-          cp data/gfs/gfs_temperature_metadata.json _site/data/gfs/
-          cp data/gfs/gfs_precipitation_metadata.json _site/data/gfs/
+          # Preserve the forecast currently deployed on GitHub Pages.
+          for hour in $(seq 0 3 144); do
+            curl -fL "https://youstormorg.github.io/youstorm-viewer/data/gfs/gfs_temp_global_f$(printf '%03d' $hour).bin" \
+              -o "_site/data/gfs/gfs_temp_global_f$(printf '%03d' $hour).bin"
+          done
 
-          cp data/ecmwf/ecmwf_2t_*.bin _site/data/ecmwf/
-          cp data/ecmwf/ecmwf_temperature_metadata.json _site/data/ecmwf/
+          for hour in $(seq 3 3 144); do
+            curl -fL "https://youstormorg.github.io/youstorm-viewer/data/gfs/gfs_precip_global_f$(printf '%03d' $hour).bin" \
+              -o "_site/data/gfs/gfs_precip_global_f$(printf '%03d' $hour).bin"
+          done
+
+          for hour in $(seq 0 3 144); do
+            curl -fL "https://youstormorg.github.io/youstorm-viewer/data/ecmwf/ecmwf_2t_f$(printf '%03d' $hour).bin" \
+              -o "_site/data/ecmwf/ecmwf_2t_f$(printf '%03d' $hour).bin"
+          done
+
+          curl -fL https://youstormorg.github.io/youstorm-viewer/data/gfs/gfs_temperature_metadata.json \
+            -o _site/data/gfs/gfs_temperature_metadata.json
+
+          curl -fL https://youstormorg.github.io/youstorm-viewer/data/gfs/gfs_precipitation_metadata.json \
+            -o _site/data/gfs/gfs_precipitation_metadata.json
+
+          curl -fL https://youstormorg.github.io/youstorm-viewer/data/ecmwf/ecmwf_temperature_metadata.json \
+            -o _site/data/ecmwf/ecmwf_temperature_metadata.json
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
