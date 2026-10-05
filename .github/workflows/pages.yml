@@ -21,21 +21,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      - name: Install forecast processing packages
-        run: |
-          python -m pip install --upgrade pip
-          pip install \
-            xarray==2026.7.0 \
-            cfgrib==0.9.15.1 \
-            eccodes==2.48.0 \
-            ecmwf-opendata==0.3.34 \
-            requests==2.34.2
-
       - name: Assemble Pages site
         run: |
           rm -rf _site
