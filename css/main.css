@@ -141,6 +141,7 @@ z-index:10000;
 #temperatureLegend {
     left: 20px;
     right: auto;
+    bottom: 80px;
 }
 
 .legendTitle {
@@ -241,7 +242,7 @@ z-index:10000;
     background: transparent;
     border: 1px solid #666;
     color: white;
-    padding: 6px 12px;
+    padding: 5px 10px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
@@ -347,7 +348,7 @@ z-index:10000;
     background: transparent;
     border: 1px solid #666;
     color: white;
-    padding: 6px 12px;
+    padding: 5px 10px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
@@ -381,7 +382,7 @@ z-index:10000;
 
     color: white;
 
-    padding: 6px 12px;
+    padding: 5px 10px;
 
     border-radius: 4px;
 
