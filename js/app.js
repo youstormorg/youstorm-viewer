@@ -11,6 +11,7 @@ import {
     getTemperatureForecastCount,
     loadPrecipitationData,
     getPrecipitationMetadata,
+    createTemperatureLegend,
     createPrecipitationLegend,
     getForecastCount,
     updateForecastDisplay,
@@ -190,6 +191,7 @@ async function initialiseApplication() {
 
     await loadPrecipitationData();
     await loadECMWFMetadata();
+    createTemperatureLegend();
     createPrecipitationLegend();
     document.getElementById(
         "precipitationLegend"

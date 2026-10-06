@@ -224,6 +224,18 @@ z-index:10000;
 
 }
 
+.temperatureLegendItem {
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+
+.temperatureLegendColour {
+    width:16px;
+    height:12px;
+    display:inline-block;
+}
+
 #legendToggle {
     background: transparent;
     border: 1px solid #666;

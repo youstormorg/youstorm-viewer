@@ -228,7 +228,6 @@ function formatValidTime(validTime) {
 
 }
 
-
 // Create the temperature legend
 export function createTemperatureLegend() {
 
@@ -249,6 +248,24 @@ export function createTemperatureLegend() {
     }
 
 
+    const legendItems =
+        [...TEMPERATURE_SCALE]
+            .reverse()
+            .map(item => `
+                <div class="temperatureLegendItem">
+                    <span
+                        class="temperatureLegendColour"
+                        style="background:${item.colour};"
+                    ></span>
+
+                    <span>
+                        ${item.label}
+                    </span>
+                </div>
+            `)
+            .join("");
+
+
     legend.innerHTML = `
         <div class="legendTitle">
             Temperature
@@ -258,11 +275,8 @@ export function createTemperatureLegend() {
             2 m above ground
         </div>
 
-        <div class="temperatureGradient"></div>
-
-        <div class="temperatureGradientLabels">
-            <span>-5°C</span>
-            <span>35°C</span>
+        <div class="temperatureLegendItems">
+            ${legendItems}
         </div>
     `;
 
