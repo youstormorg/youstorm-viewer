@@ -227,12 +227,13 @@ z-index:10000;
 .temperatureLegendItem {
     display:flex;
     align-items:center;
-    gap:6px;
+    gap:4px;
+    line-height:1;
 }
 
 .temperatureLegendColour {
-    width:14px;
-    height:10px;
+    width:12px;
+    height:8px;
     display:inline-block;
 }
 
@@ -365,11 +366,11 @@ z-index:10000;
 }
 
 #modelSelector {
+
     display: flex;
+
     gap: 6px;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+
 }
 
 .modelButton {
