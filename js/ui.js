@@ -71,13 +71,11 @@ export function initialiseUI(map) {
             sidebar.style.display === "none" ||
             sidebar.style.display === ""
         ) {
-
             sidebar.style.display = "block";
-
+            layersToggle.classList.add("active");
         } else {
-
             sidebar.style.display = "none";
-
+            layersToggle.classList.remove("active");
         }
 
     });

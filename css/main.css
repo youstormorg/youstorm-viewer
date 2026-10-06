@@ -126,11 +126,11 @@ z-index:10000;
 
     background: rgba(20, 20, 20, 0.95);
 
-    padding: 12px;
+    padding: 8px;
 
     border-radius: 5px;
 
-    font-size: 12px;
+    font-size: 11px;
 
     color: white;
 
@@ -145,7 +145,7 @@ z-index:10000;
 
 .legendTitle {
 
-    font-size: 15px;
+    font-size: 13px;
 
     font-weight: bold;
 
@@ -155,7 +155,7 @@ z-index:10000;
 
 .legendUnit {
 
-    font-size: 11px;
+    font-size: 10px;
 
     color: #aaa;
 
@@ -231,8 +231,8 @@ z-index:10000;
 }
 
 .temperatureLegendColour {
-    width:16px;
-    height:12px;
+    width:14px;
+    height:10px;
     display:inline-block;
 }
 
@@ -341,14 +341,27 @@ z-index:10000;
     z-index: 10001;
 
 }
-#layersToggle{
-    display:block;
-    position:absolute;
-    top:60px;
-    left:10px;
-    z-index:1100;
-    background:white;
-    border-radius:4px;
+
+#layersToggle {
+    background: transparent;
+    border: 1px solid #666;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 10px;
+}
+
+#layersToggle.active {
+    background: white;
+    color: black;
+}
+
+#headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 #modelSelector {
