@@ -456,10 +456,22 @@ function loadWebGLPrecipitation(
     forecastHour
 ) {
 
-    const filename =
-        "data/gfs/gfs_precip_global_f" +
-        String(forecastHour).padStart(3, "0") +
-        ".bin";
+    let filename;
+
+    if (currentModel === "ECMWF") {
+
+        filename =
+            "data/ecmwf/ecmwf_precip_f" +
+            String(forecastHour).padStart(3, "0") +
+            ".bin";
+
+    } else {
+
+        filename =
+            "data/gfs/gfs_precip_global_f" +
+            String(forecastHour).padStart(3, "0") +
+            ".bin";
+    }
 
     console.log(
         "Loading WebGL precipitation:",
@@ -1209,6 +1221,15 @@ gl.viewport(
 
         loadPrecipitation:
             loadWebGLPrecipitation,
+
+        setModel:
+            (model) => {
+                currentModel =
+                    model;
+
+                precipitationDataTexture =
+                    null;
+            },
 
         setTemperatureVisible:
             (visible) => {

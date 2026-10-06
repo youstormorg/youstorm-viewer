@@ -12,7 +12,9 @@ export const MODELS = {
     ECMWF: {
         label: "ECMWF",
         temperatureMetadata:
-            "./data/ecmwf/ecmwf_temperature_metadata.json"
+            "./data/ecmwf/ecmwf_temperature_metadata.json",
+        precipitationMetadata:
+            "./data/ecmwf/ecmwf_precipitation_metadata.json"
     }
 };
 

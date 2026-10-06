@@ -97,56 +97,64 @@ async function initialiseApplication() {
             }
         );
 
-        document.getElementById(
-            "webglPrecipitationToggle"
-        ).addEventListener(
-            "change",
-            (event) => {
+    document.getElementById(
+        "webglPrecipitationToggle"
+    ).addEventListener(
+        "change",
+        (event) => {
 
-        const canvas =
-            document.getElementById(
-                "weatherWebGL"
-            );
-
-        if (event.target.checked) {
-
-            const forecastIndex =
-                Number(
-                    document.getElementById(
-                        "forecastSlider"
-                    ).value
-                );
-
-            const precipitationData =
-                findMetadataByValidTime(
-                    getPrecipitationMetadata()
-                );
-
-            if (precipitationData) {
-
-                webgl.loadPrecipitation(
-                    precipitationData.forecast_hour
-                );
-
+            const canvas =
                 document.getElementById(
-                    "forecastControlLabel"
-                ).textContent =
-                    `${Number(
+                    "weatherWebGL"
+                );
+
+            if (event.target.checked) {
+
+                const precipitationData =
+                    findMetadataByValidTime(
+                        getPrecipitationMetadata()
+                    );
+
+                if (precipitationData) {
+
+                    webgl.loadPrecipitation(
                         precipitationData.forecast_hour
-                    )
-                        .toString()
-                        .padStart(3, "0")} h`;
+                    );
+
+                    document.getElementById(
+                        "forecastControlLabel"
+                    ).textContent =
+                        `${Number(
+                            precipitationData.forecast_hour
+                        )
+                            .toString()
+                            .padStart(3, "0")} h`;
+
+                    webgl.setPrecipitationVisible(
+                        true
+                    );
+
+                } else {
+
+                    webgl.setPrecipitationVisible(
+                        false
+                    );
+                }
+
+            } else {
+
+                webgl.setPrecipitationVisible(
+                    false
+                );
             }
-        }    
-        webgl.setPrecipitationVisible(
-            event.target.checked
-        );
+
             document.getElementById(
                 "precipitationLegend"
             ).style.display =
                 event.target.checked
                     ? "block"
                     : "none";
+
             canvas.style.display =
                 event.target.checked ||
                 document.getElementById(
@@ -155,13 +163,13 @@ async function initialiseApplication() {
                     ? "block"
                     : "none";
 
-                console.log(
-                    "WebGL precipitation visibility:",
-                    event.target.checked
-                );
+            console.log(
+                "WebGL precipitation visibility:",
+                event.target.checked
+            );
 
-            }
-        );
+        }
+    );
 
     initialiseUI(map);
 
@@ -296,7 +304,6 @@ const forecastDate =
     }
 
 if (
-    selectedModel === "GFS" &&
     document.getElementById(
         "webglPrecipitationToggle"
     ).checked
@@ -405,7 +412,7 @@ const modelButtons =
 
 modelButtons.forEach(button => {
 
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
 
         modelButtons.forEach(item => {
             item.classList.remove("active");
@@ -417,6 +424,9 @@ modelButtons.forEach(button => {
     button.textContent.trim();
 
 setTemperatureModel(model);
+webgl.setModel(model);
+await loadPrecipitationData();
+selectedModel = model;
 
 const slider =
     document.getElementById(
@@ -427,6 +437,23 @@ slider.max =
     getTemperatureForecastCount() - 1;
 
 slider.value = 0;
+
+const firstTemperatureData =
+    model === "ECMWF"
+        ? getECMWFMetadata()[0]
+        : getTemperatureMetadata()[0];
+
+setCurrentValidTime(
+    firstTemperatureData.valid_time
+);
+
+if (
+    document.getElementById(
+        "webglPrecipitationToggle"
+    ).checked
+) {
+    webgl.setPrecipitationVisible(false);
+}
 
 if (
     document.getElementById(

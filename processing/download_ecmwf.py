@@ -10,6 +10,9 @@ forecast_hours = list(
     range(0, 145, 3)
 )
 
+precipitation_hours = list(
+    range(3, 145, 3)
+)
 
 def get_latest_ecmwf_cycle():
 
@@ -46,6 +49,30 @@ def download_ecmwf():
         print(
             f"ECMWF +{forecast_hour:03d} h download complete"
         )
+
+        if forecast_hour in precipitation_hours:
+
+            print(
+                f"Downloading ECMWF precipitation "
+                f"+{forecast_hour:03d} h"
+            )
+
+            client.retrieve(
+                type="fc",
+                stream="oper",
+                levtype="sfc",
+                param="tp",
+                step=forecast_hour,
+                target=(
+                    f"data/ecmwf/"
+                    f"ecmwf_tp_f{forecast_hour:03d}.grib2"
+                )
+            )
+
+            print(
+                f"ECMWF precipitation "
+                f"+{forecast_hour:03d} h download complete"
+            )
 
     print()
     print("All ECMWF downloads complete")

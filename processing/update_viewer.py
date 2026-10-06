@@ -213,12 +213,28 @@ if ecmwf_needs_update:
     print("ECMWF conversion complete")
 
     run_timed_stage(
+        "ECMWF precipitation conversion",
+        ["python", "processing/convert_all_ecmwf_precip.py"]
+    )
+
+    print()
+    print("ECMWF precipitation conversion complete")
+
+    run_timed_stage(
         "ECMWF metadata creation",
         ["python", "processing/create_ecmwf_metadata.py"]
     )
 
     print()
     print("ECMWF metadata creation complete")
+
+    run_timed_stage(
+        "ECMWF precipitation metadata creation",
+        ["python", "processing/create_ecmwf_precip_metadata.py"]
+    )
+
+    print()
+    print("ECMWF precipitation metadata creation complete")
 
 total_elapsed = time.perf_counter() - total_start_time
 
@@ -237,6 +253,8 @@ stage_order = [
     "ECMWF download",
     "ECMWF conversion",
     "ECMWF metadata creation",
+    "ECMWF precipitation conversion",
+    "ECMWF precipitation metadata creation",
 ]
 
 for stage in stage_order:

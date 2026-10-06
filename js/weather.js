@@ -126,7 +126,7 @@ export async function loadECMWFMetadata() {
 async function loadPrecipitationMetadata() {
 
     const filename =
-        "./data/gfs/gfs_precipitation_metadata.json";
+        MODELS[selectedTemperatureModel].precipitationMetadata;
 
     const response =
         await fetch(filename);

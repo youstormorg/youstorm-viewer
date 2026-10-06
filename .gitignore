@@ -43,6 +43,10 @@ data/ecmwf/*_webmercator*.tif
 data/ecmwf/*_colored*.tif
 data/ecmwf/*_celsius*.tif
 
+# ECMWF precipitation forecast output
+data/ecmwf/ecmwf_precip_f*.bin
+data/ecmwf/ecmwf_precipitation_metadata.json
+
 # ECMWF numerical JSON
 
 # ECMWF temporary/test files
