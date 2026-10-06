@@ -264,7 +264,7 @@ const forecastDate =
             forecastDate.toLocaleString(
                 "en-GB",
                 { month: "short", timeZone: "UTC" }
-            )
+            ).slice(0, 3)
         } ${
             forecastDate.getUTCHours()
                 .toString()

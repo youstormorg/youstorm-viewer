@@ -35,7 +35,7 @@ justify-content:space-between;
 
 align-items:center;
 
-padding:0 20px;
+padding:0;
 
 font-size:20px;
 
@@ -60,16 +60,20 @@ z-index:1000;
 
 background:#252525;
 
-padding:20px;
+padding:40px 20px 20px 20px;
 
 box-sizing:border-box;
 
 overflow:auto;
-
+overflow-x:hidden;
 }
 
 #sidebar h2{
     font-size:18px;
+}
+
+#sidebar label {
+    font-size: 12px;
 }
 
 #map{
@@ -134,6 +138,11 @@ z-index:10000;
 
 }
 
+#temperatureLegend {
+    left: 20px;
+    right: auto;
+}
+
 .legendTitle {
 
     font-size: 15px;
@@ -156,31 +165,35 @@ z-index:10000;
 
 .temperatureGradient {
 
-    width: 180px;
-    height: 12px;
+    width: 12px;
+    height: 180px;
 
     background: linear-gradient(
-        to right,
+        to top,
         #1a33cc 0%,
         #4db3e6 33%,
         #e6cc4d 66%,
         #e6331a 100%
     );
 
-    margin-bottom: 4px;
-
+    margin-right: 8px;
+    display: inline-block;
+    vertical-align: top;
 }
 
 .temperatureGradientLabels {
 
-    display: flex;
+    display: inline-flex;
+
+    flex-direction: column;
 
     justify-content: space-between;
 
-    width: 180px;
+    height: 180px;
 
     font-size: 11px;
 
+    vertical-align: top;
 }
 
 .legendRow {
@@ -211,6 +224,26 @@ z-index:10000;
 
 }
 
+#legendToggle {
+    background: transparent;
+    border: 1px solid #666;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+#legendToggle:hover {
+    background: #444;
+}
+
+#legendToggle.active {
+    background: white;
+    color: black;
+}
+
 #forecastControl {
 
     position: absolute;
@@ -232,7 +265,7 @@ z-index:10000;
 
     align-items: center;
 
-    gap: 12px;
+    gap: 5px;
 
     box-shadow: 0 2px 8px rgba(0,0,0,0.5);
 
@@ -249,6 +282,11 @@ z-index:10000;
 
     text-align: center;
 
+}
+
+#forecastUTCTime {
+    width: 90px;
+    text-align: left;
 }
 
 #forecastPlayButton {
@@ -297,14 +335,16 @@ z-index:10000;
     top:60px;
     left:10px;
     z-index:1100;
+    background:white;
+    border-radius:4px;
 }
 
 #modelSelector {
-
     display: flex;
-
     gap: 6px;
-
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .modelButton {
