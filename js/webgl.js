@@ -128,57 +128,148 @@ vec3 colour;
 
 if (weatherField < 0.5) {
 
-    float minimum =
-        -5.0;
-
-    float maximum =
-        35.0;
-
-    float t =
-        (temperature - minimum) /
-        (maximum - minimum);
-
-    t =
-        clamp(
-            t,
-            0.0,
-            1.0
-        );
-
-    if (t < 0.33) {
-
-        float p =
-            t / 0.33;
+    if (temperature < -40.0) {
 
         colour =
             vec3(
-                0.1 + p * 0.2,
-                0.2 + p * 0.5,
-                0.8 + p * 0.1
+                49.0 / 255.0,
+                54.0 / 255.0,
+                149.0 / 255.0
             );
 
-    } else if (t < 0.66) {
-
-        float p =
-            (t - 0.33) / 0.33;
+    } else if (temperature < -30.0) {
 
         colour =
             vec3(
-                0.3 + p * 0.6,
-                0.7 + p * 0.1,
-                0.9 - p * 0.6
+                69.0 / 255.0,
+                117.0 / 255.0,
+                180.0 / 255.0
+            );
+
+    } else if (temperature < -20.0) {
+
+        colour =
+            vec3(
+                116.0 / 255.0,
+                173.0 / 255.0,
+                209.0 / 255.0
+            );
+
+    } else if (temperature < -10.0) {
+
+        colour =
+            vec3(
+                171.0 / 255.0,
+                217.0 / 255.0,
+                233.0 / 255.0
+            );
+
+    } else if (temperature < 0.0) {
+
+        colour =
+            vec3(
+                224.0 / 255.0,
+                243.0 / 255.0,
+                248.0 / 255.0
+            );
+
+    } else if (temperature < 5.0) {
+
+        colour =
+            vec3(
+                199.0 / 255.0,
+                233.0 / 255.0,
+                192.0 / 255.0
+            );
+
+    } else if (temperature < 10.0) {
+
+        colour =
+            vec3(
+                127.0 / 255.0,
+                205.0 / 255.0,
+                187.0 / 255.0
+            );
+
+    } else if (temperature < 15.0) {
+
+        colour =
+            vec3(
+                65.0 / 255.0,
+                171.0 / 255.0,
+                93.0 / 255.0
+            );
+
+    } else if (temperature < 20.0) {
+
+        colour =
+            vec3(
+                217.0 / 255.0,
+                239.0 / 255.0,
+                139.0 / 255.0
+            );
+
+    } else if (temperature < 25.0) {
+
+        colour =
+            vec3(
+                254.0 / 255.0,
+                224.0 / 255.0,
+                139.0 / 255.0
+            );
+
+    } else if (temperature < 30.0) {
+
+        colour =
+            vec3(
+                253.0 / 255.0,
+                174.0 / 255.0,
+                97.0 / 255.0
+            );
+
+    } else if (temperature < 35.0) {
+
+        colour =
+            vec3(
+                244.0 / 255.0,
+                109.0 / 255.0,
+                67.0 / 255.0
+            );
+
+    } else if (temperature < 40.0) {
+
+        colour =
+            vec3(
+                215.0 / 255.0,
+                48.0 / 255.0,
+                39.0 / 255.0
+            );
+
+    } else if (temperature < 45.0) {
+
+        colour =
+            vec3(
+                165.0 / 255.0,
+                0.0,
+                38.0 / 255.0
+            );
+
+    } else if (temperature < 50.0) {
+
+        colour =
+            vec3(
+                127.0 / 255.0,
+                0.0,
+                0.0
             );
 
     } else {
 
-        float p =
-            (t - 0.66) / 0.34;
-
         colour =
             vec3(
-                0.9,
-                0.8 - p * 0.6,
-                0.3 - p * 0.2
+                77.0 / 255.0,
+                0.0,
+                0.0
             );
     }
 
