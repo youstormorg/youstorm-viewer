@@ -27,15 +27,22 @@ export const PRECIPITATION_HOURS = Array.from(
 );
 
 export const TEMPERATURE_SCALE = [
-    { colour: "#4b6cb7", label: "< 0°C" },
-    { colour: "#6fa8dc", label: "0–5°C" },
-    { colour: "#9fc5e8", label: "5–10°C" },
-    { colour: "#b6d7a8", label: "10–15°C" },
-    { colour: "#ffd966", label: "15–20°C" },
-    { colour: "#f6b26b", label: "20–25°C" },
-    { colour: "#e06666", label: "25–30°C" },
-    { colour: "#cc0000", label: "30–35°C" },
-    { colour: "#990000", label: "≥ 35°C" }
+    { colour: "#313695", label: "< −40°C" },
+    { colour: "#4575b4", label: "−40–−30°C" },
+    { colour: "#74add1", label: "−30–−20°C" },
+    { colour: "#abd9e9", label: "−20–−10°C" },
+    { colour: "#e0f3f8", label: "−10–0°C" },
+    { colour: "#c7e9c0", label: "0–5°C" },
+    { colour: "#7fcdbb", label: "5–10°C" },
+    { colour: "#41ab5d", label: "10–15°C" },
+    { colour: "#d9ef8b", label: "15–20°C" },
+    { colour: "#fee08b", label: "20–25°C" },
+    { colour: "#fdae61", label: "25–30°C" },
+    { colour: "#f46d43", label: "30–35°C" },
+    { colour: "#d73027", label: "35–40°C" },
+    { colour: "#a50026", label: "40–45°C" },
+    { colour: "#7f0000", label: "45–50°C" },
+    { colour: "#4d0000", label: "≥ 50°C" }
 ];
 
 export const PRECIPITATION_SCALE = [
