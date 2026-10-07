@@ -508,6 +508,10 @@ const forecastSlider =
         "forecastSlider"
     );
 
+const opacitySlider =
+    document.getElementById(
+        "opacitySlider"
+    );
 
 if (forecastPlayButton && forecastSlider) {
 
@@ -567,6 +571,22 @@ if (forecastPlayButton && forecastSlider) {
                     },
                     1000
                 );
+
+        }
+    );
+
+}
+
+if (opacitySlider) {
+
+    opacitySlider.addEventListener(
+        "input",
+        () => {
+
+            const opacity =
+                Number(opacitySlider.value) / 100;
+
+            webgl.setOpacity(opacity);
 
         }
     );

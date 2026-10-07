@@ -70,6 +70,7 @@ const fragmentShaderSource = `
     uniform float flipLatitude;
     uniform float shiftLongitude;
     uniform float weatherField;
+    uniform float weatherOpacity;
     void main() {
 
     float latitudeRadians =
@@ -374,7 +375,7 @@ if (weatherField < 0.5) {
     gl_FragColor =
         vec4(
             colour,
-            1.0
+            weatherOpacity
         );
 
     }
@@ -387,7 +388,12 @@ export function initialiseWebGL(map) {
         document.getElementById("weatherWebGL");
 
     const gl =
-        canvas.getContext("webgl");
+        canvas.getContext(
+            "webgl",
+            {
+                alpha: true
+            }
+        );
 
     const floatTextureExtension =
         gl.getExtension(
@@ -832,6 +838,12 @@ gl.viewport(
             program,
             "weatherField"
         );   
+
+    const weatherOpacityLocation =
+        gl.getUniformLocation(
+            program,
+            "weatherOpacity"
+        );        
         
     const flipLatitudeLocation =
         gl.getUniformLocation(
@@ -850,6 +862,7 @@ gl.viewport(
 
     let temperatureVisible = false;
     let precipitationVisible = false;
+    let weatherOpacity = 1.0;
 
     let indexBuffer = null;
     let temperatureDataTexture = null;
@@ -972,6 +985,11 @@ gl.viewport(
             gl.BLEND
         );
 
+        gl.blendFunc(
+            gl.SRC_ALPHA,
+            gl.ONE_MINUS_SRC_ALPHA
+        );        
+
         gl.uniform1i(
             temperatureDataTextureLocation,
             1
@@ -985,7 +1003,13 @@ gl.viewport(
         gl.uniform1f(
             weatherFieldLocation,
             0.0
+        );  
+        
+        gl.uniform1f(
+            weatherOpacityLocation,
+            weatherOpacity
         );        
+
         console.log(
             "WebGL layers:",
             "temperature =", temperatureVisible,
@@ -1221,6 +1245,13 @@ gl.viewport(
 
         loadPrecipitation:
             loadWebGLPrecipitation,
+
+        setOpacity:
+            (opacity) => {
+                weatherOpacity = opacity;
+
+                draw();
+            },
 
         setModel:
             (model) => {
