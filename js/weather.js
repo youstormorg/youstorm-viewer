@@ -279,6 +279,11 @@ export function createTemperatureLegend() {
             ${legendItems}
         </div>
     `;
+    makeLegendDraggable(legend);
+
+}
+
+function makeLegendDraggable(legend) {
 
     let dragging = false;
     let startX = 0;
@@ -311,47 +316,49 @@ export function createTemperatureLegend() {
 
     }
 
-function drag(event) {
 
-    if (!dragging) {
-        return;
+    function drag(event) {
+
+        if (!dragging) {
+            return;
+        }
+
+        const point =
+            event.touches
+                ? event.touches[0]
+                : event;
+
+        const parentRect =
+            legend.offsetParent.getBoundingClientRect();
+
+        const newLeft =
+            startLeft -
+            parentRect.left +
+            (point.clientX - startX);
+
+        const newTop =
+            startTop -
+            parentRect.top +
+            (point.clientY - startY);
+
+        legend.style.left =
+            `${newLeft}px`;
+
+        legend.style.top =
+            `${newTop}px`;
+
+        legend.style.right =
+            "auto";
+
+        legend.style.bottom =
+            "auto";
+
+        event.preventDefault();
+
+        event.stopPropagation();
+
     }
 
-    const point =
-        event.touches
-            ? event.touches[0]
-            : event;
-
-    const parentRect =
-        legend.offsetParent.getBoundingClientRect();
-
-    const newLeft =
-        startLeft -
-        parentRect.left +
-        (point.clientX - startX);
-
-    const newTop =
-        startTop -
-        parentRect.top +
-        (point.clientY - startY);
-
-    legend.style.left =
-        `${newLeft}px`;
-
-    legend.style.top =
-        `${newTop}px`;
-
-    legend.style.right =
-        "auto";
-
-    legend.style.bottom =
-        "auto";
-
-    event.preventDefault();
-
-    event.stopPropagation();
-
-}
 
     function stopDrag() {
 
@@ -460,4 +467,6 @@ export function getForecastCount() {
 
     });
 
+    makeLegendDraggable(legend);
+    
 }
