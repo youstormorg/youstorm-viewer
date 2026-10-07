@@ -1236,6 +1236,37 @@ gl.viewport(
 
     }
 
+    function getWeatherValue(
+        row,
+        column,
+        variable
+    ) {
+
+        if (variable === "temperature") {
+
+            if (!temperatures) {
+                return null;
+            }
+
+            return temperatures[row][column];
+
+        }
+
+        if (variable === "precipitation") {
+
+            if (!precipitation) {
+                return null;
+            }
+
+            return precipitation[
+                row * 1440 + column
+            ];
+
+        }
+
+        return null;
+    }
+
     map.on("move", draw);
     map.on("zoom", draw);
 
@@ -1253,6 +1284,9 @@ gl.viewport(
                 draw();
             },
 
+        getWeatherValue:
+            getWeatherValue,
+
         setModel:
             (model) => {
                 currentModel =
@@ -1260,6 +1294,17 @@ gl.viewport(
 
                 precipitationDataTexture =
                     null;
+            },
+
+        getVisibleLayers:
+            () => {
+                return {
+                    temperature:
+                        temperatureVisible,
+
+                    precipitation:
+                        precipitationVisible
+                };
             },
 
         setTemperatureVisible:

@@ -283,7 +283,7 @@ export function createTemperatureLegend() {
 
 }
 
-function makeLegendDraggable(legend) {
+export function makeLegendDraggable(legend) {
 
     let dragging = false;
     let startX = 0;

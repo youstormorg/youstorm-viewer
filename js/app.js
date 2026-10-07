@@ -13,11 +13,140 @@ import {
     getPrecipitationMetadata,
     createTemperatureLegend,
     createPrecipitationLegend,
+    makeLegendDraggable,
     getForecastCount,
     updateForecastDisplay,
 } from "./weather.js";
 let map;
 let webgl;
+
+function updateWeatherReadoutVisibility() {
+
+    const readout =
+        document.getElementById(
+            "weatherReadout"
+        );
+
+    if (!probeEnabled) {
+
+        readout.style.display =
+            "none";
+
+        return;
+    }
+
+    const visibleLayers =
+        webgl.getVisibleLayers();
+
+    if (
+        visibleLayers.temperature ||
+        visibleLayers.precipitation
+    ) {
+
+        readout.style.display =
+            "block";
+
+    } else {
+
+        readout.style.display =
+            "none";
+
+    }
+}
+
+function updateWeatherReadout() {
+
+    if (!lastMouseLatLon) {
+        return;
+    }
+
+    const lat =
+        lastMouseLatLon.lat;
+
+    const lon =
+        lastMouseLatLon.lon;
+
+    const grid =
+        latLonToGrid(
+            lat,
+            lon
+        );
+
+    const visibleLayers =
+        webgl.getVisibleLayers();
+
+    let variable;
+
+    if (visibleLayers.temperature) {
+
+        variable =
+            "temperature";
+
+    } else if (visibleLayers.precipitation) {
+
+        variable =
+            "precipitation";
+
+    } else {
+
+        return;
+    }
+
+    const value =
+        webgl.getWeatherValue(
+            grid.row,
+            grid.column,
+            variable
+        );
+
+    const readoutLocation =
+        document.getElementById(
+            "weatherReadoutLocation"
+        );
+
+    const readoutValue =
+        document.getElementById(
+            "weatherReadoutValue"
+        );
+
+    let displayLon =
+        lon;
+
+    if (displayLon > 180) {
+        displayLon -= 360;
+    }
+
+    if (displayLon < -180) {
+        displayLon += 360;
+    }
+
+    const latDirection =
+        lat >= 0 ? "N" : "S";
+
+    const lonDirection =
+        displayLon >= 0 ? "E" : "W";
+
+    readoutLocation.textContent =
+        `${Math.abs(lat).toFixed(2)}°${latDirection}, ` +
+        `${Math.abs(displayLon).toFixed(2)}°${lonDirection}`;
+
+    if (value === null) {
+
+        readoutValue.textContent =
+            "--";
+
+    } else if (variable === "temperature") {
+
+        readoutValue.textContent =
+            `Temperature: ${value.toFixed(1)} °C`;
+
+    } else if (variable === "precipitation") {
+
+        readoutValue.textContent =
+            `Precipitation: ${value.toFixed(1)} mm`;
+    }
+}
+
 async function initialiseApplication() {
 
     map =
@@ -25,6 +154,59 @@ async function initialiseApplication() {
 
     webgl =
         initialiseWebGL(map);
+
+    makeLegendDraggable(
+        document.getElementById(
+            "weatherReadout"
+        )
+    );
+
+    document.getElementById(
+        "probeToggle"
+    ).addEventListener(
+        "click",
+        () => {
+
+            const readout =
+                document.getElementById(
+                    "weatherReadout"
+                );
+
+            const probeButton =
+                document.getElementById(
+                    "probeToggle"
+                );
+
+            if (!probeEnabled) {
+
+                probeEnabled =
+                    true;
+
+                readout.style.display =
+                    "block";
+
+                probeButton.classList.add(
+                    "active"
+                );
+
+                updateWeatherReadout();
+
+            } else {
+
+                probeEnabled =
+                    false;
+
+                readout.style.display =
+                    "none";
+
+                probeButton.classList.remove(
+                    "active"
+                );
+            }
+
+        }
+    );
+
         document.getElementById(
             "webglTemperatureToggle"
         ).addEventListener(
@@ -39,6 +221,11 @@ async function initialiseApplication() {
                 webgl.setTemperatureVisible(
                     event.target.checked
                 );
+
+                updateWeatherReadoutVisibility();
+
+                updateWeatherReadout();
+
                 document.getElementById(
                     "temperatureLegend"
                 ).style.display =
@@ -154,6 +341,10 @@ async function initialiseApplication() {
                 event.target.checked
                     ? "block"
                     : "none";
+
+            updateWeatherReadoutVisibility(); 
+            
+            updateWeatherReadout();
 
             canvas.style.display =
                 event.target.checked ||
@@ -324,11 +515,15 @@ if (
             true
         );
 
+        updateWeatherReadoutVisibility();
+
     } else {
 
         webgl.setPrecipitationVisible(
             false
         );
+
+        updateWeatherReadoutVisibility();
 
     }
 
@@ -502,6 +697,129 @@ const forecastPlayButton =
     document.getElementById(
         "forecastPlayButton"
     );
+
+function latLonToGrid(
+    lat,
+    lon
+) {
+
+    const row =
+        Math.round(
+            (90 - lat) / 0.25
+        );
+
+    let normalisedLon =
+        lon + 180;
+
+    if (normalisedLon < 0) {
+        normalisedLon += 360;
+    }
+
+    if (normalisedLon >= 360) {
+        normalisedLon -= 360;
+    }
+
+    const column =
+        Math.round(
+            normalisedLon / 0.25
+        ) % 1440;
+
+    return {
+        row: row,
+        column: column
+    };
+}
+
+let probeEnabled =
+    true;
+
+let lastMouseLatLon =
+    null;
+
+map.on(
+    "mousemove",
+    (event) => {
+
+        const lat =
+            event.latlng.lat;
+
+        const lon =
+            event.latlng.lng;
+
+        lastMouseLatLon = {
+            lat: lat,
+            lon: lon
+        };
+
+        const grid =
+            latLonToGrid(
+                lat,
+                lon
+            );
+
+        let variable;
+
+        const visibleLayers =
+            webgl.getVisibleLayers();
+
+        if (visibleLayers.temperature) {
+            variable = "temperature";
+        } else if (visibleLayers.precipitation) {
+            variable = "precipitation";
+        } else {
+            return;
+        }
+
+        const value =
+            webgl.getWeatherValue(
+                grid.row,
+                grid.column,
+                variable
+            );
+
+        const readoutLocation =
+            document.getElementById(
+                "weatherReadoutLocation"
+            );
+
+        const readoutValue =
+            document.getElementById(
+                "weatherReadoutValue"
+            );
+
+        let displayLon =
+            lon;
+
+        if (displayLon > 180) {
+            displayLon -= 360;
+        }
+
+        if (displayLon < -180) {
+            displayLon += 360;
+        }
+
+        const latDirection =
+            lat >= 0 ? "N" : "S";
+
+        const lonDirection =
+            displayLon >= 0 ? "E" : "W";
+
+        readoutLocation.textContent =
+            `${Math.abs(lat).toFixed(2)}°${latDirection}, ` +
+            `${Math.abs(displayLon).toFixed(2)}°${lonDirection}`;
+
+        if (value === null) {
+            readoutValue.textContent =
+                "--";
+        } else if (variable === "temperature") {
+            readoutValue.textContent =
+                `Temperature: ${value.toFixed(1)} °C`;
+        } else if (variable === "precipitation") {
+            readoutValue.textContent =
+                `Precipitation: ${value.toFixed(1)} mm`;
+        }
+    }
+);
 
 const forecastSlider =
     document.getElementById(

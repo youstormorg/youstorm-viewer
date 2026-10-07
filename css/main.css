@@ -31,7 +31,7 @@ background:#111;
 
 display:flex;
 
-justify-content:space-between;
+justify-content:flex-start;
 
 align-items:center;
 
@@ -47,6 +47,31 @@ flex:1;
 
 display:flex;
 
+}
+
+#weatherReadout {
+    position: absolute;
+    top: 70px;
+    left: 150px;
+    z-index: 10000;
+    background: rgba(20, 20, 20, 0.95);
+    color: white;
+    padding: 8px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    line-height: 1.4;
+    min-width: 120px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+#weatherReadoutLocation {
+    color: #aaa;
+    font-size: 11px;
+}
+
+#weatherReadoutValue {
+    font-size: 14px;
+    font-weight: bold;
 }
 
 #sidebar{
@@ -257,14 +282,9 @@ z-index:10000;
 }
 
 #legendToggle {
-    background: transparent;
-    border: 1px solid #666;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-right: 10px;
+
+    margin-right: 2px;
+
 }
 
 #legendToggle:hover {
@@ -362,15 +382,22 @@ z-index:10000;
 
 }
 
-#layersToggle {
+#layersToggle,
+#legendToggle,
+#probeToggle,
+.modelButton {
     background: transparent;
     border: 1px solid #666;
     color: white;
-    padding: 5px 10px;
+    padding: 4px 8px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     margin-left: 10px;
+}
+
+#probeToggle {
+    margin-right: 10px;
 }
 
 #layersToggle.active {
@@ -390,6 +417,8 @@ z-index:10000;
 
     gap: 6px;
 
+    margin-right: auto;
+
 }
 
 .modelButton {
@@ -400,13 +429,13 @@ z-index:10000;
 
     color: white;
 
-    padding: 5px 10px;
+    padding: 4px 8px;
 
     border-radius: 4px;
 
     cursor: pointer;
 
-    font-size: 14px;
+    font-size: 13px;
 
 }
 
