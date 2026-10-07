@@ -280,6 +280,119 @@ export function createTemperatureLegend() {
         </div>
     `;
 
+    let dragging = false;
+    let startX = 0;
+    let startY = 0;
+    let startLeft = 0;
+    let startTop = 0;
+
+
+    function startDrag(event) {
+
+        const point =
+            event.touches
+                ? event.touches[0]
+                : event;
+
+        const rect =
+            legend.getBoundingClientRect();
+
+        dragging = true;
+
+        startX = point.clientX;
+        startY = point.clientY;
+
+        startLeft = rect.left;
+        startTop = rect.top;
+
+        event.preventDefault();
+
+        event.stopPropagation();
+
+    }
+
+function drag(event) {
+
+    if (!dragging) {
+        return;
+    }
+
+    const point =
+        event.touches
+            ? event.touches[0]
+            : event;
+
+    const parentRect =
+        legend.offsetParent.getBoundingClientRect();
+
+    const newLeft =
+        startLeft -
+        parentRect.left +
+        (point.clientX - startX);
+
+    const newTop =
+        startTop -
+        parentRect.top +
+        (point.clientY - startY);
+
+    legend.style.left =
+        `${newLeft}px`;
+
+    legend.style.top =
+        `${newTop}px`;
+
+    legend.style.right =
+        "auto";
+
+    legend.style.bottom =
+        "auto";
+
+    event.preventDefault();
+
+    event.stopPropagation();
+
+}
+
+    function stopDrag() {
+
+        dragging = false;
+
+    }
+
+
+    legend.addEventListener(
+        "mousedown",
+        startDrag
+    );
+
+    document.addEventListener(
+        "mousemove",
+        drag
+    );
+
+    document.addEventListener(
+        "mouseup",
+        stopDrag
+    );
+
+
+    legend.addEventListener(
+        "touchstart",
+        startDrag,
+        { passive: false }
+    );
+
+    document.addEventListener(
+        "touchmove",
+        drag,
+        { passive: false }
+    );
+
+    document.addEventListener(
+        "touchend",
+        stopDrag
+    );
+
 }
 
 // Return the number of available forecasts
