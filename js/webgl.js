@@ -58,6 +58,57 @@ const vertexShaderSource = `
     }
 `;
 
+const coastlineVertexShaderSource = `
+    attribute vec2 position;
+
+    uniform vec2 mapOrigin;
+    uniform vec2 mapScale;
+    uniform float worldOffset;
+
+    void main() {
+
+        float longitude =
+            position.x;
+
+        float latitude =
+            position.y;
+
+        float latitudeRadians =
+            latitude *
+            3.14159265359 /
+            180.0;
+
+        float mercatorY =
+            log(
+                tan(
+                    3.14159265359 / 4.0 +
+                    latitudeRadians / 2.0
+                )
+            );
+
+        vec2 projectedPosition =
+            vec2(
+                longitude / 180.0,
+                mercatorY
+            );
+
+        vec2 screenPosition =
+            projectedPosition *
+            mapScale +
+            mapOrigin;
+
+        screenPosition.x +=
+            worldOffset;
+
+        gl_Position =
+            vec4(
+                screenPosition,
+                0.0,
+                1.0
+            );
+
+    }
+`;
 
 const fragmentShaderSource = `
     precision mediump float;
@@ -381,6 +432,21 @@ if (weatherField < 0.5) {
     }
 `;
 
+const coastlineFragmentShaderSource = `
+    precision mediump float;
+
+    void main() {
+
+        gl_FragColor =
+            vec4(
+                0.05,
+                0.05,
+                0.05,
+                0.9
+            );
+
+    }
+`;
 
 export function initialiseWebGL(map) {
 
@@ -455,6 +521,141 @@ function prepareQuadIndexData() {
         0, 1, 2,
         2, 1, 3
     ]);
+
+}
+
+function prepareCoastlineVertexData(
+    data
+) {
+
+    const vertices = [];
+
+    function addLine(
+        line
+    ) {
+
+        for (
+            let i = 0;
+            i < line.length - 1;
+            i++
+        ) {
+
+            const start =
+                line[i];
+
+            const end =
+                line[i + 1];
+
+            vertices.push(
+                start[0],
+                start[1],
+                end[0],
+                end[1]
+            );
+
+        }
+
+    }
+
+    data.features.forEach(
+        feature => {
+
+            const geometry =
+                feature.geometry;
+
+            if (
+                geometry.type ===
+                "LineString"
+            ) {
+
+                addLine(
+                    geometry.coordinates
+                );
+
+            }
+
+            if (
+                geometry.type ===
+                "MultiLineString"
+            ) {
+
+                geometry.coordinates.forEach(
+                    line => {
+
+                        addLine(
+                            line
+                        );
+
+                    }
+                );
+
+            }
+
+        }
+    );
+
+    return new Float32Array(
+        vertices
+    );
+
+}
+
+function loadWebGLCoastline() {
+
+    fetch(
+        "data/coastline/ne_50m_coastline.geojson"
+    )
+        .then(response => {
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Coastline GeoJSON could not be loaded."
+                );
+
+            }
+
+            return response.json();
+
+        })
+        .then(data => {
+
+            const coastlineVertices =
+                prepareCoastlineVertexData(
+                    data
+                );
+
+            coastlineBuffer =
+                gl.createBuffer();
+
+            gl.bindBuffer(
+                gl.ARRAY_BUFFER,
+                coastlineBuffer
+            );
+
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                coastlineVertices,
+                gl.STATIC_DRAW
+            );
+
+            coastlineVertexCount =
+                coastlineVertices.length / 2;
+
+            console.log(
+                "WebGL coastline vertices:",
+                coastlineVertexCount
+            );
+
+        })
+        .catch(error => {
+
+            console.error(
+                "WebGL coastline loading failed:",
+                error
+            );
+
+        });
 
 }
 
@@ -792,6 +993,133 @@ gl.viewport(
         program
     );
 
+    // -------------------------
+    // Create coastline shaders
+    // -------------------------
+
+    const coastlineVertexShader =
+        gl.createShader(
+            gl.VERTEX_SHADER
+        );
+
+    gl.shaderSource(
+        coastlineVertexShader,
+        coastlineVertexShaderSource
+    );
+
+    gl.compileShader(
+        coastlineVertexShader
+    );
+
+    if (
+        !gl.getShaderParameter(
+            coastlineVertexShader,
+            gl.COMPILE_STATUS
+        )
+    ) {
+
+        throw new Error(
+            gl.getShaderInfoLog(
+                coastlineVertexShader
+            )
+        );
+
+    }
+
+
+    const coastlineFragmentShader =
+        gl.createShader(
+            gl.FRAGMENT_SHADER
+        );
+
+    gl.shaderSource(
+        coastlineFragmentShader,
+        coastlineFragmentShaderSource
+    );
+
+    gl.compileShader(
+        coastlineFragmentShader
+    );
+
+    if (
+        !gl.getShaderParameter(
+            coastlineFragmentShader,
+            gl.COMPILE_STATUS
+        )
+    ) {
+
+        throw new Error(
+            gl.getShaderInfoLog(
+                coastlineFragmentShader
+            )
+        );
+
+    }
+
+
+    // -------------------------
+    // Create coastline program
+    // -------------------------
+
+    const coastlineProgram =
+        gl.createProgram();
+
+    gl.attachShader(
+        coastlineProgram,
+        coastlineVertexShader
+    );
+
+    gl.attachShader(
+        coastlineProgram,
+        coastlineFragmentShader
+    );
+
+    gl.linkProgram(
+        coastlineProgram
+    );
+
+    if (
+        !gl.getProgramParameter(
+            coastlineProgram,
+            gl.LINK_STATUS
+        )
+    ) {
+
+        throw new Error(
+            gl.getProgramInfoLog(
+                coastlineProgram
+            )
+        );
+
+    }
+
+    console.log(
+        "WebGL coastline shader program ready."
+    );
+
+    const coastlinePosition =
+        gl.getAttribLocation(
+            coastlineProgram,
+            "position"
+        );
+
+    const coastlineMapOrigin =
+        gl.getUniformLocation(
+            coastlineProgram,
+            "mapOrigin"
+        );
+
+    const coastlineMapScale =
+        gl.getUniformLocation(
+            coastlineProgram,
+            "mapScale"
+        );
+
+    const coastlineWorldOffset =
+        gl.getUniformLocation(
+            coastlineProgram,
+            "worldOffset"
+        );
 
     // -------------------------
     // Find shader attributes
@@ -939,6 +1267,10 @@ gl.viewport(
         quadVertexData,
         gl.STATIC_DRAW
     );        
+
+    let coastlineBuffer = null;
+
+    let coastlineVertexCount = 0;
 
     function draw() {
 
@@ -1228,7 +1560,80 @@ gl.viewport(
             );
         }
 
+        if (coastlineBuffer) {
+
+            gl.useProgram(
+                coastlineProgram
+            );
+
+            gl.bindBuffer(
+                gl.ARRAY_BUFFER,
+                coastlineBuffer
+            );
+
+            gl.enableVertexAttribArray(
+                coastlinePosition
+            );
+
+            gl.vertexAttribPointer(
+                coastlinePosition,
+                2,
+                gl.FLOAT,
+                false,
+                0,
+                0
+            );
+
+            gl.uniform2f(
+                coastlineMapOrigin,
+                mapOriginX,
+                mapOriginY
+            );
+
+            gl.uniform2f(
+                coastlineMapScale,
+                mapScaleX,
+                mapScaleY
+            );
+
+            gl.uniform1f(
+                coastlineWorldOffset,
+                -worldWidth
+            );
+
+            gl.drawArrays(
+                gl.LINES,
+                0,
+                coastlineVertexCount
+            );
+
+            gl.uniform1f(
+                coastlineWorldOffset,
+                0.0
+            );
+
+            gl.drawArrays(
+                gl.LINES,
+                0,
+                coastlineVertexCount
+            );
+
+            gl.uniform1f(
+                coastlineWorldOffset,
+                worldWidth
+            );
+
+            gl.drawArrays(
+                gl.LINES,
+                0,
+                coastlineVertexCount
+            );
+
+        }        
+
     }
+
+    loadWebGLCoastline();
 
     if (temperatures) {
 

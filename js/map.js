@@ -23,6 +23,32 @@ export function initialiseMap() {
         }
     ).addTo(map);
 
+    map.createPane("coastlinePane");
+
+    map.getPane("coastlinePane").style.zIndex =
+        650;
+
+    fetch(
+        "./data/coastline/ne_50m_coastline.geojson"
+    )
+        .then(response => response.json())
+        .then(data => {
+
+            L.geoJSON(
+                data,
+                {
+                    pane: "coastlinePane",
+
+                    style: {
+                        color: "#222",
+                        weight: 1,
+                        opacity: 0.8
+                    }
+                }
+            ).addTo(map);
+
+        });
+
     map.on("zoomend", updateZoom);
 
     map.on("mousemove", updateMousePosition);
