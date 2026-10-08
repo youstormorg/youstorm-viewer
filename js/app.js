@@ -643,6 +643,25 @@ setCurrentValidTime(
     firstTemperatureData.valid_time
 );
 
+const forecastDate =
+    new Date(
+        firstTemperatureData.valid_time
+    );
+
+document.getElementById(
+    "forecastUTCTime"
+).textContent =
+    `${forecastDate.getUTCDate()} ${
+        forecastDate.toLocaleString(
+            "en-GB",
+            { month: "short", timeZone: "UTC" }
+        ).slice(0, 3)
+    } ${
+        forecastDate.getUTCHours()
+            .toString()
+            .padStart(2, "0")
+    } UTC`;
+
 if (
     document.getElementById(
         "webglPrecipitationToggle"

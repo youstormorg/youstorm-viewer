@@ -124,6 +124,10 @@ flex:1;
 
 }
 
+.leaflet-top {
+    top: 35px;
+}
+
 #weatherWebGL {
     
     position:absolute;
