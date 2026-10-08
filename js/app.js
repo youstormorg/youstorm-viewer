@@ -69,7 +69,8 @@ function updateWeatherReadout() {
     const grid =
         latLonToGrid(
             lat,
-            lon
+            lon,
+            webgl.getModel()
         );
 
     const visibleLayers =
@@ -700,29 +701,59 @@ const forecastPlayButton =
 
 function latLonToGrid(
     lat,
-    lon
+    lon,
+    model
 ) {
 
-    const row =
-        Math.round(
-            (90 - lat) / 0.25
-        );
+    let row;
+    let column;
 
-    let normalisedLon =
-        lon + 180;
+    if (model === "GFS") {
 
-    if (normalisedLon < 0) {
-        normalisedLon += 360;
+        row =
+            Math.round(
+                (lat + 90) / 0.25
+            );
+
+        let normalisedLon =
+            lon;
+
+        if (normalisedLon < 0) {
+            normalisedLon += 360;
+        }
+
+        if (normalisedLon >= 360) {
+            normalisedLon -= 360;
+        }
+
+        column =
+            Math.round(
+                normalisedLon / 0.25
+            ) % 1440;
+
+    } else {
+
+        row =
+            Math.round(
+                (90 - lat) / 0.25
+            );
+
+        let normalisedLon =
+            lon + 180;
+
+        if (normalisedLon < 0) {
+            normalisedLon += 360;
+        }
+
+        if (normalisedLon >= 360) {
+            normalisedLon -= 360;
+        }
+
+        column =
+            Math.round(
+                normalisedLon / 0.25
+            ) % 1440;
     }
-
-    if (normalisedLon >= 360) {
-        normalisedLon -= 360;
-    }
-
-    const column =
-        Math.round(
-            normalisedLon / 0.25
-        ) % 1440;
 
     return {
         row: row,
@@ -754,7 +785,8 @@ map.on(
         const grid =
             latLonToGrid(
                 lat,
-                lon
+                lon,
+                webgl.getModel()
             );
 
         let variable;

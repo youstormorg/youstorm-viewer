@@ -1692,6 +1692,11 @@ gl.viewport(
         getWeatherValue:
             getWeatherValue,
 
+        getModel:
+            () => {
+                return currentModel;
+            },
+
         setModel:
             (model) => {
                 currentModel =
