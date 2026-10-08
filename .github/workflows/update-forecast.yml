@@ -48,6 +48,8 @@ jobs:
           cp -r images _site/
           mkdir -p _site/data/gfs
           mkdir -p _site/data/ecmwf
+          mkdir -p _site/data/coastline
+          cp data/coastline/ne_50m_coastline.geojson _site/data/coastline/
 
           cp data/gfs/gfs_temp_global_*.bin _site/data/gfs/
           cp data/gfs/gfs_precip_global_*.bin _site/data/gfs/
