@@ -22,6 +22,14 @@ for forecast_hour in precipitation_hours:
         ],
         check=True
     )
+    subprocess.run(
+        [
+            "python",
+            "processing/convert_ecmwf_precip_u16.py",
+            str(forecast_hour)
+        ],
+        check=True
+    )    
 
 
 print()
