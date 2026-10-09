@@ -44,6 +44,11 @@ jobs:
               -o "_site/data/gfs/gfs_precip_global_f$(printf '%03d' $hour).bin"
           done
 
+          for hour in $(seq 3 3 144); do
+            curl -fL "https://youstormorg.github.io/youstorm-viewer/data/gfs/gfs_precip_global_f$(printf '%03d' $hour)_u16.bin" \
+              -o "_site/data/gfs/gfs_precip_global_f$(printf '%03d' $hour)_u16.bin"
+          done
+
           for hour in $(seq 0 3 144); do
             curl -fL "https://youstormorg.github.io/youstorm-viewer/data/ecmwf/ecmwf_2t_f$(printf '%03d' $hour).bin" \
               -o "_site/data/ecmwf/ecmwf_2t_f$(printf '%03d' $hour).bin"
@@ -52,6 +57,11 @@ jobs:
           for hour in $(seq 3 3 144); do
             curl -fL "https://youstormorg.github.io/youstorm-viewer/data/ecmwf/ecmwf_precip_f$(printf '%03d' $hour).bin" \
               -o "_site/data/ecmwf/ecmwf_precip_f$(printf '%03d' $hour).bin"
+          done
+
+          for hour in $(seq 3 3 144); do
+            curl -fL "https://youstormorg.github.io/youstorm-viewer/data/ecmwf/ecmwf_precip_f$(printf '%03d' $hour)_u16.bin" \
+              -o "_site/data/ecmwf/ecmwf_precip_f$(printf '%03d' $hour)_u16.bin"
           done
 
           curl -fL https://youstormorg.github.io/youstorm-viewer/data/gfs/gfs_temperature_metadata.json \
