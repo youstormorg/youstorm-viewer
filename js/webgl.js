@@ -670,14 +670,14 @@ function loadWebGLPrecipitation(
         filename =
             "data/ecmwf/ecmwf_precip_f" +
             String(forecastHour).padStart(3, "0") +
-            ".bin";
+            "_u16.bin";
 
     } else {
 
         filename =
             "data/gfs/gfs_precip_global_f" +
             String(forecastHour).padStart(3, "0") +
-            ".bin";
+            "_u16.bin";
     }
 
     console.log(
@@ -701,8 +701,25 @@ function loadWebGLPrecipitation(
         })
         .then(data => {
 
+            const packedPrecipitation =
+                new Uint16Array(data);
+
             precipitation =
-                new Float32Array(data);
+                new Float32Array(
+                    packedPrecipitation.length
+                );
+
+            for (
+                let i = 0;
+                i < packedPrecipitation.length;
+                i++
+            ) {
+
+                precipitation[i] =
+                    packedPrecipitation[i] === 65535
+                        ? 0
+                        : packedPrecipitation[i] / 10;
+            }
 
             precipitationDataTexture =
                 gl.createTexture();
@@ -731,7 +748,7 @@ function loadWebGLPrecipitation(
             console.log(
                 "WebGL error after precipitation texture upload:",
                 gl.getError()
-            );            
+            );
 
             gl.texParameteri(
                 gl.TEXTURE_2D,
@@ -762,6 +779,12 @@ function loadWebGLPrecipitation(
             );
 
             draw();
+        })
+        .catch(error => {
+            console.error(
+                "Failed to load WebGL precipitation:",
+                error
+            );
         });
 
 }
