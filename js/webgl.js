@@ -660,7 +660,8 @@ function loadWebGLCoastline() {
 }
 
 function loadWebGLPrecipitation(
-    forecastHour
+    forecastHour,
+    onLoaded = null
 ) {
 
     let filename;
@@ -779,6 +780,10 @@ function loadWebGLPrecipitation(
             );
 
             draw();
+
+            if (typeof onLoaded === "function") {
+                onLoaded();
+            }
         })
         .catch(error => {
             console.error(
@@ -791,7 +796,8 @@ function loadWebGLPrecipitation(
 
 function loadWebGLForecast(
     forecastHour,
-    model = "GFS"
+    model = "GFS",
+    onLoaded = null
 ) {
     currentModel =
         model;
@@ -940,6 +946,10 @@ function loadWebGLForecast(
             );            
 
             draw();
+
+            if (typeof onLoaded === "function") {
+                onLoaded();
+            }
         });
 
 }

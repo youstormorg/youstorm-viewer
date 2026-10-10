@@ -148,6 +148,90 @@ function updateWeatherReadout() {
     }
 }
 
+function updateFixedProbeReadout() {
+
+    if (!fixedProbeLatLon) {
+        return;
+    }
+
+    const lat = fixedProbeLatLon.lat;
+    const lon = fixedProbeLatLon.lon;
+
+    const grid = latLonToGrid(
+        lat,
+        lon,
+        webgl.getModel()
+    );
+
+    const visibleLayers = webgl.getVisibleLayers();
+
+    let variable;
+
+    if (visibleLayers.temperature) {
+        variable = "temperature";
+    } else if (visibleLayers.precipitation) {
+        variable = "precipitation";
+    }
+
+    const locationElement =
+        document.getElementById("fixedProbeLocation");
+
+    const timeElement =
+        document.getElementById("fixedProbeTime");
+
+    const valueElement =
+        document.getElementById("fixedProbeValue");
+
+    let displayLon = lon;
+
+    if (displayLon > 180) displayLon -= 360;
+    if (displayLon < -180) displayLon += 360;
+
+    const latDirection = lat >= 0 ? "N" : "S";
+    const lonDirection = displayLon >= 0 ? "E" : "W";
+
+    locationElement.textContent =
+        `${Math.abs(lat).toFixed(2)}°${latDirection}, ` +
+        `${Math.abs(displayLon).toFixed(2)}°${lonDirection}`;
+
+    if (currentValidTime) {
+        const forecastDate = new Date(currentValidTime);
+
+        timeElement.textContent =
+            forecastDate.toLocaleString("en-GB", {
+                timeZone: "UTC",
+                day: "2-digit",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false
+            }) + " UTC";
+    } else {
+        timeElement.textContent = "Forecast time unavailable";
+    }
+
+    if (!variable) {
+        valueElement.textContent = "No weather layer visible";
+        return;
+    }
+
+    const value = webgl.getWeatherValue(
+        grid.row,
+        grid.column,
+        variable
+    );
+
+    if (value === null) {
+        valueElement.textContent = "--";
+    } else if (variable === "temperature") {
+        valueElement.textContent =
+            `Temperature: ${value.toFixed(1)} °C`;
+    } else {
+        valueElement.textContent =
+            `Precipitation: ${value.toFixed(1)} mm`;
+    }
+}
+
 async function initialiseApplication() {
 
     map =
@@ -251,7 +335,8 @@ async function initialiseApplication() {
                             ).value
                         )
                     ].forecast_hour,
-                    getTemperatureModel()
+                    getTemperatureModel(),
+                    updateFixedProbeReadout
                 );
 
                 const forecastIndex =
@@ -306,7 +391,8 @@ async function initialiseApplication() {
                 if (precipitationData) {
 
                     webgl.loadPrecipitation(
-                        precipitationData.forecast_hour
+                        precipitationData.forecast_hour,
+                        updateFixedProbeReadout
                     );
 
                     document.getElementById(
@@ -486,7 +572,8 @@ const forecastDate =
 
         webgl.loadForecast(
             data.forecast_hour,
-            getTemperatureModel()
+            getTemperatureModel(),
+            updateFixedProbeReadout
         );
 
         updateForecastDisplay(
@@ -509,7 +596,8 @@ if (
     if (precipitationData) {
 
         webgl.loadPrecipitation(
-            precipitationData.forecast_hour
+            precipitationData.forecast_hour,
+            updateFixedProbeReadout
         );
 
         webgl.setPrecipitationVisible(
@@ -690,7 +778,8 @@ if (
 
     webgl.loadForecast(
         forecastData.forecast_hour,
-        model
+        model,
+        updateFixedProbeReadout
     );
 
 }
@@ -782,7 +871,7 @@ function latLonToGrid(
 
 let probeEnabled =
     true;
-
+let fixedProbeLatLon = null;
 let lastMouseLatLon =
     null;
 
@@ -871,6 +960,62 @@ map.on(
         }
     }
 );
+
+map.doubleClickZoom.disable();
+
+const fixedProbeMarkerElement = document.getElementById(
+    "fixedProbeMarker"
+);
+
+function positionFixedProbeMarker() {
+
+    if (!fixedProbeLatLon) {
+        return;
+    }
+
+    const point = map.latLngToContainerPoint([
+        fixedProbeLatLon.lat,
+        fixedProbeLatLon.lon
+    ]);
+
+    fixedProbeMarkerElement.style.left = `${point.x}px`;
+    fixedProbeMarkerElement.style.top = `${point.y}px`;
+}
+
+map.on("dblclick", (event) => {
+
+    fixedProbeLatLon = {
+        lat: event.latlng.lat,
+        lon: event.latlng.lng
+    };
+
+    fixedProbeMarkerElement.style.display = "block";
+
+    positionFixedProbeMarker();
+
+    document.getElementById(
+        "fixedProbeReadout"
+    ).style.display = "block";
+
+    updateFixedProbeReadout();
+
+});
+
+map.on("move zoom", positionFixedProbeMarker);
+
+document.getElementById(
+    "fixedProbeClose"
+).addEventListener("click", () => {
+
+    fixedProbeLatLon = null;
+
+    fixedProbeMarkerElement.style.display = "none";
+
+    document.getElementById(
+        "fixedProbeReadout"
+    ).style.display = "none";
+
+});
 
 const forecastSlider =
     document.getElementById(
