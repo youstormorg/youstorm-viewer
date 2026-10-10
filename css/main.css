@@ -88,8 +88,8 @@ display:flex;
 #fixedProbeReadout {
     position: absolute;
     cursor: grab;
-    top: 70px;
-    left: 290px;
+    top: 150px;
+    left: 150px;
     z-index: 10000;
     background: rgba(20, 20, 20, 0.95);
     color: white;
@@ -129,7 +129,7 @@ display:flex;
 }
 
 #sidebar{
-
+cursor: grab;
 width:100px;
 
 display:none;

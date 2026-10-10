@@ -283,8 +283,10 @@ export function createTemperatureLegend() {
 
 }
 
-export function makeLegendDraggable(legend) {
-
+export function makeLegendDraggable(
+    legend,
+    ignoreSelector = null
+) {
     let dragging = false;
     let startX = 0;
     let startY = 0;
@@ -293,7 +295,12 @@ export function makeLegendDraggable(legend) {
 
 
     function startDrag(event) {
-
+        if (
+            ignoreSelector &&
+            event.target.closest(ignoreSelector)
+        ) {
+            return;
+        }
         const point =
             event.touches
                 ? event.touches[0]
@@ -303,7 +310,7 @@ export function makeLegendDraggable(legend) {
             legend.getBoundingClientRect();
 
         dragging = true;
-
+        legend.style.cursor = "grabbing";
         startX = point.clientX;
         startY = point.clientY;
 
@@ -363,6 +370,7 @@ export function makeLegendDraggable(legend) {
     function stopDrag() {
 
         dragging = false;
+        legend.style.cursor = "grab";
 
     }
 

@@ -272,6 +272,19 @@ async function initialiseApplication() {
         )
     );
 
+    makeLegendDraggable(
+        document.getElementById(
+            "fixedProbeReadout"
+        )
+    );
+
+    makeLegendDraggable(
+        document.getElementById(
+            "sidebar"
+        ),
+        "input, label"
+    );
+
     document.getElementById(
         "probeToggle"
     ).addEventListener(
