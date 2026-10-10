@@ -194,21 +194,47 @@ function updateFixedProbeReadout() {
         `${Math.abs(lat).toFixed(2)}°${latDirection}, ` +
         `${Math.abs(displayLon).toFixed(2)}°${lonDirection}`;
 
-    if (currentValidTime) {
-        const forecastDate = new Date(currentValidTime);
 
-        timeElement.textContent =
-            forecastDate.toLocaleString("en-GB", {
-                timeZone: "UTC",
-                day: "2-digit",
+    if (currentValidTime) {
+        try {
+            const forecastDate = new Date(currentValidTime);
+
+            const localTimeInfo =
+                window.timezoneturbo.getLocalTimeInfo(
+                    [displayLon, lat],
+                    { date: forecastDate }
+                );
+
+            const localDate = new Date(
+                localTimeInfo.unixTimestamp * 1000
+            );
+
+            const localDateParts = new Intl.DateTimeFormat("en-GB", {
+                timeZone: localTimeInfo.timezone,
+                day: "numeric",
                 month: "short",
                 hour: "2-digit",
                 minute: "2-digit",
                 hour12: false
-            }) + " UTC";
+            }).formatToParts(localDate);
+
+            const parts = Object.fromEntries(
+                localDateParts.map(part => [part.type, part.value])
+            );
+
+            const offset = localTimeInfo.localTime.match(/GMT[+-]\d+(?::\d+)?|EST|EDT|CST|CDT|MST|MDT|PST|PDT/);
+
+            timeElement.textContent =
+                `${parts.day} ${parts.month} ${parts.hour}:${parts.minute}` +
+                (offset ? ` ${offset[0]}` : "");
+
+        } catch (error) {
+            timeElement.textContent = "Local time unavailable";
+        }
     } else {
         timeElement.textContent = "Forecast time unavailable";
     }
+
 
     if (!variable) {
         valueElement.textContent = "No weather layer visible";
@@ -807,60 +833,29 @@ const forecastPlayButton =
         "forecastPlayButton"
     );
 
+
 function latLonToGrid(
     lat,
     lon,
     model
 ) {
-
     let row;
     let column;
 
+    // Normalise longitude for any repeated map world.
+    const normalisedLon =
+        ((lon % 360) + 360) % 360;
+
     if (model === "GFS") {
-
-        row =
-            Math.round(
-                (lat + 90) / 0.25
-            );
-
-        let normalisedLon =
-            lon;
-
-        if (normalisedLon < 0) {
-            normalisedLon += 360;
-        }
-
-        if (normalisedLon >= 360) {
-            normalisedLon -= 360;
-        }
+        row = Math.round((lat + 90) / 0.25);
 
         column =
-            Math.round(
-                normalisedLon / 0.25
-            ) % 1440;
-
+            Math.round(normalisedLon / 0.25) % 1440;
     } else {
-
-        row =
-            Math.round(
-                (90 - lat) / 0.25
-            );
-
-        let normalisedLon =
-            lon + 180;
-
-        if (normalisedLon < 0) {
-            normalisedLon += 360;
-        }
-
-        if (normalisedLon >= 360) {
-            normalisedLon -= 360;
-        }
+        row = Math.round((90 - lat) / 0.25);
 
         column =
-            Math.round(
-                normalisedLon / 0.25
-            ) % 1440;
+            Math.round(((normalisedLon + 180) % 360) / 0.25) % 1440;
     }
 
     return {
@@ -868,6 +863,7 @@ function latLonToGrid(
         column: column
     };
 }
+
 
 let probeEnabled =
     true;
