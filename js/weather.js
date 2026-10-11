@@ -46,37 +46,26 @@ const precipitationHours = PRECIPITATION_HOURS;
 const temperatureScale = TEMPERATURE_SCALE;
 const precipitationScale = PRECIPITATION_SCALE;
 
-// Load a single GFS forecast
+// Load GFS forecast metadata
 async function loadForecastMetadata() {
+    const filename = MODELS.GFS.temperatureMetadata;
 
-    const filename =
-        MODELS.GFS.temperatureMetadata;
-
-    const response =
-        await fetch(filename);
+    const response = await fetch(filename);
 
     if (!response.ok) {
-
         throw new Error(
             `Could not load GFS metadata: ${response.status}`
         );
-
     }
 
     return await response.json();
 }
 
-
-// Load all available forecasts
+// Load GFS temperature forecasts
 export async function loadTemperatureData() {
+    weatherData = await loadForecastMetadata();
 
-    weatherData =
-        await loadForecastMetadata();
-        
-    console.log(
-        "First GFS forecast:",
-        weatherData[0]
-    );
+    console.log("First GFS forecast:", weatherData[0]);
 
     console.log(
         `Loaded ${weatherData.length} GFS forecast metadata records`

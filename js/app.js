@@ -366,39 +366,36 @@ async function initialiseApplication() {
 
                 if (event.target.checked) {
 
-                webgl.loadForecast(
-                    getTemperatureMetadata()[
+                    const forecastIndex =
                         Number(
                             document.getElementById(
                                 "forecastSlider"
                             ).value
-                        )
-                    ].forecast_hour,
-                    getTemperatureModel(),
-                    updateFixedProbeReadout
-                );
+                        );
 
-                const forecastIndex =
-                    Number(
-                        document.getElementById(
-                            "forecastSlider"
-                        ).value
+                    const temperatureMetadata =
+                        getTemperatureModel() === "ECMWF"
+                            ? getECMWFMetadata()
+                            : getTemperatureMetadata();
+
+                    const temperatureData =
+                        temperatureMetadata[forecastIndex];
+
+                    webgl.loadForecast(
+                        temperatureData.forecast_hour,
+                        getTemperatureModel(),
+                        updateFixedProbeReadout
                     );
 
-                const temperatureData =
-                    getTemperatureModel() === "ECMWF"
-                        ? getECMWFMetadata()[forecastIndex]
-                        : getTemperatureMetadata()[forecastIndex];
-
-                document.getElementById(
-                    "forecastControlLabel"
-                ).textContent =
-                    `${Number(
-                        temperatureData.forecast_hour
-                    )
-                        .toString()
-                        .padStart(3, "0")} h`;
-                }                       
+                    document.getElementById(
+                        "forecastControlLabel"
+                    ).textContent =
+                        `${Number(
+                            temperatureData.forecast_hour
+                        )
+                            .toString()
+                            .padStart(3, "0")} h`;
+                }
 
                 console.log(
                     "WebGL visibility:",
@@ -488,46 +485,47 @@ async function initialiseApplication() {
         }
     );
 
-    initialiseUI(map);
+initialiseUI(map);
 
+await loadTemperatureData();
 
-    await loadTemperatureData();
+await loadECMWFMetadata();
+webgl.setModel(getTemperatureModel());
 
-    const temperatureToggle =
-        document.getElementById(
-            "webglTemperatureToggle"
-        );
+const temperatureToggle =
+    document.getElementById("webglTemperatureToggle");
 
-    if (temperatureToggle.checked) {
+currentValidTime =
+    getTemperatureModel() === "ECMWF"
+        ? getECMWFMetadata()[0].valid_time
+        : getTemperatureMetadata()[0].valid_time;
 
-        temperatureToggle.dispatchEvent(
-            new Event("change")
-        );
+console.log(
+    "Temperature metadata:",
+    getTemperatureModel() === "ECMWF"
+        ? getECMWFMetadata()
+        : getTemperatureMetadata()
+);
 
-    }
+await loadPrecipitationData();
 
-    currentValidTime =
-        getTemperatureMetadata()[0].valid_time;
+createTemperatureLegend();
+createPrecipitationLegend();
 
-    console.log(
-        "Temperature metadata:",
-        getTemperatureMetadata()
+document.getElementById(
+    "precipitationLegend"
+).style.display = "none";
+
+if (temperatureToggle.checked) {
+    temperatureToggle.dispatchEvent(
+        new Event("change")
     );
+}
 
-    await loadPrecipitationData();
-    await loadECMWFMetadata();
-    createTemperatureLegend();
-    createPrecipitationLegend();
-    document.getElementById(
-        "precipitationLegend"
-    ).style.display = "none";
-   
-    // Set up the forecast slider
-    initialiseForecastSlider(map);
+// Set up the forecast slider
+initialiseForecastSlider(map);
 
-    console.log(
-        "YouStorm started"
-    );
+console.log("YouStorm started");
 
 }
 

@@ -1,4 +1,4 @@
-export const DEFAULT_MODEL = "GFS";
+export const DEFAULT_MODEL = "ECMWF";
 
 export const MODELS = {
     GFS: {
