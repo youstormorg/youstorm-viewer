@@ -490,6 +490,17 @@ initialiseUI(map);
 
 await loadTemperatureData();
 
+document.getElementById(
+    "webglCoastlineToggle"
+).addEventListener(
+    "change",
+    (event) => {
+        webgl.setCoastlineVisible(
+            event.target.checked
+        );
+    }
+);
+
 await loadECMWFMetadata();
 webgl.setModel(getTemperatureModel());
 

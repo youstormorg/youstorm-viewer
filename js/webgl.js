@@ -442,7 +442,7 @@ const coastlineFragmentShaderSource = `
                 0.05,
                 0.05,
                 0.05,
-                0.9
+                0.55
             );
 
     }
@@ -1305,6 +1305,8 @@ gl.viewport(
 
     let coastlineVertexCount = 0;
 
+    let coastlineVisible = true;
+
     function draw() {
 
         if (
@@ -1593,7 +1595,7 @@ gl.viewport(
             );
         }
 
-        if (coastlineBuffer) {
+        if (coastlineVisible && coastlineBuffer) {
 
             gl.useProgram(
                 coastlineProgram
@@ -1761,6 +1763,14 @@ gl.viewport(
         setPrecipitationVisible:
             (visible) => {
                 precipitationVisible =
+                    visible;
+
+                draw();
+            },
+
+        setCoastlineVisible:
+            (visible) => {
+                coastlineVisible =
                     visible;
 
                 draw();
