@@ -440,10 +440,27 @@ z-index:10000;
 
 }
 
+/* Header layout */
+
+#headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+}
+
+#modelSelector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Buttons that open viewer panels */
+
 #layersToggle,
 #legendToggle,
-#probeToggle,
-.modelButton {
+#probeToggle {
     background: transparent;
     border: 1px solid #666;
     color: white;
@@ -451,64 +468,33 @@ z-index:10000;
     border-radius: 4px;
     cursor: pointer;
     font-size: 13px;
-    margin-left: 10px;
 }
 
-#probeToggle {
-    margin-right: 10px;
+/* Forecast model buttons */
+
+.modelButton {
+    background: #24445d;
+    border: 1px solid #47718f;
+    color: #e5f2ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.modelButton.active {
+    background: #3679a8;
+    border-color: #73b7e5;
+    color: white;
+}
+
+.modelButton:hover {
+    background: #426b87;
 }
 
 #layersToggle.active {
     background: white;
     color: black;
-}
-
-#headerLeft {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-#modelSelector {
-
-    display: flex;
-
-    gap: 6px;
-
-    margin-right: auto;
-
-}
-
-.modelButton {
-
-    background: transparent;
-
-    border: 1px solid #666;
-
-    color: white;
-
-    padding: 4px 8px;
-
-    border-radius: 4px;
-
-    cursor: pointer;
-
-    font-size: 13px;
-
-}
-
-.modelButton.active {
-
-    background: white;
-
-    color: black;
-
-}
-
-.modelButton:hover {
-
-    background: #444;
-
 }
 
 #logo {
