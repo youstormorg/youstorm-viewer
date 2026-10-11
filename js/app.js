@@ -275,7 +275,8 @@ async function initialiseApplication() {
     makeLegendDraggable(
         document.getElementById(
             "fixedProbeReadout"
-        )
+        ),
+        "#fixedProbeClose"
     );
 
     makeLegendDraggable(
