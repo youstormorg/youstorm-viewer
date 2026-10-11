@@ -39,14 +39,6 @@ for forecast_hour in precipitation_hours:
     subprocess.run(
         [
             "python",
-            "processing/convert_precip_binary.py",
-            str(forecast_hour)
-        ],
-        check=True
-    )
-    subprocess.run(
-        [
-            "python",
             "processing/convert_precip_binary_u16.py",
             str(forecast_hour)
         ],

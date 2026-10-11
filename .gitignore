@@ -59,3 +59,9 @@ data/ecmwf/ecmwf_temperature_tiles_*/openlayers.html
 data/ecmwf/ecmwf_temperature_tiles_*/stacta.json
 data/ecmwf/ecmwf_temperature_tiles_*/leaflet.html
 data/ecmwf/ecmwf_temperature_tiles_*/mapml.mapml
+
+# Generated forecast binaries and metadata (deployed via GitHub Pages)
+data/gfs/*.bin
+data/gfs/*metadata.json
+data/ecmwf/*.bin
+data/ecmwf/*metadata.json

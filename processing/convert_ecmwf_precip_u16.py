@@ -5,7 +5,7 @@ import numpy as np
 if len(sys.argv) != 2:
 
     print(
-        "Usage: python convert_ecmwf_precip.py FORECAST_HOUR"
+        "Usage: python convert_ecmwf_precip_u16.py FORECAST_HOUR"
     )
 
     sys.exit(1)
