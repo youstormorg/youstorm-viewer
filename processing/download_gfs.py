@@ -69,12 +69,35 @@ def find_latest_cycle():
         )
 
         if response.status_code == 200:
-            print()
-            print(
-                f"Latest available GFS cycle: "
-                f"{date} {cycle}Z"
+
+            # Check whether the final forecast hour is available.
+            final_filename = (
+                f"gfs.t{cycle}z.pgrb2.0p25.f144"
             )
-            return date, cycle
+
+            final_params = {
+                "file": final_filename,
+                "dir": f"/gfs.{date}/{cycle}/atmos"
+            }
+
+            final_response = requests.head(
+                url,
+                params=final_params,
+                timeout=30
+            )
+
+            if final_response.status_code == 200:
+                print()
+                print(
+                    f"Latest complete GFS cycle: "
+                    f"{date} {cycle}Z"
+                )
+                return date, cycle
+
+            print(
+                f"GFS cycle {date} {cycle}Z "
+                f"has no f144 forecast yet"
+            )
 
         print(
             f"GFS cycle {date} {cycle}Z "
