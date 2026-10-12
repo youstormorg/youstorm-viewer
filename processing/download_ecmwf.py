@@ -1,5 +1,5 @@
 from ecmwf.opendata import Client
-
+from pathlib import Path
 
 client = Client(
     source="google"
@@ -26,6 +26,11 @@ def get_latest_ecmwf_cycle():
 
 
 def download_ecmwf():
+
+    Path("data/ecmwf").mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
     for forecast_hour in forecast_hours:
 
