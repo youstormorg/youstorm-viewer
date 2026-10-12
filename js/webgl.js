@@ -122,6 +122,21 @@ const fragmentShaderSource = `
     uniform float shiftLongitude;
     uniform float weatherField;
     uniform float weatherOpacity;
+    uniform float precipitationRenderMode;
+    float readPrecipitationCell(vec2 cell) {
+        float x = mod(cell.x, 1440.0);
+        float y = clamp(cell.y, 0.0, 720.0);
+
+        vec2 cellCentre =
+            (vec2(x, y) + vec2(0.5, 0.5))
+            / vec2(1440.0, 721.0);
+
+        return texture2D(
+            precipitationDataTexture,
+            cellCentre
+        ).r;
+    }
+
     void main() {
 
     float latitudeRadians =
@@ -170,11 +185,69 @@ const fragmentShaderSource = `
             precipitationDataTexture,
             dataTexCoord
         ).r;
+    float wetMask = 0.0;
+    float mode5PrecipitationValue = precipitationValue;
 
+    if (precipitationRenderMode > 0.5) {
+        vec2 gridPosition =
+            dataTexCoord * vec2(1440.0, 721.0)
+            - vec2(0.5, 0.5);
+
+        vec2 baseCell = floor(gridPosition);
+        vec2 fraction = fract(gridPosition);
+
+        float a = readPrecipitationCell(baseCell);
+        float b = readPrecipitationCell(
+            baseCell + vec2(1.0, 0.0)
+        );
+        float c = readPrecipitationCell(
+            baseCell + vec2(0.0, 1.0)
+        );
+        float d = readPrecipitationCell(
+            baseCell + vec2(1.0, 1.0)
+        );
+
+        float wetA = a >= 0.1 ? 1.0 : 0.0;
+        float wetB = b >= 0.1 ? 1.0 : 0.0;
+        float wetC = c >= 0.1 ? 1.0 : 0.0;
+        float wetD = d >= 0.1 ? 1.0 : 0.0;
+
+        wetMask = mix(
+            mix(wetA, wetB, fraction.x),
+            mix(wetC, wetD, fraction.x),
+            fraction.y
+        );
+
+        float allWet = wetA * wetB * wetC * wetD;
+        float allDry =
+            (1.0 - wetA) * (1.0 - wetB)
+            * (1.0 - wetC) * (1.0 - wetD);
+
+        float top = mix(a, b, fraction.x);
+        float bottom = mix(c, d, fraction.x);
+        float interpolated = mix(top, bottom, fraction.y);
+
+        if (allDry > 0.5) {
+            mode5PrecipitationValue = 0.0;
+        } else if (allWet > 0.5) {
+            mode5PrecipitationValue = interpolated;
+        }
+    }
     float fieldValue =
         weatherField < 0.5
             ? temperature
             : precipitationValue;
+
+    if (precipitationRenderMode > 0.5) {
+        precipitationValue = mode5PrecipitationValue;
+
+        if (wetMask >= 0.5) {
+            precipitationValue = max(
+                precipitationValue,
+                0.1
+            );
+        }
+    }
 
 vec3 colour;
 
@@ -425,8 +498,14 @@ if (weatherField < 0.5) {
 
     float alpha = weatherOpacity;
 
-    if (weatherField >= 0.5 && precipitationValue < 0.1) {
-        alpha = 0.0;
+    if (weatherField >= 0.5) {
+        if (precipitationRenderMode > 0.5) {
+            alpha = wetMask >= 0.5
+                ? weatherOpacity
+                : 0.0;
+        } else if (precipitationValue < 0.1) {
+            alpha = 0.0;
+        }
     }
 
     gl_FragColor =
@@ -1211,7 +1290,13 @@ gl.viewport(
             program,
             "weatherOpacity"
         );        
-        
+
+    const precipitationRenderModeLocation =
+        gl.getUniformLocation(
+            program,
+            "precipitationRenderMode"
+        );
+
     const flipLatitudeLocation =
         gl.getUniformLocation(
             program,
@@ -1229,6 +1314,7 @@ gl.viewport(
 
     let temperatureVisible = false;
     let precipitationVisible = false;
+    let precipitationRenderMode = 0;
     let weatherOpacity = 1.0;
 
     let indexBuffer = null;
@@ -1382,6 +1468,11 @@ gl.viewport(
             weatherOpacityLocation,
             weatherOpacity
         );        
+
+        gl.uniform1f(
+            precipitationRenderModeLocation,
+            0.0
+        );
 
         console.log(
             "WebGL layers:",
@@ -1562,6 +1653,11 @@ gl.viewport(
             gl.uniform1f(
                 weatherFieldLocation,
                 1.0
+            );
+
+            gl.uniform1f(
+                precipitationRenderModeLocation,
+                precipitationRenderMode
             );
 
             gl.uniform1f(
@@ -1770,6 +1866,14 @@ gl.viewport(
             (visible) => {
                 precipitationVisible =
                     visible;
+
+                draw();
+            },
+
+        setPrecipitationRenderMode:
+            (mode) => {
+                precipitationRenderMode =
+                    mode;
 
                 draw();
             },

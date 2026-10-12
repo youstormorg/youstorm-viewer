@@ -55,6 +55,9 @@ export function initialiseUI(map) {
             precipitationLegend.style.display =
                 document.getElementById(
                     "webglPrecipitationToggle"
+                ).checked ||
+                document.getElementById(
+                    "webglPrecipitationMode5Toggle"
                 ).checked
                     ? "block"
                     : "none";

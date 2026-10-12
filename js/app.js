@@ -361,6 +361,9 @@ async function initialiseApplication() {
                     event.target.checked ||
                     document.getElementById(
                         "webglPrecipitationToggle"
+                    ).checked ||
+                    document.getElementById(
+                        "webglPrecipitationMode5Toggle"
                     ).checked
                         ? "block"
                         : "none";
@@ -417,6 +420,17 @@ async function initialiseApplication() {
                 document.getElementById(
                     "weatherWebGL"
                 );
+
+            const mode5Toggle =
+                document.getElementById(
+                    "webglPrecipitationMode5Toggle"
+                );
+
+            if (event.target.checked) {
+                mode5Toggle.checked = false;
+
+                webgl.setPrecipitationRenderMode(0);
+            }
 
             if (event.target.checked) {
 
@@ -485,6 +499,98 @@ async function initialiseApplication() {
 
         }
     );
+
+
+    document.getElementById(
+        "webglPrecipitationMode5Toggle"
+    ).addEventListener(
+        "change",
+        (event) => {
+
+            const canvas =
+                document.getElementById(
+                    "weatherWebGL"
+                );
+
+            if (event.target.checked) {
+
+                document.getElementById(
+                    "webglPrecipitationToggle"
+                ).checked = false;
+
+                webgl.setPrecipitationRenderMode(5);
+
+                const precipitationData =
+                    findMetadataByValidTime(
+                        getPrecipitationMetadata()
+                    );
+
+                if (precipitationData) {
+
+                    webgl.loadPrecipitation(
+                        precipitationData.forecast_hour,
+                        updateFixedProbeReadout
+                    );
+
+                    document.getElementById(
+                        "forecastControlLabel"
+                    ).textContent =
+                        `${Number(
+                            precipitationData.forecast_hour
+                        )
+                            .toString()
+                            .padStart(3, "0")} h`;
+
+                    webgl.setPrecipitationVisible(
+                        true
+                    );
+
+                } else {
+
+                    webgl.setPrecipitationVisible(
+                        false
+                    );
+                }
+
+            } else {
+
+                webgl.setPrecipitationVisible(
+                    false
+                );
+
+                webgl.setPrecipitationRenderMode(0);
+            }
+
+            document.getElementById(
+                "precipitationLegend"
+            ).style.display =
+                event.target.checked
+                    ? "block"
+                    : "none";
+
+            updateWeatherReadoutVisibility();
+
+            updateWeatherReadout();
+
+            canvas.style.display =
+                event.target.checked ||
+                document.getElementById(
+                    "webglTemperatureToggle"
+                ).checked ||
+                document.getElementById(
+                    "webglPrecipitationToggle"
+                ).checked
+                    ? "block"
+                    : "none";
+
+            console.log(
+                "WebGL precipitation Mode 5:",
+                event.target.checked
+            );
+
+        }
+    );
+
 
 initialiseUI(map);
 
@@ -634,6 +740,9 @@ const forecastDate =
 if (
     document.getElementById(
         "webglPrecipitationToggle"
+    ).checked ||
+    document.getElementById(
+        "webglPrecipitationMode5Toggle"
     ).checked
 ) {
 
@@ -671,9 +780,14 @@ if (
     let displayHour;
 
         if (
-            document.getElementById(
-                "webglPrecipitationToggle"
-            ).checked &&
+            (
+                document.getElementById(
+                    "webglPrecipitationToggle"
+                ).checked ||
+                document.getElementById(
+                    "webglPrecipitationMode5Toggle"
+                ).checked
+            ) &&
             getTemperatureModel() === "GFS"
         ) {
 
@@ -802,6 +916,9 @@ document.getElementById(
 if (
     document.getElementById(
         "webglPrecipitationToggle"
+    ).checked ||
+    document.getElementById(
+        "webglPrecipitationMode5Toggle"
     ).checked
 ) {
     webgl.setPrecipitationVisible(false);
