@@ -423,10 +423,16 @@ if (weatherField < 0.5) {
     }
 }
 
+    float alpha = weatherOpacity;
+
+    if (weatherField >= 0.5 && precipitationValue < 0.1) {
+        alpha = 0.0;
+    }
+
     gl_FragColor =
         vec4(
             colour,
-            weatherOpacity
+            alpha
         );
 
     }
