@@ -128,43 +128,59 @@ display:flex;
     padding: 0 3px;
 }
 
-#sidebar{
-cursor: grab;
-width:100px;
 
-display:none;
+#sidebar {
+    cursor: grab;
+    width: 160px;
 
-position:absolute;
-z-index:1000;
+    display: none;
 
-top:60px;
+    position: absolute;
+    z-index: 1000;
 
-left:20px;
+    top: 60px;
+    left: 20px;
 
-background:#252525;
+    background: #252525;
+    border-radius: 5px;
 
-border-radius:5px;
+    padding: 10px;
+    box-sizing: border-box;
 
-padding:10px 5px 10px 10px;
-
-box-sizing:border-box;
-
-overflow:auto;
-overflow-x:hidden;
+    overflow: auto;
+    overflow-x: hidden;
 }
 
-#sidebar h2{
-    font-size:18px;
+#sidebar h2 {
+    font-size: 18px;
 }
 
 #sidebar label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+
     font-size: 12px;
+    margin: 6px 0;
 }
 
-#map{
+#sidebar label input[type="checkbox"] {
+    flex: 0 0 auto;
+    margin: 1px 0 0;
+}
 
-flex:1;
+.layerSection {
+    margin-bottom: 14px;
+}
 
+.layerSectionTitle {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+#map {
+    flex: 1;
 }
 
 .leaflet-top {
@@ -172,20 +188,19 @@ flex:1;
 }
 
 #weatherWebGL {
-    
-    position:absolute;
+    position: absolute;
 
-    top:0;
-    left:0;
+    top: 0;
+    left: 0;
 
-    width:100%;
-    height:100%;
+    width: 100%;
+    height: 100%;
 
-    z-index:500;
+    z-index: 500;
 
-    pointer-events:none;
-    
-    display:none;
+    pointer-events: none;
+
+    display: none;
 }
 
 footer{

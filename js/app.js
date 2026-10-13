@@ -1,4 +1,7 @@
-import { initialiseMap } from "./map.js";
+import {
+    initialiseMap,
+    setCapitalLabelsVisible
+} from "./map.js";
 import { initialiseUI } from "./ui.js";
 import { initialiseWebGL } from "./webgl.js";
 import {
@@ -604,6 +607,17 @@ document.getElementById(
     "change",
     (event) => {
         webgl.setCoastlineVisible(
+            event.target.checked
+        );
+    }
+);
+
+document.getElementById(
+    "capitalLabelsToggle"
+).addEventListener(
+    "change",
+    (event) => {
+        setCapitalLabelsVisible(
             event.target.checked
         );
     }

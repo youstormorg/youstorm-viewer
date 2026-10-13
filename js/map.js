@@ -1,4 +1,6 @@
 let map;
+let capitalLabelsLayer;
+let capitalLabelsVisible = true;
 
 export function initialiseMap() {
 
@@ -22,6 +24,8 @@ export function initialiseMap() {
             attribution: "© OpenStreetMap contributors"
         }
     ).addTo(map);
+
+    addCapitalLabels();
 
     map.on("zoomend", updateZoom);
 
@@ -60,4 +64,78 @@ export function getMap() {
 
     return map;
 
+}
+
+
+async function addCapitalLabels() {
+
+    try {
+        const response = await fetch(
+            "data/places/capitals.json"
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
+
+        const capitals = await response.json();
+
+        capitalLabelsLayer = L.layerGroup();
+
+        capitals.forEach(city => {
+
+            const label = L.divIcon({
+                className: "",
+                html: `
+                    <span style="
+                        color: white;
+                        font: 800 14px Arial, sans-serif;
+                        white-space: nowrap;
+                        text-shadow:
+                            -1px -1px 2px #000,
+                             1px -1px 2px #000,
+                            -1px  1px 2px #000,
+                             1px  1px 2px #000,
+                             0 0 4px #000;
+                    ">${city.name}</span>
+                `,
+                iconSize: [0, 0],
+                iconAnchor: [0, 0]
+            });
+
+            L.marker([city.lat, city.lon], {
+                icon: label,
+                interactive: false,
+                keyboard: false
+            }).addTo(capitalLabelsLayer);
+
+        });
+
+        if (capitalLabelsVisible) {
+            capitalLabelsLayer.addTo(map);
+        }
+
+    } catch (error) {
+        console.error(
+            "Could not load capital city labels:",
+            error
+        );
+    }
+}
+
+export function setCapitalLabelsVisible(visible) {
+
+    capitalLabelsVisible = visible;
+
+    if (!map || !capitalLabelsLayer) {
+        return;
+    }
+
+    if (visible) {
+        capitalLabelsLayer.addTo(map);
+    } else {
+        map.removeLayer(capitalLabelsLayer);
+    }
 }
