@@ -21,36 +21,32 @@ let map;
 let webgl;
 
 function updateWeatherReadoutVisibility() {
+    const visibleLayers = webgl.getVisibleLayers();
+
+    const hasVisibleLayer =
+        visibleLayers.temperature ||
+        visibleLayers.precipitation;
 
     const readout =
-        document.getElementById(
-            "weatherReadout"
-        );
+        document.getElementById("weatherReadout");
 
-    if (!probeEnabled) {
+    readout.style.display =
+        probeEnabled && hasVisibleLayer
+            ? "block"
+            : "none";
 
-        readout.style.display =
-            "none";
+    const fixedProbeReadout =
+        document.getElementById("fixedProbeReadout");
 
-        return;
-    }
+    const fixedProbeMarker =
+        document.getElementById("fixedProbeMarker");
 
-    const visibleLayers =
-        webgl.getVisibleLayers();
-
-    if (
-        visibleLayers.temperature ||
-        visibleLayers.precipitation
-    ) {
-
-        readout.style.display =
-            "block";
-
-    } else {
-
-        readout.style.display =
-            "none";
-
+    if (!hasVisibleLayer) {
+        fixedProbeReadout.style.display = "none";
+        fixedProbeMarker.style.display = "none";
+    } else if (fixedProbeLatLon) {
+        fixedProbeReadout.style.display = "block";
+        fixedProbeMarker.style.display = "block";
     }
 }
 
@@ -351,6 +347,8 @@ async function initialiseApplication() {
 
                 updateWeatherReadout();
 
+                updateFixedProbeReadout();
+
                 document.getElementById(
                     "temperatureLegend"
                 ).style.display =
@@ -484,6 +482,8 @@ async function initialiseApplication() {
             
             updateWeatherReadout();
 
+            updateFixedProbeReadout();
+
             canvas.style.display =
                 event.target.checked ||
                 document.getElementById(
@@ -571,6 +571,8 @@ async function initialiseApplication() {
             updateWeatherReadoutVisibility();
 
             updateWeatherReadout();
+
+            updateFixedProbeReadout();
 
             canvas.style.display =
                 event.target.checked ||
