@@ -1444,10 +1444,12 @@ gl.viewport(
             gl.BLEND
         );
 
-        gl.blendFunc(
+        gl.blendFuncSeparate(
             gl.SRC_ALPHA,
+            gl.ONE_MINUS_SRC_ALPHA,
+            gl.ONE,
             gl.ONE_MINUS_SRC_ALPHA
-        );        
+        );
 
         gl.uniform1i(
             temperatureDataTextureLocation,
