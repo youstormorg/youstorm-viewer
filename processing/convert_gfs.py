@@ -3,16 +3,30 @@ import sys
 
 
 # Get forecast hour from command line
+if len(sys.argv) not in (2, 3):
+    print(
+        "Usage: python convert_gfs.py FORECAST_HOUR [DATA_DIR]"
+    )
+    sys.exit(1)
+
 forecast_hour = int(sys.argv[1])
+
+data_dir = (
+    sys.argv[2]
+    if len(sys.argv) == 3
+    else "data/gfs"
+)
 
 
 # Create filenames from forecast hour
 input_file = (
-    f"data/gfs/gfs_temp_global_f{forecast_hour:03d}.grib2"
+    f"{data_dir}/"
+    f"gfs_temp_global_f{forecast_hour:03d}.grib2"
 )
 
 binary_output_file = (
-    f"data/gfs/gfs_temp_global_f{forecast_hour:03d}.bin"
+    f"{data_dir}/"
+    f"gfs_temp_global_f{forecast_hour:03d}.bin"
 )
 
 

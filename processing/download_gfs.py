@@ -1,13 +1,62 @@
 import requests
+import sys
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
+import time
+
+
+# --------------------------------------------------
+# HTTP request helper
+# --------------------------------------------------
+
+def request_with_retries(method, url, *, params, timeout):
+    max_attempts = 4
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            response = requests.request(
+                method,
+                url,
+                params=params,
+                timeout=timeout
+            )
+            if (
+                method.upper() != "HEAD"
+                or response.status_code == 429
+                or response.status_code >= 500
+            ):
+                response.raise_for_status()
+
+            return response
+
+        except (
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError
+        ) as error:
+
+            retryable = (
+                not isinstance(error, requests.exceptions.HTTPError)
+                or error.response is None
+                or error.response.status_code == 429
+                or error.response.status_code >= 500
+            )
+
+            if not retryable or attempt == max_attempts:
+                raise
+
+            delay = 2 ** attempt
+            print(
+                f"Request failed ({error}); "
+                f"retrying in {delay}s "
+                f"(attempt {attempt + 1}/{max_attempts})"
+            )
+            time.sleep(delay)
 
 
 # --------------------------------------------------
 # Settings
 # --------------------------------------------------
-
-from datetime import datetime, timezone, timedelta
 
 now = datetime.now(timezone.utc)
 
@@ -62,7 +111,8 @@ def find_latest_cycle():
             "cgi-bin/filter_gfs_0p25.pl"
         )
 
-        response = requests.head(
+        response = request_with_retries(
+            "HEAD",
             url,
             params=params,
             timeout=30
@@ -80,7 +130,8 @@ def find_latest_cycle():
                 "dir": f"/gfs.{date}/{cycle}/atmos"
             }
 
-            final_response = requests.head(
+            final_response = request_with_retries(
+                "HEAD",
                 url,
                 params=final_params,
                 timeout=30
@@ -108,10 +159,19 @@ def find_latest_cycle():
         "No recent GFS cycle could be found"
     )
 if __name__ == "__main__":
-    date, cycle = find_latest_cycle()
 
-    output_dir = Path("data/gfs")
+    if len(sys.argv) not in (1, 2):
+        print(
+            "Usage: python download_gfs.py [DATA_DIR]"
+        )
+        sys.exit(1)
+
+    output_dir = Path(
+        sys.argv[1] if len(sys.argv) == 2 else "data/gfs"
+    )
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    date, cycle = find_latest_cycle()
 
 
     # --------------------------------------------------
@@ -152,7 +212,8 @@ if __name__ == "__main__":
             f"Downloading +{forecast_hour:03d} h"
         )
 
-        response = requests.get(
+        response = request_with_retries(
+            "GET",
             url,
             params=params,
             timeout=60
@@ -193,7 +254,8 @@ if __name__ == "__main__":
                 f"Downloading precipitation +{forecast_hour:03d} h"
             )
 
-            precip_response = requests.get(
+            precip_response = request_with_retries(
+                "GET",
                 url,
                 params=precip_params,
                 timeout=60

@@ -2,26 +2,30 @@ import xarray as xr
 import sys
 import numpy as np
 
-if len(sys.argv) != 2:
-
+if len(sys.argv) not in (2, 3):
     print(
-        "Usage: python convert_ecmwf_precip_u16.py FORECAST_HOUR"
+        "Usage: python convert_ecmwf_precip_u16.py "
+        "FORECAST_HOUR [DATA_DIR]"
     )
-
     sys.exit(1)
-
 
 forecast_hour = int(sys.argv[1])
 
+data_dir = (
+    sys.argv[2]
+    if len(sys.argv) == 3
+    else "data/ecmwf"
+)
+
 
 input_file = (
-    f"data/ecmwf/"
+    f"{data_dir}/"
     f"ecmwf_tp_f{forecast_hour:03d}.grib2"
 )
 
 
 output_file = (
-    f"data/ecmwf/"
+    f"{data_dir}/"
     f"ecmwf_precip_f{forecast_hour:03d}_u16.bin"
 )
 
@@ -63,7 +67,7 @@ if forecast_hour > 3:
     previous_hour = forecast_hour - 3
 
     previous_file = (
-        f"data/ecmwf/"
+        f"{data_dir}/"
         f"ecmwf_tp_f{previous_hour:03d}.grib2"
     )
 

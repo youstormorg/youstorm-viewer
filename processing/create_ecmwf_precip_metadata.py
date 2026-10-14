@@ -1,6 +1,21 @@
 import json
+import sys
 import xarray as xr
 from pathlib import Path
+
+
+if len(sys.argv) not in (1, 2):
+    print(
+        "Usage: python create_ecmwf_precip_metadata.py [DATA_DIR]"
+    )
+    sys.exit(1)
+
+
+data_dir = Path(
+    sys.argv[1]
+    if len(sys.argv) == 2
+    else "data/ecmwf"
+)
 
 
 precipitation_hours = list(
@@ -15,7 +30,7 @@ for forecast_hour in precipitation_hours:
     hour = f"{forecast_hour:03d}"
 
     input_file = (
-        Path("data/ecmwf")
+        data_dir
         / f"ecmwf_tp_f{hour}.grib2"
     )
 
@@ -43,16 +58,14 @@ for forecast_hour in precipitation_hours:
             "model": "ECMWF",
             "variable": "precipitation",
             "forecast_hour": forecast_hour,
-            "initialisation":
-                initialisation,
-            "valid_time":
-                valid
+            "initialisation": initialisation,
+            "valid_time": valid
         }
     )
 
 
 output_file = (
-    Path("data/ecmwf")
+    data_dir
     / "ecmwf_precipitation_metadata.json"
 )
 

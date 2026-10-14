@@ -1,8 +1,25 @@
+import sys
 import xarray as xr
+
+
+if len(sys.argv) not in (1, 2):
+    print(
+        "Usage: python convert_ecmwf.py [DATA_DIR]"
+    )
+    sys.exit(1)
+
+
+data_dir = (
+    sys.argv[1]
+    if len(sys.argv) == 2
+    else "data/ecmwf"
+)
+
 
 forecast_hours = list(
     range(0, 145, 3)
 )
+
 
 for forecast_hour in forecast_hours:
 
@@ -12,31 +29,36 @@ for forecast_hour in forecast_hours:
     )
 
     input_file = (
-        f"data/ecmwf/"
+        f"{data_dir}/"
         f"ecmwf_2t_f{forecast_hour:03d}.grib2"
     )
 
     binary_output_file = (
-        f"data/ecmwf/"
+        f"{data_dir}/"
         f"ecmwf_2t_f{forecast_hour:03d}.bin"
     )
 
-    ds = xr.open_dataset(
+    with xr.open_dataset(
         input_file,
         engine="cfgrib"
-    )
+    ) as ds:
 
-    temperature = ds["t2m"] - 273.15
+        temperature = ds["t2m"] - 273.15
 
-    binary_temperature = \
-        (temperature.values * 10).round().astype("int16")
+        binary_temperature = (
+            (temperature.values * 10)
+            .round()
+            .astype("int16")
+        )
 
-    binary_temperature.tofile(
-        binary_output_file
-    )
+        binary_temperature.tofile(
+            binary_output_file
+        )
 
     print(
         f"Created {binary_output_file}"
     )
+
+
 print()
 print("All ECMWF conversions complete")

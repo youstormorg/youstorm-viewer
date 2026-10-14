@@ -1,10 +1,10 @@
+import sys
 from ecmwf.opendata import Client
 from pathlib import Path
 
 client = Client(
     source="google"
 )
-
 
 forecast_hours = list(
     range(0, 145, 3)
@@ -25,9 +25,9 @@ def get_latest_ecmwf_cycle():
     )
 
 
-def download_ecmwf():
+def download_ecmwf(data_dir="data/ecmwf"):
 
-    Path("data/ecmwf").mkdir(
+    Path(data_dir).mkdir(
         parents=True,
         exist_ok=True
     )
@@ -46,7 +46,7 @@ def download_ecmwf():
             param="2t",
             step=forecast_hour,
             target=(
-                f"data/ecmwf/"
+                f"{data_dir}/"
                 f"ecmwf_2t_f{forecast_hour:03d}.grib2"
             )
         )
@@ -69,7 +69,7 @@ def download_ecmwf():
                 param="tp",
                 step=forecast_hour,
                 target=(
-                    f"data/ecmwf/"
+                    f"{data_dir}/"
                     f"ecmwf_tp_f{forecast_hour:03d}.grib2"
                 )
             )
@@ -84,4 +84,16 @@ def download_ecmwf():
 
 if __name__ == "__main__":
 
-    download_ecmwf()
+    if len(sys.argv) not in (1, 2):
+        print(
+            "Usage: python download_ecmwf.py [DATA_DIR]"
+        )
+        sys.exit(1)
+
+    data_dir = (
+        sys.argv[1]
+        if len(sys.argv) == 2
+        else "data/ecmwf"
+    )
+
+    download_ecmwf(data_dir)

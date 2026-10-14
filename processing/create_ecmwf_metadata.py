@@ -1,4 +1,5 @@
 import json
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -6,6 +7,20 @@ from eccodes import (
     codes_grib_new_from_file,
     codes_get,
     codes_release,
+)
+
+
+if len(sys.argv) not in (1, 2):
+    print(
+        "Usage: python create_ecmwf_metadata.py [DATA_DIR]"
+    )
+    sys.exit(1)
+
+
+data_dir = Path(
+    sys.argv[1]
+    if len(sys.argv) == 2
+    else "data/ecmwf"
 )
 
 
@@ -22,7 +37,7 @@ for forecast_hour in forecast_hours:
     hour = f"{forecast_hour:03d}"
 
     input_file = (
-        Path("data/ecmwf")
+        data_dir
         / f"ecmwf_2t_f{hour}.grib2"
     )
 
@@ -39,27 +54,29 @@ for forecast_hour in forecast_hours:
                 f"Could not read GRIB metadata from {input_file}"
             )
 
-        data_date = codes_get(
-            gid,
-            "dataDate"
-        )
+        try:
+            data_date = codes_get(
+                gid,
+                "dataDate"
+            )
 
-        data_time = codes_get(
-            gid,
-            "dataTime"
-        )
+            data_time = codes_get(
+                gid,
+                "dataTime"
+            )
 
-        forecast_step = codes_get(
-            gid,
-            "step"
-        )
+            forecast_step = codes_get(
+                gid,
+                "step"
+            )
 
-        step_units = codes_get(
-            gid,
-            "stepUnits"
-        )
+            step_units = codes_get(
+                gid,
+                "stepUnits"
+            )
 
-        codes_release(gid)
+        finally:
+            codes_release(gid)
 
     if step_units != 1:
         raise RuntimeError(
@@ -101,7 +118,7 @@ for forecast_hour in forecast_hours:
 
 
 output_file = (
-    Path("data/ecmwf")
+    data_dir
     / "ecmwf_temperature_metadata.json"
 )
 

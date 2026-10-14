@@ -2,10 +2,11 @@ import xarray as xr
 import sys
 import numpy as np
 
-if len(sys.argv) != 2:
+if len(sys.argv) not in (2, 3):
 
     print(
-        "Usage: python convert_precip_binary_u16.py FORECAST_HOUR"
+        "Usage: python convert_precip_binary_u16.py "
+        "FORECAST_HOUR [DATA_DIR]"
     )
 
     sys.exit(1)
@@ -13,15 +14,21 @@ if len(sys.argv) != 2:
 
 forecast_hour = int(sys.argv[1])
 
+data_dir = (
+    sys.argv[2]
+    if len(sys.argv) == 3
+    else "data/gfs"
+)
+
 
 input_file = (
-    f"data/gfs/"
+    f"{data_dir}/"
     f"gfs_precip_global_f{forecast_hour:03d}.grib2"
 )
 
 
 output_file = (
-    f"data/gfs/"
+    f"{data_dir}/"
     f"gfs_precip_global_f{forecast_hour:03d}_u16.bin"
 )
 
@@ -55,7 +62,7 @@ if end_step - start_step == 6:
     previous_hour = forecast_hour - 3
 
     previous_file = (
-        f"data/gfs/"
+        f"{data_dir}/"
         f"gfs_precip_global_f{previous_hour:03d}.grib2"
     )
 
