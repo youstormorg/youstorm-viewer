@@ -30,6 +30,9 @@ MODEL_SETTINGS = {
         "precipitation_hours": list(range(3, 145, 3)),
         "temperature_pattern": "ecmwf_2t_f{hour:03d}.bin",
         "precipitation_pattern": "ecmwf_precip_f{hour:03d}_u16.bin",
+        "wind_metadata": "ecmwf_wind_metadata.json",
+        "wind_hours": list(range(0, 145, 3)),
+        "wind_pattern": "ecmwf_{component}_f{hour:03d}.bin",
     },
 }
 
@@ -108,11 +111,26 @@ def validate_model(model):
             staging / settings["precipitation_pattern"].format(hour=hour)
         )
 
+    if model == "ecmwf":
+        for component in ("10u", "10v"):
+            for hour in settings["wind_hours"]:
+                expected_files.append(
+                    staging / settings["wind_pattern"].format(
+                        component=component,
+                        hour=hour,
+                    )
+                )
+
     for filename in (
         settings["temperature_metadata"],
         settings["precipitation_metadata"],
     ):
         expected_files.append(staging / filename)
+
+    if model == "ecmwf":
+        expected_files.append(
+            staging / settings["wind_metadata"]
+        )
 
     missing = [
         path for path in expected_files
@@ -139,10 +157,17 @@ def validate_model(model):
             f"{model.upper()} staging validation failed"
         )
     metadata_initialisations = {}
-    for metadata_name, expected_hours in (
+    metadata_checks = [
         (settings["temperature_metadata"], settings["temperature_hours"]),
         (settings["precipitation_metadata"], settings["precipitation_hours"]),
-    ):
+    ]
+
+    if model == "ecmwf":
+        metadata_checks.append(
+            (settings["wind_metadata"], settings["wind_hours"])
+        )
+
+    for metadata_name, expected_hours in metadata_checks:
         metadata_file = staging / metadata_name
 
         with open(metadata_file, encoding="utf-8") as f:
@@ -182,13 +207,10 @@ def validate_model(model):
                 f"Mixed forecast initialisations in {metadata_file}"
             )
         metadata_initialisations[metadata_name] = next(iter(initialisations))
-    if (
-        metadata_initialisations[settings["temperature_metadata"]]
-        != metadata_initialisations[settings["precipitation_metadata"]]
-    ):
+    if len(set(metadata_initialisations.values())) != 1:
         raise RuntimeError(
-            f"{model.upper()} temperature and precipitation metadata "
-            "belong to different forecast initialisations"
+            f"{model.upper()} metadata belongs to different "
+            "forecast initialisations"
         )
     print(
         f"{model.upper()} validation passed: "
@@ -253,6 +275,15 @@ def build_ecmwf():
     )
 
     run_timed_stage(
+        "ECMWF wind conversion",
+        [
+            sys.executable,
+            "processing/convert_ecmwf_wind.py",
+            str(staging),
+        ],
+    )
+
+    run_timed_stage(
         "ECMWF temperature metadata creation",
         [
             sys.executable,
@@ -266,6 +297,15 @@ def build_ecmwf():
         [
             sys.executable,
             "processing/create_ecmwf_precip_metadata.py",
+            str(staging),
+        ],
+    )
+
+    run_timed_stage(
+        "ECMWF wind metadata creation",
+        [
+            sys.executable,
+            "processing/create_ecmwf_wind_metadata.py",
             str(staging),
         ],
     )

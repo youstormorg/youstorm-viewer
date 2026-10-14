@@ -50,6 +50,9 @@ jobs:
           cp data/ecmwf/ecmwf_temperature_metadata.json _site/data/ecmwf/
           cp data/ecmwf/ecmwf_precip_*_u16.bin _site/data/ecmwf/
           cp data/ecmwf/ecmwf_precipitation_metadata.json _site/data/ecmwf/
+          cp data/ecmwf/ecmwf_10u_f*.bin _site/data/ecmwf/
+          cp data/ecmwf/ecmwf_10v_f*.bin _site/data/ecmwf/
+          cp data/ecmwf/ecmwf_wind_metadata.json _site/data/ecmwf/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

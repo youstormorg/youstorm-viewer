@@ -78,7 +78,29 @@ def download_ecmwf(data_dir="data/ecmwf"):
                 f"ECMWF precipitation "
                 f"+{forecast_hour:03d} h download complete"
             )
+        for wind_component in ("10u", "10v"):
 
+            print(
+                f"Downloading ECMWF {wind_component} "
+                f"+{forecast_hour:03d} h"
+            )
+
+            client.retrieve(
+                type="fc",
+                stream="oper",
+                levtype="sfc",
+                param=wind_component,
+                step=forecast_hour,
+                target=(
+                    f"{data_dir}/"
+                    f"ecmwf_{wind_component}_f{forecast_hour:03d}.grib2"
+                )
+            )
+
+            print(
+                f"ECMWF {wind_component} "
+                f"+{forecast_hour:03d} h download complete"
+            )
     print()
     print("All ECMWF downloads complete")
 
