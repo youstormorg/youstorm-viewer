@@ -23,18 +23,8 @@ jobs:
 
       - name: Assemble Pages site
         run: |
-          rm -rf _site
-          mkdir -p _site
-          cp index.html _site/
-          cp -r css _site/
-          cp -r js _site/
-          cp -r images _site/
-          mkdir -p _site/data/gfs
-          mkdir -p _site/data/ecmwf
-          mkdir -p _site/data/coastline
-          cp data/coastline/ne_50m_coastline.geojson _site/data/coastline/
-          mkdir -p _site/data/places
-          cp data/places/capitals.json _site/data/places/
+          bash processing/assemble_pages.sh
+
           # Preserve the forecast currently deployed on GitHub Pages.
           for hour in $(seq 0 3 144); do
             curl -fL "https://youstormorg.github.io/youstorm-viewer/data/gfs/gfs_temp_global_f$(printf '%03d' $hour).bin" \
