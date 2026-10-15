@@ -230,7 +230,8 @@ z-index:10000;
 }
 
 #temperatureLegend,
-#precipitationLegend {
+#precipitationLegend,
+#windLegend {
 
     position: absolute;
 
@@ -262,6 +263,11 @@ z-index:10000;
 #precipitationLegend {
     right: 20px;
     bottom: 110px;
+}
+
+#windLegend {
+    right: 20px;
+    bottom: 300px;
 }
 
 .legendTitle {

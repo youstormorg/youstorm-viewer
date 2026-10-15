@@ -17,6 +17,7 @@ import {
     loadPrecipitationData,
     getPrecipitationMetadata,
     createTemperatureLegend,
+    createWindLegend,
     createPrecipitationLegend,
     makeLegendDraggable,
     getForecastCount,
@@ -360,16 +361,23 @@ async function initialiseApplication() {
                     event.target.checked
                         ? "block"
                         : "none";
-                canvas.style.display =
-                    event.target.checked ||
-                    document.getElementById(
-                        "webglPrecipitationToggle"
-                    ).checked ||
-                    document.getElementById(
-                        "webglPrecipitationMode5Toggle"
-                    ).checked
-                        ? "block"
-                        : "none";
+
+                    canvas.style.display =
+                        event.target.checked ||
+                        document.getElementById(
+                            "webglPrecipitationToggle"
+                        ).checked ||
+                        document.getElementById(
+                            "webglPrecipitationMode5Toggle"
+                        ).checked ||
+                        (
+                            selectedModel === "ECMWF" &&
+                            document.getElementById(
+                                "webglWindToggle"
+                            ).checked
+                        )
+                            ? "block"
+                            : "none";
 
                 if (event.target.checked) {
 
@@ -506,18 +514,29 @@ async function initialiseApplication() {
     );
 
 
-    document.getElementById(
-        "webglWindToggle"
-    ).addEventListener(
-        "change",
-        (event) => {
+document.getElementById(
+    "webglWindToggle"
+).addEventListener(
+    "change",
+    (event) => {
 
-            const canvas =
-                document.getElementById(
-                    "weatherWebGL"
+        const canvas =
+            document.getElementById(
+                "weatherWebGL"
+            );
+
+        if (event.target.checked) {
+
+            // Wind is currently supported only for ECMWF.
+            if (selectedModel !== "ECMWF") {
+
+                webgl.setWindVisible(false);
+
+                console.log(
+                    "Wind is available only for ECMWF."
                 );
 
-            if (event.target.checked) {
+            } else {
 
                 const windData =
                     findMetadataByValidTime(
@@ -536,33 +555,45 @@ async function initialiseApplication() {
                 } else {
 
                     webgl.setWindVisible(false);
+
                     console.warn(
                         "No ECMWF wind forecast matches the selected time."
                     );
                 }
-
-            } else {
-
-                webgl.setWindVisible(false);
             }
 
-            canvas.style.display =
-                event.target.checked ||
-                document.getElementById(
-                    "webglTemperatureToggle"
-                ).checked ||
-                document.getElementById(
-                    "webglPrecipitationToggle"
-                ).checked
-                    ? "block"
-                    : "none";
+        } else {
 
-            console.log(
-                "WebGL wind visibility:",
-                event.target.checked
-            );
+            webgl.setWindVisible(false);
         }
-    );
+
+        // Show the wind legend only when ECMWF wind is enabled.
+        document.getElementById(
+            "windLegend"
+        ).style.display =
+            event.target.checked &&
+            selectedModel === "ECMWF"
+                ? "block"
+                : "none";
+
+        canvas.style.display =
+            event.target.checked &&
+            selectedModel === "ECMWF" ||
+            document.getElementById(
+                "webglTemperatureToggle"
+            ).checked ||
+            document.getElementById(
+                "webglPrecipitationToggle"
+            ).checked
+                ? "block"
+                : "none";
+
+        console.log(
+            "WebGL wind visibility:",
+            event.target.checked
+        );
+    }
+);
 
 
     document.getElementById(
@@ -648,7 +679,16 @@ async function initialiseApplication() {
                 ).checked
                     ? "block"
                     : "none";
+            const windLegend =
+                document.getElementById(
+                    "windLegend"
+                );
 
+            windLegend.style.display =
+                event.target.checked &&
+                selectedModel === "ECMWF"
+                    ? "block"
+                    : "none";
             console.log(
                 "WebGL precipitation Mode 5:",
                 event.target.checked
@@ -705,11 +745,18 @@ console.log(
 
 await loadPrecipitationData();
 
+// Initialise forecast legends.
 createTemperatureLegend();
+createWindLegend();
 createPrecipitationLegend();
 
+// Hide legends for inactive forecast layers on initial load.
 document.getElementById(
     "precipitationLegend"
+).style.display = "none";
+
+document.getElementById(
+    "windLegend"
 ).style.display = "none";
 
 if (temperatureToggle.checked) {
@@ -960,11 +1007,19 @@ function findMetadataByValidTime(
     );
 
 }
+// ==========================================
+// MODEL SELECTION AND FORECAST INITIALISATION
+// Handles GFS/ECMWF switching, resets the
+// forecast slider, and loads the selected model.
+// ==========================================
 
-let selectedModel = "GFS";
+let selectedModel = "ECMWF";
 
 const modelButtons =
     document.querySelectorAll(".modelButton");
+
+// Handle clicks on the GFS and ECMWF model buttons.
+// Updates the selected model and initialises its forecast.
 
 modelButtons.forEach(button => {
 
@@ -1002,6 +1057,47 @@ const firstTemperatureData =
 setCurrentValidTime(
     firstTemperatureData.valid_time
 );
+
+// Wind data is currently available only for ECMWF.
+const windToggle =
+    document.getElementById(
+        "webglWindToggle"
+    );
+
+if (model !== "ECMWF") {
+
+    webgl.setWindVisible(false);
+
+} else if (windToggle.checked) {
+
+    const windData =
+        findMetadataByValidTime(
+            getECMWFWindMetadata()
+        );
+
+    if (windData) {
+
+        webgl.loadWind(
+            windData.forecast_hour,
+            updateFixedProbeReadout
+        );
+
+        webgl.setWindVisible(true);
+
+    } else {
+
+        webgl.setWindVisible(false);
+    }
+}
+
+// Keep wind legend in sync with the selected model.
+document.getElementById(
+    "windLegend"
+).style.display =
+    model === "ECMWF" &&
+    windToggle.checked
+        ? "block"
+        : "none";
 
 const forecastDate =
     new Date(
@@ -1074,7 +1170,7 @@ document.getElementById(
     });
 
 });
-
+// End of model selection and forecast initialisation.
 let animationTimer = null;
 
 const forecastPlayButton =

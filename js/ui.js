@@ -17,12 +17,15 @@ export function initialiseUI(map) {
     const precipitationLegend =
         document.getElementById("precipitationLegend");
 
+    const windLegend =
+        document.getElementById("windLegend");
+
     function updateLegendButton() {
 
         const legendsVisible =
             temperatureLegend.style.display !== "none" ||
-            precipitationLegend.style.display !== "none";
-
+            precipitationLegend.style.display !== "none" ||
+            windLegend.style.display !== "none";
         legendToggle.classList.toggle(
             "active",
             legendsVisible
@@ -36,12 +39,15 @@ export function initialiseUI(map) {
 
         const legendsVisible =
             temperatureLegend.style.display !== "none" ||
-            precipitationLegend.style.display !== "none";
+            precipitationLegend.style.display !== "none" ||
+            windLegend.style.display !== "none";
 
+        // Hide or show all forecast legends.
         if (legendsVisible) {
 
             temperatureLegend.style.display = "none";
             precipitationLegend.style.display = "none";
+            windLegend.style.display = "none";
 
         } else {
 
@@ -59,6 +65,16 @@ export function initialiseUI(map) {
                 document.getElementById(
                     "webglPrecipitationMode5Toggle"
                 ).checked
+                    ? "block"
+                    : "none";
+            // Show wind legend only when ECMWF wind is enabled.
+            windLegend.style.display =
+                document.getElementById(
+                    "webglWindToggle"
+                ).checked &&
+                document.querySelector(
+                    ".modelButton.active"
+                )?.textContent.trim() === "ECMWF"
                     ? "block"
                     : "none";
 

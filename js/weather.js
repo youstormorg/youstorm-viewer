@@ -306,6 +306,66 @@ export function createTemperatureLegend() {
 
 }
 
+
+export function createWindLegend() {
+
+    const legend =
+        document.getElementById(
+            "windLegend"
+        );
+
+    if (!legend) {
+        console.error(
+            "Wind legend element not found"
+        );
+        return;
+    }
+
+    const windLegendItems = [
+        { colour: "#8ccaff", label: "0–5 m/s" },
+        { colour: "#33bf8c", label: "5–10 m/s" },
+        { colour: "#ffe633", label: "10–15 m/s" },
+        { colour: "#ff801a", label: "15–20 m/s" },
+        { colour: "#d91a26", label: "20–25 m/s" },
+        { colour: "#8c0040", label: "25–30 m/s" },
+        { colour: "#590073", label: "30–35 m/s" },
+        { colour: "#bf73d9", label: "35+ m/s" }
+    ];
+
+    const legendItems =
+        [...windLegendItems]
+            .reverse()
+            .map(item => `
+                <div class="temperatureLegendItem">
+                    <span
+                        class="temperatureLegendColour"
+                        style="background:${item.colour};"
+                    ></span>
+
+                    <span>
+                        ${item.label}
+                    </span>
+                </div>
+            `)
+            .join("");
+
+    legend.innerHTML = `
+        <div class="legendTitle">
+            Wind speed
+        </div>
+
+        <div class="legendUnit">
+            10 m above ground
+        </div>
+
+        <div class="temperatureLegendItems">
+            ${legendItems}
+        </div>
+    `;
+
+    makeLegendDraggable(legend);
+}
+
 export function makeLegendDraggable(
     legend,
     ignoreSelector = null

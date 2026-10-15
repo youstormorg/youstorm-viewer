@@ -514,15 +514,79 @@ if (weatherField < 0.5) {
 } else {
 
     if (windSpeed < 5.0) {
-        colour = vec3(0.55, 0.80, 1.00);
+
+        float t = windSpeed / 5.0;
+
+        colour = mix(
+            vec3(0.55, 0.80, 1.00),
+            vec3(0.20, 0.75, 0.55),
+            t
+        );
+
     } else if (windSpeed < 10.0) {
-        colour = vec3(0.20, 0.75, 0.55);
+
+        float t = (windSpeed - 5.0) / 5.0;
+
+        colour = mix(
+            vec3(0.20, 0.75, 0.55),
+            vec3(1.00, 0.90, 0.20),
+            t
+        );
+
     } else if (windSpeed < 15.0) {
-        colour = vec3(1.00, 0.90, 0.20);
+
+        float t = (windSpeed - 10.0) / 5.0;
+
+        colour = mix(
+            vec3(1.00, 0.90, 0.20),
+            vec3(1.00, 0.50, 0.10),
+            t
+        );
+
     } else if (windSpeed < 20.0) {
-        colour = vec3(1.00, 0.50, 0.10);
+
+        float t = (windSpeed - 15.0) / 5.0;
+
+        colour = mix(
+            vec3(1.00, 0.50, 0.10),
+            vec3(0.85, 0.10, 0.15),
+            t
+        );
+
+    } else if (windSpeed < 25.0) {
+
+        float t = (windSpeed - 20.0) / 5.0;
+
+        colour = mix(
+            vec3(0.85, 0.10, 0.15),
+            vec3(0.55, 0.00, 0.25),
+            t
+        );
+
+    } else if (windSpeed < 30.0) {
+
+        float t = (windSpeed - 25.0) / 5.0;
+
+        colour = mix(
+            vec3(0.55, 0.00, 0.25),
+            vec3(0.35, 0.00, 0.45),
+            t
+        );
+
+    } else if (windSpeed < 35.0) {
+
+        float t = (windSpeed - 30.0) / 5.0;
+
+        colour = mix(
+            vec3(0.35, 0.00, 0.45),
+            vec3(0.75, 0.45, 0.85),
+            t
+        );
+
     } else {
-        colour = vec3(0.85, 0.10, 0.15);
+
+        colour = vec3(0.75, 0.45, 0.85);
+
     }
 }
 
