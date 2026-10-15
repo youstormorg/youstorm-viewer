@@ -68,45 +68,6 @@ jobs:
           curl -fL https://youstormorg.github.io/youstorm-viewer/data/ecmwf/ecmwf_precipitation_metadata.json \
             -o _site/data/ecmwf/ecmwf_precipitation_metadata.json
 
-      - name: Report Pages site size
-        run: |
-          python - <<'PY'
-          import os
-
-          root = "_site"
-          limit = 1_000_000_000
-          totals = {}
-
-          for directory, _, filenames in os.walk(root):
-              for filename in filenames:
-                  path = os.path.join(directory, filename)
-                  size = os.path.getsize(path)
-                  relative = os.path.relpath(path, root)
-                  category = relative.split(os.sep)[0]
-                  totals[category] = totals.get(category, 0) + size
-
-          total = sum(totals.values())
-
-          print(f"Uncompressed site size: {total:,} bytes")
-          print(f"Decimal GB: {total / 1_000_000_000:.4f}")
-          print(f"Limit used: {total / limit * 100:.2f}%")
-          print(f"Remaining: {limit - total:,} bytes")
-
-          print("\nBreakdown:")
-          for category, size in sorted(
-              totals.items(), key=lambda item: item[1], reverse=True
-          ):
-              print(
-                  f"  {category}: {size:,} bytes "
-                  f"({size / 1_000_000:.2f} MB)"
-              )
-
-          if total >= 900_000_000:
-              print("::warning::Pages site is at or above 90% of the 1 GB limit.")
-          elif total >= 800_000_000:
-              print("::warning::Pages site is at or above 80% of the 1 GB limit.")
-          PY
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
