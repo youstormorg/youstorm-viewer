@@ -99,6 +99,7 @@ href="css/main.css">
     <div class="layerSection">
         <div class="layerSectionTitle">Weather</div>
 
+    <div class="weatherLayerRow">
         <label>
             <input
                 type="checkbox"
@@ -108,6 +109,16 @@ href="css/main.css">
             Temperature
         </label>
 
+        <button
+            type="button"
+            class="renderModeToggle"
+            id="temperatureRenderModeToggle"
+            title="Switch to nearest-neighbour rendering"
+            aria-label="Switch temperature to nearest-neighbour rendering"
+        >N</button>
+    </div>
+
+    <div class="weatherLayerRow">
         <label>
             <input
                 type="checkbox"
@@ -116,6 +127,16 @@ href="css/main.css">
             Precipitation
         </label>
 
+        <button
+            type="button"
+            class="renderModeToggle"
+            id="precipitationRenderModeToggle"
+            title="Switch to nearest-neighbour rendering"
+            aria-label="Switch precipitation to nearest-neighbour rendering"
+        >N</button>
+    </div>
+
+    <div class="weatherLayerRow">
         <label>
             <input
                 type="checkbox"
@@ -124,13 +145,15 @@ href="css/main.css">
             Wind speed (EC)
         </label>
 
-        <label>
-            <input
-                type="checkbox"
-                id="webglPrecipitationMode5Toggle"
-            >
-            Precip Mode 5
-        </label>
+        <button
+            type="button"
+            class="renderModeToggle"
+            id="windRenderModeToggle"
+            title="Switch to nearest-neighbour rendering"
+            aria-label="Switch wind to nearest-neighbour rendering"
+        >N</button>
+    </div>
+
     </div>
 
     <div class="layerSection">

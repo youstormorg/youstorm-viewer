@@ -125,6 +125,48 @@ const fragmentShaderSource = `
     uniform float weatherField;
     uniform float weatherOpacity;
     uniform float precipitationRenderMode;
+    uniform float temperatureRenderMode;
+    uniform float windRenderMode;
+    float readTemperatureCell(vec2 cell) {
+        float x = mod(cell.x, 1440.0);
+        float y = clamp(cell.y, 0.0, 720.0);
+
+        vec2 cellCentre =
+            (vec2(x, y) + vec2(0.5, 0.5))
+            / vec2(1440.0, 721.0);
+
+        return texture2D(
+            temperatureDataTexture,
+            cellCentre
+        ).r;
+    }
+    float readWindUCell(vec2 cell) {
+        float x = mod(cell.x, 1440.0);
+        float y = clamp(cell.y, 0.0, 720.0);
+
+        vec2 cellCentre =
+            (vec2(x, y) + vec2(0.5, 0.5))
+            / vec2(1440.0, 721.0);
+
+        return texture2D(
+            windUDataTexture,
+            cellCentre
+        ).r;
+    }
+
+    float readWindVCell(vec2 cell) {
+        float x = mod(cell.x, 1440.0);
+        float y = clamp(cell.y, 0.0, 720.0);
+
+        vec2 cellCentre =
+            (vec2(x, y) + vec2(0.5, 0.5))
+            / vec2(1440.0, 721.0);
+
+        return texture2D(
+            windVDataTexture,
+            cellCentre
+        ).r;
+    }
     float readPrecipitationCell(vec2 cell) {
         float x = mod(cell.x, 1440.0);
         float y = clamp(cell.y, 0.0, 720.0);
@@ -182,6 +224,35 @@ const fragmentShaderSource = `
             dataTexCoord
         ).r;
 
+    if (temperatureRenderMode > 0.5) {
+        vec2 gridPosition =
+            dataTexCoord * vec2(1440.0, 721.0)
+            - vec2(0.5, 0.5);
+
+        vec2 baseCell = floor(gridPosition);
+        vec2 fraction = fract(gridPosition);
+
+        float a = readTemperatureCell(baseCell);
+        float b = readTemperatureCell(
+            baseCell + vec2(1.0, 0.0)
+        );
+        float c = readTemperatureCell(
+            baseCell + vec2(0.0, 1.0)
+        );
+        float d = readTemperatureCell(
+            baseCell + vec2(1.0, 1.0)
+        );
+
+        float top = mix(a, b, fraction.x);
+        float bottom = mix(c, d, fraction.x);
+
+        temperature = mix(
+            top,
+            bottom,
+            fraction.y
+        );
+    }
+
     float precipitationValue =
         texture2D(
             precipitationDataTexture,
@@ -199,6 +270,45 @@ const fragmentShaderSource = `
             windVDataTexture,
             dataTexCoord
         ).r;
+
+    if (windRenderMode > 0.5) {
+        vec2 gridPosition =
+            dataTexCoord * vec2(1440.0, 721.0)
+            - vec2(0.5, 0.5);
+
+        vec2 baseCell = floor(gridPosition);
+        vec2 fraction = fract(gridPosition);
+
+        float u00 = readWindUCell(baseCell);
+        float u10 = readWindUCell(
+            baseCell + vec2(1.0, 0.0)
+        );
+        float u01 = readWindUCell(
+            baseCell + vec2(0.0, 1.0)
+        );
+        float u11 = readWindUCell(
+            baseCell + vec2(1.0, 1.0)
+        );
+
+        float v00 = readWindVCell(baseCell);
+        float v10 = readWindVCell(
+            baseCell + vec2(1.0, 0.0)
+        );
+        float v01 = readWindVCell(
+            baseCell + vec2(0.0, 1.0)
+        );
+        float v11 = readWindVCell(
+            baseCell + vec2(1.0, 1.0)
+        );
+
+        float uTop = mix(u00, u10, fraction.x);
+        float uBottom = mix(u01, u11, fraction.x);
+        windU = mix(uTop, uBottom, fraction.y);
+
+        float vTop = mix(v00, v10, fraction.x);
+        float vBottom = mix(v01, v11, fraction.x);
+        windV = mix(vTop, vBottom, fraction.y);
+    }
 
     float windSpeed = length(vec2(windU, windV));
 
@@ -1540,7 +1650,16 @@ gl.viewport(
             program,
             "precipitationRenderMode"
         );
-
+    const temperatureRenderModeLocation =
+        gl.getUniformLocation(
+            program,
+            "temperatureRenderMode"
+        );
+    const windRenderModeLocation =
+        gl.getUniformLocation(
+            program,
+            "windRenderMode"
+        );
     const flipLatitudeLocation =
         gl.getUniformLocation(
             program,
@@ -1559,7 +1678,9 @@ gl.viewport(
     let windV = null;
     let temperatureVisible = false;
     let precipitationVisible = false;
-    let precipitationRenderMode = 0;
+    let precipitationRenderMode = 5;
+    let temperatureRenderMode = 1;
+    let windRenderMode = 1;
     let weatherOpacity = 1.0;
     let windVisible = false;
     let indexBuffer = null;
@@ -1865,7 +1986,10 @@ gl.viewport(
         }
 
         if (temperatureVisible) {
-
+            gl.uniform1f(
+                temperatureRenderModeLocation,
+                temperatureRenderMode
+            );
             gl.uniform1f(
                 worldOffset,
                 -worldWidth
@@ -1913,7 +2037,10 @@ gl.viewport(
                 weatherFieldLocation,
                 2.0
             );
-
+            gl.uniform1f(
+                windRenderModeLocation,
+                windRenderMode
+            );
             gl.uniform1f(
                 precipitationRenderModeLocation,
                 0.0
@@ -2203,6 +2330,21 @@ gl.viewport(
         setPrecipitationRenderMode:
             (mode) => {
                 precipitationRenderMode =
+                    mode;
+
+                draw();
+            },
+        setTemperatureRenderMode:
+            (mode) => {
+                temperatureRenderMode =
+                    mode;
+
+                draw();
+            },
+
+        setWindRenderMode:
+            (mode) => {
+                windRenderMode =
                     mode;
 
                 draw();

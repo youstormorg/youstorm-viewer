@@ -339,6 +339,100 @@ async function initialiseApplication() {
 
         }
     );
+document.getElementById(
+    "temperatureRenderModeToggle"
+).addEventListener(
+    "click",
+    (event) => {
+        const button = event.currentTarget;
+        const useNearest =
+            button.dataset.mode !== "nearest";
+
+        button.dataset.mode =
+            useNearest ? "nearest" : "smooth";
+
+        webgl.setTemperatureRenderMode(
+            useNearest ? 0 : 1
+        );
+
+        button.title = useNearest
+            ? "Switch to smooth rendering"
+            : "Switch to nearest-neighbour rendering";
+
+        button.setAttribute(
+            "aria-label",
+            useNearest
+                ? "Switch temperature to smooth rendering"
+                : "Switch temperature to nearest-neighbour rendering"
+        );
+
+        button.textContent =
+            useNearest ? "S" : "N";
+    }
+);
+document.getElementById(
+    "windRenderModeToggle"
+).addEventListener(
+    "click",
+    (event) => {
+        const button = event.currentTarget;
+        const useNearest =
+            button.dataset.mode !== "nearest";
+
+        button.dataset.mode =
+            useNearest ? "nearest" : "smooth";
+
+        webgl.setWindRenderMode(
+            useNearest ? 0 : 1
+        );
+
+        button.title = useNearest
+            ? "Switch to smooth rendering"
+            : "Switch to nearest-neighbour rendering";
+
+        button.setAttribute(
+            "aria-label",
+            useNearest
+                ? "Switch wind to smooth rendering"
+                : "Switch wind to nearest-neighbour rendering"
+        );
+
+        button.textContent =
+            useNearest ? "S" : "N";
+    }
+);
+
+document.getElementById(
+    "precipitationRenderModeToggle"
+).addEventListener(
+    "click",
+    (event) => {
+        const button = event.currentTarget;
+        const useNearest =
+            button.dataset.mode !== "nearest";
+
+        button.dataset.mode =
+            useNearest ? "nearest" : "smooth";
+
+        webgl.setPrecipitationRenderMode(
+            useNearest ? 0 : 5
+        );
+
+        button.title = useNearest
+            ? "Switch to smooth rendering"
+            : "Switch to nearest-neighbour rendering";
+
+        button.setAttribute(
+            "aria-label",
+            useNearest
+                ? "Switch precipitation to smooth rendering"
+                : "Switch precipitation to nearest-neighbour rendering"
+        );
+
+        button.textContent =
+            useNearest ? "S" : "N";
+    }
+);
 
         document.getElementById(
             "webglTemperatureToggle"
@@ -372,9 +466,6 @@ async function initialiseApplication() {
                         event.target.checked ||
                         document.getElementById(
                             "webglPrecipitationToggle"
-                        ).checked ||
-                        document.getElementById(
-                            "webglPrecipitationMode5Toggle"
                         ).checked ||
                         (
                             selectedModel === "ECMWF" &&
@@ -437,17 +528,6 @@ async function initialiseApplication() {
                 document.getElementById(
                     "weatherWebGL"
                 );
-
-            const mode5Toggle =
-                document.getElementById(
-                    "webglPrecipitationMode5Toggle"
-                );
-
-            if (event.target.checked) {
-                mode5Toggle.checked = false;
-
-                webgl.setPrecipitationRenderMode(0);
-            }
 
             if (event.target.checked) {
 
@@ -601,109 +681,6 @@ document.getElementById(
         );
     }
 );
-
-
-    document.getElementById(
-        "webglPrecipitationMode5Toggle"
-    ).addEventListener(
-        "change",
-        (event) => {
-
-            const canvas =
-                document.getElementById(
-                    "weatherWebGL"
-                );
-
-            if (event.target.checked) {
-
-                document.getElementById(
-                    "webglPrecipitationToggle"
-                ).checked = false;
-
-                webgl.setPrecipitationRenderMode(5);
-
-                const precipitationData =
-                    findMetadataByValidTime(
-                        getPrecipitationMetadata()
-                    );
-
-                if (precipitationData) {
-
-                    webgl.loadPrecipitation(
-                        precipitationData.forecast_hour,
-                        updateFixedProbeReadout
-                    );
-
-                    document.getElementById(
-                        "forecastControlLabel"
-                    ).textContent =
-                        `${Number(
-                            precipitationData.forecast_hour
-                        )
-                            .toString()
-                            .padStart(3, "0")} h`;
-
-                    webgl.setPrecipitationVisible(
-                        true
-                    );
-
-                } else {
-
-                    webgl.setPrecipitationVisible(
-                        false
-                    );
-                }
-
-            } else {
-
-                webgl.setPrecipitationVisible(
-                    false
-                );
-
-                webgl.setPrecipitationRenderMode(0);
-            }
-
-            document.getElementById(
-                "precipitationLegend"
-            ).style.display =
-                event.target.checked
-                    ? "block"
-                    : "none";
-
-            updateWeatherReadoutVisibility();
-
-            updateWeatherReadout();
-
-            updateFixedProbeReadout();
-
-            canvas.style.display =
-                event.target.checked ||
-                document.getElementById(
-                    "webglTemperatureToggle"
-                ).checked ||
-                document.getElementById(
-                    "webglPrecipitationToggle"
-                ).checked
-                    ? "block"
-                    : "none";
-            const windLegend =
-                document.getElementById(
-                    "windLegend"
-                );
-
-            windLegend.style.display =
-                event.target.checked &&
-                selectedModel === "ECMWF"
-                    ? "block"
-                    : "none";
-            console.log(
-                "WebGL precipitation Mode 5:",
-                event.target.checked
-            );
-
-        }
-    );
-
 
 initialiseUI(map);
 
@@ -872,9 +849,6 @@ const forecastDate =
 if (
     document.getElementById(
         "webglPrecipitationToggle"
-    ).checked ||
-    document.getElementById(
-        "webglPrecipitationMode5Toggle"
     ).checked
 ) {
 
@@ -943,14 +917,9 @@ if (
     let displayHour;
 
         if (
-            (
-                document.getElementById(
-                    "webglPrecipitationToggle"
-                ).checked ||
-                document.getElementById(
-                    "webglPrecipitationMode5Toggle"
-                ).checked
-            ) &&
+            document.getElementById(
+                "webglPrecipitationToggle"
+            ).checked &&
             getTemperatureModel() === "GFS"
         ) {
 
@@ -1128,9 +1097,6 @@ document.getElementById(
 if (
     document.getElementById(
         "webglPrecipitationToggle"
-    ).checked ||
-    document.getElementById(
-        "webglPrecipitationMode5Toggle"
     ).checked
 ) {
     webgl.setPrecipitationVisible(false);
