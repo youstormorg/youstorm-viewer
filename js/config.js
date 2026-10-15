@@ -14,8 +14,11 @@ export const MODELS = {
         temperatureMetadata:
             "./data/ecmwf/ecmwf_temperature_metadata.json",
         precipitationMetadata:
-            "./data/ecmwf/ecmwf_precipitation_metadata.json"
+            "./data/ecmwf/ecmwf_precipitation_metadata.json",
+        windMetadata:
+            "./data/ecmwf/ecmwf_wind_metadata.json"
     }
+
 };
 
 export const FORECAST_HOURS = Array.from(

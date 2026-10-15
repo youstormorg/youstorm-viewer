@@ -10,6 +10,7 @@ import {
 let weatherData = null;
 let precipitationData = null;
 let ecmwfMetadata = null;
+let ecmwfWindMetadata = null;
 let selectedTemperatureModel = DEFAULT_MODEL;
 export function setTemperatureModel(model) {
 
@@ -86,6 +87,12 @@ export function getECMWFMetadata() {
 
 }
 
+export function getECMWFWindMetadata() {
+
+    return ecmwfWindMetadata;
+
+}
+
 export async function loadECMWFMetadata() {
 
     const filename =
@@ -110,6 +117,33 @@ export async function loadECMWFMetadata() {
     );
 
     return ecmwfMetadata;
+}
+
+
+export async function loadECMWFWindMetadata() {
+
+    const filename =
+        MODELS.ECMWF.windMetadata;
+
+    const response =
+        await fetch(filename);
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Could not load ECMWF wind metadata: ${response.status}`
+        );
+
+    }
+
+    ecmwfWindMetadata =
+        await response.json();
+
+    console.log(
+        `Loaded ${ecmwfWindMetadata.length} ECMWF wind forecasts`
+    );
+
+    return ecmwfWindMetadata;
 }
 
 async function loadPrecipitationMetadata() {

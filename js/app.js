@@ -9,6 +9,8 @@ import {
     getTemperatureMetadata,
     getECMWFMetadata,
     loadECMWFMetadata,
+    loadECMWFWindMetadata,
+    getECMWFWindMetadata,
     setTemperatureModel,
     getTemperatureModel,
     getTemperatureForecastCount,
@@ -505,6 +507,65 @@ async function initialiseApplication() {
 
 
     document.getElementById(
+        "webglWindToggle"
+    ).addEventListener(
+        "change",
+        (event) => {
+
+            const canvas =
+                document.getElementById(
+                    "weatherWebGL"
+                );
+
+            if (event.target.checked) {
+
+                const windData =
+                    findMetadataByValidTime(
+                        getECMWFWindMetadata()
+                    );
+
+                if (windData) {
+
+                    webgl.loadWind(
+                        windData.forecast_hour,
+                        updateFixedProbeReadout
+                    );
+
+                    webgl.setWindVisible(true);
+
+                } else {
+
+                    webgl.setWindVisible(false);
+                    console.warn(
+                        "No ECMWF wind forecast matches the selected time."
+                    );
+                }
+
+            } else {
+
+                webgl.setWindVisible(false);
+            }
+
+            canvas.style.display =
+                event.target.checked ||
+                document.getElementById(
+                    "webglTemperatureToggle"
+                ).checked ||
+                document.getElementById(
+                    "webglPrecipitationToggle"
+                ).checked
+                    ? "block"
+                    : "none";
+
+            console.log(
+                "WebGL wind visibility:",
+                event.target.checked
+            );
+        }
+    );
+
+
+    document.getElementById(
         "webglPrecipitationMode5Toggle"
     ).addEventListener(
         "change",
@@ -624,6 +685,7 @@ document.getElementById(
 );
 
 await loadECMWFMetadata();
+await loadECMWFWindMetadata();
 webgl.setModel(getTemperatureModel());
 
 const temperatureToggle =
@@ -790,6 +852,37 @@ if (
 
     }
 
+}
+
+if (
+    document.getElementById(
+        "webglWindToggle"
+    ).checked
+) {
+
+    const windData =
+        findMetadataByValidTime(
+            getECMWFWindMetadata()
+        );
+
+    if (windData) {
+
+        webgl.loadWind(
+            windData.forecast_hour,
+            updateFixedProbeReadout
+        );
+
+        webgl.setWindVisible(true);
+
+    } else {
+
+        webgl.setWindVisible(false);
+
+        console.warn(
+            "No ECMWF wind forecast matches the selected time."
+        );
+
+    }
 }
 
     // Update the slider label

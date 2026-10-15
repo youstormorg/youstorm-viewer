@@ -118,6 +118,8 @@ const fragmentShaderSource = `
 
     uniform sampler2D temperatureDataTexture;
     uniform sampler2D precipitationDataTexture;
+    uniform sampler2D windUDataTexture;
+    uniform sampler2D windVDataTexture;
     uniform float flipLatitude;
     uniform float shiftLongitude;
     uniform float weatherField;
@@ -185,6 +187,21 @@ const fragmentShaderSource = `
             precipitationDataTexture,
             dataTexCoord
         ).r;
+
+    float windU =
+        texture2D(
+            windUDataTexture,
+            dataTexCoord
+        ).r;
+
+    float windV =
+        texture2D(
+            windVDataTexture,
+            dataTexCoord
+        ).r;
+
+    float windSpeed = length(vec2(windU, windV));
+
     float wetMask = 0.0;
     float mode5PrecipitationValue = precipitationValue;
 
@@ -402,7 +419,7 @@ if (weatherField < 0.5) {
         colour = vec3(127.0/255.0, 0.0, 0.0);
 
     }
-} else {
+} else if (weatherField < 1.5) {
 
     if (precipitationValue < 0.1) {
 
@@ -494,11 +511,24 @@ if (weatherField < 0.5) {
                 0.0
             );
     }
+} else {
+
+    if (windSpeed < 5.0) {
+        colour = vec3(0.55, 0.80, 1.00);
+    } else if (windSpeed < 10.0) {
+        colour = vec3(0.20, 0.75, 0.55);
+    } else if (windSpeed < 15.0) {
+        colour = vec3(1.00, 0.90, 0.20);
+    } else if (windSpeed < 20.0) {
+        colour = vec3(1.00, 0.50, 0.10);
+    } else {
+        colour = vec3(0.85, 0.10, 0.15);
+    }
 }
 
     float alpha = weatherOpacity;
 
-    if (weatherField >= 0.5) {
+    if (weatherField >= 0.5 && weatherField < 1.5) {
         if (precipitationRenderMode > 0.5) {
             alpha = wetMask >= 0.5
                 ? weatherOpacity
@@ -878,6 +908,144 @@ function loadWebGLPrecipitation(
         });
 
 }
+
+
+function loadWebGLWind(
+    forecastHour,
+    onLoaded = null
+) {
+
+    const hour =
+        String(forecastHour).padStart(3, "0");
+
+    const filenames = {
+        u: `data/ecmwf/ecmwf_10u_f${hour}.bin`,
+        v: `data/ecmwf/ecmwf_10v_f${hour}.bin`
+    };
+
+    console.log(
+        "Loading ECMWF wind components:",
+        filenames.u,
+        filenames.v
+    );
+
+    Promise.all([
+        fetch(filenames.u),
+        fetch(filenames.v)
+    ])
+    .then(responses => {
+
+        for (let i = 0; i < responses.length; i++) {
+            if (!responses[i].ok) {
+                throw new Error(
+                    `Wind file not found: ${
+                        i === 0 ? filenames.u : filenames.v
+                    }`
+                );
+            }
+        }
+
+        return Promise.all(
+            responses.map(response => response.arrayBuffer())
+        );
+    })
+    .then(buffers => {
+
+        const encodedU = new Int16Array(buffers[0]);
+        const encodedV = new Int16Array(buffers[1]);
+
+        if (
+            encodedU.length !== 1440 * 721 ||
+            encodedV.length !== 1440 * 721
+        ) {
+            throw new Error(
+                "Unexpected ECMWF wind grid dimensions"
+            );
+        }
+
+        windU = new Float32Array(encodedU.length);
+        windV = new Float32Array(encodedV.length);
+
+        for (let i = 0; i < encodedU.length; i++) {
+            windU[i] = encodedU[i] / 10;
+            windV[i] = encodedV[i] / 10;
+        }
+
+        function uploadWindTexture(data, textureUnit) {
+
+            const texture = gl.createTexture();
+
+            gl.activeTexture(textureUnit);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+
+            gl.texImage2D(
+                gl.TEXTURE_2D,
+                0,
+                gl.LUMINANCE,
+                1440,
+                721,
+                0,
+                gl.LUMINANCE,
+                gl.FLOAT,
+                data
+            );
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_MIN_FILTER,
+                gl.NEAREST
+            );
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_MAG_FILTER,
+                gl.NEAREST
+            );
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_WRAP_S,
+                gl.CLAMP_TO_EDGE
+            );
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_WRAP_T,
+                gl.CLAMP_TO_EDGE
+            );
+
+            return texture;
+        }
+
+        windUDataTexture =
+            uploadWindTexture(windU, gl.TEXTURE3);
+
+        windVDataTexture =
+            uploadWindTexture(windV, gl.TEXTURE4);
+
+        gl.activeTexture(gl.TEXTURE0);
+
+        console.log(
+            "ECMWF wind textures uploaded:",
+            "u =", windU.length,
+            "v =", windV.length,
+            "WebGL error =", gl.getError()
+        );
+
+        draw();
+
+        if (typeof onLoaded === "function") {
+            onLoaded();
+        }
+    })
+    .catch(error => {
+        console.error(
+            "Failed to load ECMWF wind:",
+            error
+        );
+    });
+}
+
 
 function loadWebGLForecast(
     forecastHour,
@@ -1279,6 +1447,18 @@ gl.viewport(
             "precipitationDataTexture"
         );
 
+    const windUDataTextureLocation =
+        gl.getUniformLocation(
+            program,
+            "windUDataTexture"
+        );
+
+    const windVDataTextureLocation =
+        gl.getUniformLocation(
+            program,
+            "windVDataTexture"
+        );
+
     const weatherFieldLocation =
         gl.getUniformLocation(
             program,
@@ -1311,15 +1491,18 @@ gl.viewport(
 
     let temperatures = null;
     let precipitation = null;
-
+    let windU = null;
+    let windV = null;
     let temperatureVisible = false;
     let precipitationVisible = false;
     let precipitationRenderMode = 0;
     let weatherOpacity = 1.0;
-
+    let windVisible = false;
     let indexBuffer = null;
     let temperatureDataTexture = null;
     let precipitationDataTexture = null;
+    let windUDataTexture = null;
+    let windVDataTexture = null;    
     let currentModel = "GFS";
     function temperatureColour(
         temperature
@@ -1460,7 +1643,16 @@ gl.viewport(
             precipitationDataTextureLocation,
             2
         );    
-        
+        gl.uniform1i(
+            windUDataTextureLocation,
+            3
+        );
+
+        gl.uniform1i(
+            windVDataTextureLocation,
+            4
+        );
+
         gl.uniform1f(
             weatherFieldLocation,
             0.0
@@ -1699,6 +1891,59 @@ gl.viewport(
             );
         }
 
+        if (
+            windVisible &&
+            windUDataTexture &&
+            windVDataTexture
+        ) {
+
+            gl.uniform1f(
+                weatherFieldLocation,
+                2.0
+            );
+
+            gl.uniform1f(
+                precipitationRenderModeLocation,
+                0.0
+            );
+
+            gl.uniform1f(
+                worldOffset,
+                -worldWidth
+            );
+
+            gl.drawElements(
+                gl.TRIANGLES,
+                6,
+                gl.UNSIGNED_SHORT,
+                0
+            );
+
+            gl.uniform1f(
+                worldOffset,
+                0.0
+            );
+
+            gl.drawElements(
+                gl.TRIANGLES,
+                6,
+                gl.UNSIGNED_SHORT,
+                0
+            );
+
+            gl.uniform1f(
+                worldOffset,
+                worldWidth
+            );
+
+            gl.drawElements(
+                gl.TRIANGLES,
+                6,
+                gl.UNSIGNED_SHORT,
+                0
+            );
+        }
+
         if (coastlineVisible && coastlineBuffer) {
 
             gl.useProgram(
@@ -1820,7 +2065,7 @@ gl.viewport(
 
         loadPrecipitation:
             loadWebGLPrecipitation,
-
+        loadWind: loadWebGLWind,
         setOpacity:
             (opacity) => {
                 weatherOpacity = opacity;
@@ -1845,16 +2090,13 @@ gl.viewport(
                     null;
             },
 
-        getVisibleLayers:
-            () => {
-                return {
-                    temperature:
-                        temperatureVisible,
-
-                    precipitation:
-                        precipitationVisible
-                };
-            },
+        getVisibleLayers: () => {
+            return {
+                temperature: temperatureVisible,
+                precipitation: precipitationVisible,
+                wind: windVisible
+            };
+        },
 
         setTemperatureVisible:
             (visible) => {
@@ -1871,6 +2113,11 @@ gl.viewport(
 
                 draw();
             },
+
+        setWindVisible: (visible) => {
+            windVisible = visible;
+            draw();
+        },
 
         setPrecipitationRenderMode:
             (mode) => {
