@@ -1903,19 +1903,20 @@ gl.viewport(
             );
         }
 
-        if (
-            precipitationVisible &&
-            precipitationDataTexture
+       if (
+            windVisible &&
+            windUDataTexture &&
+            windVDataTexture
         ) {
 
             gl.uniform1f(
                 weatherFieldLocation,
-                1.0
+                2.0
             );
 
             gl.uniform1f(
                 precipitationRenderModeLocation,
-                precipitationRenderMode
+                0.0
             );
 
             gl.uniform1f(
@@ -1956,19 +1957,18 @@ gl.viewport(
         }
 
         if (
-            windVisible &&
-            windUDataTexture &&
-            windVDataTexture
+            precipitationVisible &&
+            precipitationDataTexture
         ) {
 
             gl.uniform1f(
                 weatherFieldLocation,
-                2.0
+                1.0
             );
 
             gl.uniform1f(
                 precipitationRenderModeLocation,
-                0.0
+                precipitationRenderMode
             );
 
             gl.uniform1f(
@@ -2105,6 +2105,7 @@ gl.viewport(
 
         }
 
+
         if (variable === "precipitation") {
 
             if (!precipitation) {
@@ -2117,7 +2118,23 @@ gl.viewport(
 
         }
 
+        if (variable === "wind") {
+
+            if (!windU || !windV) {
+                return null;
+            }
+
+            const index = row * 1440 + column;
+
+            const u = windU[index];
+            const v = windV[index];
+
+            return Math.sqrt(u * u + v * v);
+
+        }
+
         return null;
+
     }
 
     map.on("move", draw);

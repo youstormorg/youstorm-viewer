@@ -169,10 +169,12 @@ function updateFixedProbeReadout() {
 
     let variable;
 
-    if (visibleLayers.temperature) {
-        variable = "temperature";
-    } else if (visibleLayers.precipitation) {
+    if (visibleLayers.precipitation) {
         variable = "precipitation";
+    } else if (visibleLayers.wind) {
+        variable = "wind";
+    } else if (visibleLayers.temperature) {
+        variable = "temperature";
     }
 
     const locationElement =
@@ -249,11 +251,15 @@ function updateFixedProbeReadout() {
         variable
     );
 
+
     if (value === null) {
         valueElement.textContent = "--";
     } else if (variable === "temperature") {
         valueElement.textContent =
             `Temperature: ${value.toFixed(1)} °C`;
+    } else if (variable === "wind") {
+        valueElement.textContent =
+            `Wind speed: ${value.toFixed(1)} m/s`;
     } else {
         valueElement.textContent =
             `Precipitation: ${value.toFixed(1)} mm`;
@@ -588,6 +594,7 @@ document.getElementById(
                 ? "block"
                 : "none";
 
+        updateFixedProbeReadout();
         console.log(
             "WebGL wind visibility:",
             event.target.checked
@@ -1243,10 +1250,12 @@ map.on(
         const visibleLayers =
             webgl.getVisibleLayers();
 
-        if (visibleLayers.temperature) {
-            variable = "temperature";
-        } else if (visibleLayers.precipitation) {
+        if (visibleLayers.precipitation) {
             variable = "precipitation";
+        } else if (visibleLayers.wind) {
+            variable = "wind";
+        } else if (visibleLayers.temperature) {
+            variable = "temperature";
         } else {
             return;
         }
@@ -1295,6 +1304,9 @@ map.on(
         } else if (variable === "temperature") {
             readoutValue.textContent =
                 `Temperature: ${value.toFixed(1)} °C`;
+        } else if (variable === "wind") {
+            readoutValue.textContent =
+                `Wind speed: ${value.toFixed(1)} m/s`;
         } else if (variable === "precipitation") {
             readoutValue.textContent =
                 `Precipitation: ${value.toFixed(1)} mm`;
