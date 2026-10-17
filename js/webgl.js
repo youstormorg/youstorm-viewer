@@ -959,7 +959,7 @@ function loadWebGLPrecipitation(
 
     const reconstructThreeHour =
         currentModel === "ECMWF" &&
-        precipitationType === "threeHourFromTotal";
+        precipitationType !== "total";
 
     if (currentModel === "ECMWF") {
 

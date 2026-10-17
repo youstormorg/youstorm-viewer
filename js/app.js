@@ -1120,9 +1120,11 @@ const windToggle =
     document.getElementById(
         "webglWindToggle"
     );
-
+windToggle.closest(".weatherLayerRow").hidden =
+    model !== "ECMWF";
 if (model !== "ECMWF") {
 
+    windToggle.checked = false;
     webgl.setWindVisible(false);
 
 } else if (windToggle.checked) {

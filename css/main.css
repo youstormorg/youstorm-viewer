@@ -176,6 +176,10 @@ display:flex;
     gap: 8px;
 }
 
+.weatherLayerRow[hidden] {
+    display: none;
+}
+
 .weatherLayerRow label {
     flex: 1;
     min-width: 0;
