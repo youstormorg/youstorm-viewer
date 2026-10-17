@@ -502,7 +502,9 @@ export function getForecastCount() {
 
 }
 
- export function createPrecipitationLegend() {
+export function createPrecipitationLegend(
+    modelPrecipitationType = null
+) {
 
     const legend =
         document.getElementById(
@@ -520,6 +522,17 @@ export function getForecastCount() {
 
     }
 
+    const precipitationType =
+        modelPrecipitationType ??
+        document.getElementById(
+            "precipitationTypeSelect"
+        )?.value ??
+        "threeHour";
+
+    const legendUnit =
+        precipitationType === "total"
+            ? "Total accumulated"
+            : "3-hour accumulation";
 
     legend.innerHTML = `
         <div class="legendTitle">
@@ -527,10 +540,9 @@ export function getForecastCount() {
         </div>
 
         <div class="legendUnit">
-            3-hour accumulation
+            ${legendUnit}
         </div>
     `;
-
 
     precipitationScale.forEach(item => {
 

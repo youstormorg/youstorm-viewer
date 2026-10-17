@@ -950,20 +950,54 @@ function loadWebGLCoastline() {
 
 function loadWebGLPrecipitation(
     forecastHour,
-    onLoaded = null
+    onLoaded = null,
+    precipitationType = "threeHour"
 ) {
 
     let filename;
+    let previousFilename = null;
+
+    const reconstructThreeHour =
+        currentModel === "ECMWF" &&
+        precipitationType === "threeHourFromTotal";
 
     if (currentModel === "ECMWF") {
 
-        filename =
-            "data/ecmwf/ecmwf_precip_f" +
-            String(forecastHour).padStart(3, "0") +
-            "_u16.bin";
+        if (reconstructThreeHour) {
+
+            // The current cumulative total.
+            filename =
+                "data/ecmwf/ecmwf_precip_total_f" +
+                String(forecastHour).padStart(3, "0") +
+                "_u16.bin";
+
+            // At +3, the cumulative total is itself the
+            // first three-hour precipitation amount.
+            if (forecastHour > 3) {
+                previousFilename =
+                    "data/ecmwf/ecmwf_precip_total_f" +
+                    String(forecastHour - 3).padStart(3, "0") +
+                    "_u16.bin";
+            }
+
+        } else {
+
+            const accumulationType =
+                precipitationType === "total"
+                    ? "precip_total_"
+                    : "precip_";
+
+            filename =
+                "data/ecmwf/ecmwf_" +
+                accumulationType +
+                "f" +
+                String(forecastHour).padStart(3, "0") +
+                "_u16.bin";
+        }
 
     } else {
 
+        // Preserve the existing GFS loading behaviour.
         filename =
             "data/gfs/gfs_precip_global_f" +
             String(forecastHour).padStart(3, "0") +
@@ -972,51 +1006,75 @@ function loadWebGLPrecipitation(
 
     console.log(
         "Loading WebGL precipitation:",
-        filename
+        filename,
+        previousFilename ? "minus " + previousFilename : ""
     );
 
-    fetch(filename)
-        .then(response => {
+    function fetchPackedPrecipitation(file) {
+        return fetch(file)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(
+                        `WebGL precipitation file not found: ${file}`
+                    );
+                }
 
-            if (!response.ok) {
+                return response.arrayBuffer();
+            })
+            .then(data => new Uint16Array(data));
+    }
 
-                throw new Error(
-                    `WebGL precipitation file not found: ${filename}`
-                );
+    const currentPromise =
+        fetchPackedPrecipitation(filename);
 
-            }
+    const previousPromise = previousFilename
+        ? fetchPackedPrecipitation(previousFilename)
+        : Promise.resolve(null);
 
-            return response.arrayBuffer();
-
-        })
-        .then(data => {
-
-            const packedPrecipitation =
-                new Uint16Array(data);
+    Promise.all([currentPromise, previousPromise])
+        .then(([currentPacked, previousPacked]) => {
 
             precipitation =
-                new Float32Array(
-                    packedPrecipitation.length
-                );
+                new Float32Array(currentPacked.length);
 
-            for (
-                let i = 0;
-                i < packedPrecipitation.length;
-                i++
-            ) {
+            for (let i = 0; i < currentPacked.length; i++) {
 
-                precipitation[i] =
-                    packedPrecipitation[i] === 65535
-                        ? 0
-                        : packedPrecipitation[i] / 10;
+                const currentValue = currentPacked[i];
+
+                if (reconstructThreeHour && previousPacked) {
+
+                    const previousValue = previousPacked[i];
+
+                    // Match the existing display's treatment of
+                    // missing data, and avoid subtracting its
+                    // 65535 missing-value marker.
+                    if (
+                        currentValue === 65535 ||
+                        previousValue === 65535
+                    ) {
+                        precipitation[i] = 0;
+                    } else {
+                        precipitation[i] =
+                            Math.max(
+                                0,
+                                currentValue - previousValue
+                            ) / 10;
+                    }
+
+                } else {
+
+                    // Preserve existing original and total decoding.
+                    precipitation[i] =
+                        currentValue === 65535
+                            ? 0
+                            : currentValue / 10;
+                }
             }
 
             precipitationDataTexture =
                 gl.createTexture();
 
-            gl.activeTexture(
-                gl.TEXTURE2
-            );
+            gl.activeTexture(gl.TEXTURE2);
 
             gl.bindTexture(
                 gl.TEXTURE_2D,
@@ -1064,9 +1122,7 @@ function loadWebGLPrecipitation(
                 gl.CLAMP_TO_EDGE
             );
 
-            gl.activeTexture(
-                gl.TEXTURE0
-            );
+            gl.activeTexture(gl.TEXTURE0);
 
             draw();
 
@@ -1080,7 +1136,6 @@ function loadWebGLPrecipitation(
                 error
             );
         });
-
 }
 
 

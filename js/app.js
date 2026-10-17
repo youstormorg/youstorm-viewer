@@ -265,7 +265,7 @@ function updateFixedProbeReadout() {
             `Precipitation: ${value.toFixed(1)} mm`;
     }
 }
-
+let selectedModel = "ECMWF";
 async function initialiseApplication() {
 
     map =
@@ -291,7 +291,7 @@ async function initialiseApplication() {
         document.getElementById(
             "sidebar"
         ),
-        "input, label"
+        "input, label, select, button"
     );
 
     document.getElementById(
@@ -540,7 +540,10 @@ document.getElementById(
 
                     webgl.loadPrecipitation(
                         precipitationData.forecast_hour,
-                        updateFixedProbeReadout
+                        updateFixedProbeReadout,
+                        document.getElementById(
+                            "precipitationTypeSelect"
+                        ).value
                     );
 
                     document.getElementById(
@@ -599,6 +602,55 @@ document.getElementById(
         }
     );
 
+document.getElementById(
+    "precipitationTypeSelect"
+).addEventListener(
+    "change",
+    (event) => {
+
+        // The accumulation selector applies only to ECMWF.
+        if (selectedModel !== "ECMWF") {
+            return;
+        }
+
+        // Update the legend for the selected accumulation type.
+        createPrecipitationLegend();
+
+        // Reload precipitation only when its layer is enabled.
+        const precipitationToggle =
+            document.getElementById(
+                "webglPrecipitationToggle"
+            );
+
+        if (!precipitationToggle.checked) {
+            return;
+        }
+
+        const precipitationData =
+            findMetadataByValidTime(
+                getPrecipitationMetadata()
+            );
+
+        if (precipitationData) {
+
+            webgl.loadPrecipitation(
+                precipitationData.forecast_hour,
+                updateFixedProbeReadout,
+                event.target.value
+            );
+
+            webgl.setPrecipitationVisible(true);
+
+        } else {
+
+            webgl.setPrecipitationVisible(false);
+        }
+
+        updateWeatherReadoutVisibility();
+        updateWeatherReadout();
+        updateFixedProbeReadout();
+    }
+);
 
 document.getElementById(
     "webglWindToggle"
@@ -726,13 +778,25 @@ console.log(
         ? getECMWFMetadata()
         : getTemperatureMetadata()
 );
-
 await loadPrecipitationData();
 
 // Initialise forecast legends.
 createTemperatureLegend();
 createWindLegend();
-createPrecipitationLegend();
+
+const precipitationTypeSelect =
+    document.getElementById(
+        "precipitationTypeSelect"
+    );
+
+precipitationTypeSelect.hidden =
+    selectedModel !== "ECMWF";
+
+createPrecipitationLegend(
+    selectedModel === "ECMWF"
+        ? precipitationTypeSelect.value
+        : "threeHour"
+);
 
 // Hide legends for inactive forecast layers on initial load.
 document.getElementById(
@@ -861,7 +925,10 @@ if (
 
         webgl.loadPrecipitation(
             precipitationData.forecast_hour,
-            updateFixedProbeReadout
+            updateFixedProbeReadout,
+            document.getElementById(
+                "precipitationTypeSelect"
+            ).value
         );
 
         webgl.setPrecipitationVisible(
@@ -989,7 +1056,7 @@ function findMetadataByValidTime(
 // forecast slider, and loads the selected model.
 // ==========================================
 
-let selectedModel = "ECMWF";
+
 
 const modelButtons =
     document.querySelectorAll(".modelButton");
@@ -1014,6 +1081,20 @@ setTemperatureModel(model);
 webgl.setModel(model);
 await loadPrecipitationData();
 selectedModel = model;
+
+const precipitationTypeSelect =
+    document.getElementById(
+        "precipitationTypeSelect"
+    );
+
+precipitationTypeSelect.hidden =
+    model !== "ECMWF";
+
+createPrecipitationLegend(
+    model === "ECMWF"
+        ? precipitationTypeSelect.value
+        : "threeHour"
+);
 
 const slider =
     document.getElementById(

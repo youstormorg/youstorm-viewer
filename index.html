@@ -122,24 +122,6 @@ href="css/main.css">
         <label>
             <input
                 type="checkbox"
-                id="webglPrecipitationToggle"
-            >
-            Precipitation
-        </label>
-
-        <button
-            type="button"
-            class="renderModeToggle"
-            id="precipitationRenderModeToggle"
-            title="Switch to nearest-neighbour rendering"
-            aria-label="Switch precipitation to nearest-neighbour rendering"
-        >N</button>
-    </div>
-
-    <div class="weatherLayerRow">
-        <label>
-            <input
-                type="checkbox"
                 id="webglWindToggle"
             >
             Wind speed (EC)
@@ -153,7 +135,33 @@ href="css/main.css">
             aria-label="Switch wind to nearest-neighbour rendering"
         >N</button>
     </div>
+     <div class="weatherLayerRow">
+        <label>
+            <input
+                type="checkbox"
+                id="webglPrecipitationToggle"
+            >
+            Precipitation
+        </label>
 
+        <select
+            id="precipitationTypeSelect"
+            aria-label="Precipitation accumulation type"
+            title="Choose precipitation accumulation type"
+        >
+            <option value="threeHour">3-hour (original)</option>
+            <option value="threeHourFromTotal">3-hour (from total)</option>
+            <option value="total">Total</option>
+        </select>
+
+        <button
+            type="button"
+            class="renderModeToggle"
+            id="precipitationRenderModeToggle"
+            title="Switch to nearest-neighbour rendering"
+            aria-label="Switch precipitation to nearest-neighbour rendering"
+        >N</button>
+    </div>
     </div>
 
     <div class="layerSection">

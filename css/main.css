@@ -63,7 +63,7 @@ display:flex;
     position: absolute;
     cursor: grab;
     top: 70px;
-    left: 150px;
+    left: 190px;
     z-index: 10000;
     background: rgba(20, 20, 20, 0.95);
     color: white;
@@ -89,7 +89,7 @@ display:flex;
     position: absolute;
     cursor: grab;
     top: 150px;
-    left: 150px;
+    left: 190px;
     z-index: 10000;
     background: rgba(20, 20, 20, 0.95);
     color: white;
@@ -197,6 +197,21 @@ display:flex;
     cursor: pointer;
 }
 
+.weatherLayerRow select {
+    max-width: 90px;
+    min-width: 0;
+    height: 24px;
+    position: relative;
+    top: 20px;
+    padding: 2px 4px;
+    box-sizing: border-box;
+    background: #333;
+    color: #fff;
+    border: 1px solid #666;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
 .renderModeToggle:hover {
     background: #505050;
 }
@@ -208,6 +223,10 @@ display:flex;
 
 .layerSection {
     margin-bottom: 14px;
+}
+
+.layerSection + .layerSection {
+    margin-top: 20px;
 }
 
 .layerSectionTitle {
