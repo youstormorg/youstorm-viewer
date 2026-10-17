@@ -30,6 +30,9 @@ MODEL_SETTINGS = {
         "precipitation_hours": list(range(3, 145, 3)),
         "temperature_pattern": "ecmwf_2t_f{hour:03d}.bin",
         "precipitation_pattern": "ecmwf_precip_f{hour:03d}_u16.bin",
+        "total_precipitation_pattern": (
+            "ecmwf_precip_total_f{hour:03d}_u16.bin"
+        ),
         "wind_metadata": "ecmwf_wind_metadata.json",
         "wind_hours": list(range(0, 145, 3)),
         "wind_pattern": "ecmwf_{component}_f{hour:03d}.bin",
@@ -110,6 +113,14 @@ def validate_model(model):
         expected_files.append(
             staging / settings["precipitation_pattern"].format(hour=hour)
         )
+    if model == "ecmwf":
+        for hour in settings["precipitation_hours"]:
+            expected_files.append(
+                staging
+                / settings["total_precipitation_pattern"].format(
+                    hour=hour
+                )
+            )
 
     if model == "ecmwf":
         for component in ("10u", "10v"):
@@ -270,6 +281,14 @@ def build_ecmwf():
         [
             sys.executable,
             "processing/convert_all_ecmwf_precip.py",
+            str(staging),
+        ],
+    )
+    run_timed_stage(
+        "ECMWF cumulative precipitation conversion",
+        [
+            sys.executable,
+            "processing/convert_all_ecmwf_total_precip.py",
             str(staging),
         ],
     )
