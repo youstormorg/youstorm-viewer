@@ -46,6 +46,11 @@ jobs:
               -o "_site/data/ecmwf/ecmwf_precip_f$(printf '%03d' $hour)_u16.bin"
           done
 
+          for hour in $(seq 3 3 144); do
+            curl -fL "https://youstormorg.github.io/youstorm-viewer/data/ecmwf/ecmwf_precip_total_f$(printf '%03d' $hour)_u16.bin" \
+              -o "_site/data/ecmwf/ecmwf_precip_total_f$(printf '%03d' $hour)_u16.bin"
+          done
+
           for hour in $(seq 0 3 144); do
             for component in 10u 10v; do
               curl -fL "https://youstormorg.github.io/youstorm-viewer/data/ecmwf/ecmwf_${component}_f$(printf '%03d' $hour).bin" \
