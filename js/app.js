@@ -734,6 +734,32 @@ document.getElementById(
     }
 );
 
+document.getElementById(
+    "webglStreamlinesToggle"
+).addEventListener(
+    "change",
+    (event) => {
+
+        webgl.setWindDirectionVisible(
+            event.target.checked
+        );
+
+    }
+);
+
+document.getElementById(
+    "webglWindParticlesToggle"
+).addEventListener(
+    "change",
+    (event) => {
+
+        webgl.setWindParticlesVisible(
+            event.target.checked
+        );
+
+    }
+);
+
 initialiseUI(map);
 
 await loadTemperatureData();

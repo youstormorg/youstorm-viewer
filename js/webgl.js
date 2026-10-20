@@ -724,16 +724,65 @@ if (weatherField < 0.5) {
 const coastlineFragmentShaderSource = `
     precision mediump float;
 
+    uniform vec4 lineColor;
+
     void main() {
 
-        gl_FragColor =
-            vec4(
-                0.05,
-                0.05,
-                0.05,
-                0.55
+        gl_FragColor = lineColor;
+
+    }
+`;
+
+const windParticleVertexShaderSource = `
+    attribute vec2 position;
+    attribute vec2 particleOffset;
+
+    uniform vec2 mapOrigin;
+    uniform vec2 mapScale;
+    uniform float worldOffset;
+
+    void main() {
+
+        float longitude = position.x;
+        float latitude = position.y;
+
+        float latitudeRadians =
+            latitude * 3.14159265359 / 180.0;
+
+        float mercatorY =
+            log(
+                tan(
+                    3.14159265359 / 4.0 +
+                    latitudeRadians / 2.0
+                )
             );
 
+        vec2 projectedPosition =
+            vec2(longitude / 180.0, mercatorY);
+
+        vec2 screenPosition =
+            projectedPosition * mapScale +
+            mapOrigin;
+
+        screenPosition.x += worldOffset;
+        screenPosition += particleOffset;
+
+        gl_Position =
+            vec4(screenPosition, 0.0, 1.0);
+    }
+`;
+
+const windParticleFragmentShaderSource = `
+    precision mediump float;
+
+    void main() {
+        gl_FragColor =
+            vec4(
+                0.90,
+                0.95,
+                1.00,
+                0.95
+            );
     }
 `;
 
@@ -887,6 +936,212 @@ function prepareCoastlineVertexData(
         vertices
     );
 
+}
+
+function prepareWindDirectionVertexData(
+    uData,
+    vData
+) {
+    const vertices = [];
+
+    const seedSpacing = 24;
+    const minimumSpeed = 0.5;
+    const stepLength = 0.7;
+    const maximumSteps = 28;
+
+    function latitudeFromMercatorY(y) {
+        return (
+            2 * Math.atan(
+                Math.exp(y * Math.PI / 180)
+            ) -
+            Math.PI / 2
+        ) * 180 / Math.PI;
+    }
+
+    function mercatorYFromLatitude(latitude) {
+        const radians = latitude * Math.PI / 180;
+
+        return Math.log(
+            Math.tan(Math.PI / 4 + radians / 2)
+        ) * 180 / Math.PI;
+    }
+
+    function sampleWind(longitude, mercatorY) {
+        const latitude =
+            latitudeFromMercatorY(mercatorY);
+
+        if (Math.abs(latitude) > 85) {
+            return null;
+        }
+
+        const row = (90 - latitude) / 0.25;
+        const column =
+            ((longitude + 180) / 0.25 + 1440) % 1440;
+
+        const row0 = Math.floor(row);
+        const row1 = Math.min(row0 + 1, 720);
+        const col0 = Math.floor(column) % 1440;
+        const col1 = (col0 + 1) % 1440;
+
+        const fy = row - row0;
+        const fx = column - Math.floor(column);
+
+        const i00 = row0 * 1440 + col0;
+        const i10 = row0 * 1440 + col1;
+        const i01 = row1 * 1440 + col0;
+        const i11 = row1 * 1440 + col1;
+
+        function interpolate(data) {
+            const top =
+                data[i00] * (1 - fx) +
+                data[i10] * fx;
+
+            const bottom =
+                data[i01] * (1 - fx) +
+                data[i11] * fx;
+
+            return top * (1 - fy) + bottom * fy;
+        }
+
+        const u = interpolate(uData);
+        const v = interpolate(vData);
+        const speed = Math.hypot(u, v);
+
+        if (
+            !Number.isFinite(speed) ||
+            speed < minimumSpeed
+        ) {
+            return null;
+        }
+
+        return { u, v, speed };
+    }
+
+    function traceDirection(
+        startLongitude,
+        startY,
+        direction
+    ) {
+        const points = [
+            [startLongitude, startY]
+        ];
+
+        let longitude = startLongitude;
+        let y = startY;
+
+        for (let step = 0; step < maximumSteps; step++) {
+            const wind1 = sampleWind(longitude, y);
+
+            if (!wind1) {
+                break;
+            }
+
+            const dx1 =
+                direction * wind1.u / wind1.speed;
+
+            const dy1 =
+                direction * wind1.v / wind1.speed;
+
+            const midpointLongitude =
+                longitude + dx1 * stepLength * 0.5;
+
+            const midpointY =
+                y + dy1 * stepLength * 0.5;
+
+            if (
+                midpointLongitude <= -179.5 ||
+                midpointLongitude >= 179.5
+            ) {
+                break;
+            }
+
+            const wind2 = sampleWind(
+                midpointLongitude,
+                midpointY
+            );
+
+            if (!wind2) {
+                break;
+            }
+
+            longitude +=
+                direction *
+                wind2.u / wind2.speed *
+                stepLength;
+
+            y +=
+                direction *
+                wind2.v / wind2.speed *
+                stepLength;
+
+            if (
+                longitude <= -179.5 ||
+                longitude >= 179.5
+            ) {
+                break;
+            }
+
+            points.push([longitude, y]);
+        }
+
+        return points;
+    }
+
+    function addStreamline(points) {
+        for (let i = 1; i < points.length; i++) {
+            const [x1, y1] = points[i - 1];
+            const [x2, y2] = points[i];
+
+            vertices.push(
+                x1,
+                latitudeFromMercatorY(y1),
+                x2,
+                latitudeFromMercatorY(y2)
+            );
+        }
+    }
+
+    for (
+        let row = 24;
+        row < 697;
+        row += seedSpacing
+    ) {
+        const latitude = 90 - row * 0.25;
+        const seedY =
+            mercatorYFromLatitude(latitude);
+
+        for (
+            let column = 24;
+            column < 1416;
+            column += seedSpacing
+        ) {
+            const longitude = -180 + column * 0.25;
+
+            if (!sampleWind(longitude, seedY)) {
+                continue;
+            }
+
+            const backward = traceDirection(
+                longitude,
+                seedY,
+                -1
+            );
+
+            const forward = traceDirection(
+                longitude,
+                seedY,
+                1
+            );
+
+            backward.reverse();
+
+            addStreamline(
+                backward.concat(forward.slice(1))
+            );
+        }
+    }
+
+    return new Float32Array(vertices);
 }
 
 function loadWebGLCoastline() {
@@ -1200,6 +1455,71 @@ function loadWebGLWind(
             windV[i] = encodedV[i] / 10;
         }
 
+        const windDirectionVertices =
+            prepareWindDirectionVertexData(
+                windU,
+                windV
+            );
+
+        if (windDirectionBuffer) {
+            gl.deleteBuffer(windDirectionBuffer);
+        }
+
+        windDirectionBuffer = gl.createBuffer();
+
+        gl.bindBuffer(
+            gl.ARRAY_BUFFER,
+            windDirectionBuffer
+        );
+
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            windDirectionVertices,
+            gl.STATIC_DRAW
+        );
+
+        windDirectionVertexCount =
+            windDirectionVertices.length / 2;
+
+        // Initialise independent moving wind particles.
+
+        windParticlePositions.length = 0;
+
+        for (
+            let i = 0;
+            i < windParticleCount;
+            i++
+        ) {
+            const particle = {
+                longitude: 0,
+                mercatorY: 0,
+                age: 0
+            };
+
+            resetWindParticle(particle);
+
+            windParticlePositions.push(particle);
+        }
+
+        if (windParticleBuffer) {
+            gl.deleteBuffer(windParticleBuffer);
+        }
+
+        windParticleBuffer = gl.createBuffer();
+
+        gl.bindBuffer(
+            gl.ARRAY_BUFFER,
+            windParticleBuffer
+        );
+
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(0),
+            gl.DYNAMIC_DRAW
+        );
+
+        windParticleVertexCount = 0;
+
         function uploadWindTexture(data, textureUnit) {
 
             const texture = gl.createTexture();
@@ -1260,6 +1580,8 @@ function loadWebGLWind(
             "v =", windV.length,
             "WebGL error =", gl.getError()
         );
+
+        startWindParticleAnimation();
 
         draw();
 
@@ -1636,6 +1958,123 @@ gl.viewport(
             "worldOffset"
         );
 
+    const coastlineLineColor =
+        gl.getUniformLocation(
+            coastlineProgram,
+            "lineColor"
+        );
+    // -------------------------
+    // Create wind particle program
+    // -------------------------
+
+    const windParticleVertexShader =
+        gl.createShader(gl.VERTEX_SHADER);
+
+    gl.shaderSource(
+        windParticleVertexShader,
+        windParticleVertexShaderSource
+    );
+
+    gl.compileShader(windParticleVertexShader);
+
+    if (
+        !gl.getShaderParameter(
+            windParticleVertexShader,
+            gl.COMPILE_STATUS
+        )
+    ) {
+        throw new Error(
+            gl.getShaderInfoLog(windParticleVertexShader)
+        );
+    }
+
+    const windParticleFragmentShader =
+        gl.createShader(
+            gl.FRAGMENT_SHADER
+        );
+
+    gl.shaderSource(
+        windParticleFragmentShader,
+        windParticleFragmentShaderSource
+    );
+
+    gl.compileShader(
+        windParticleFragmentShader
+    );
+
+    if (
+        !gl.getShaderParameter(
+            windParticleFragmentShader,
+            gl.COMPILE_STATUS
+        )
+    ) {
+        throw new Error(
+            gl.getShaderInfoLog(
+                windParticleFragmentShader
+            )
+        );
+    }
+
+    const windParticleProgram =
+        gl.createProgram();
+
+    gl.attachShader(
+        windParticleProgram,
+        windParticleVertexShader
+    );
+
+    gl.attachShader(
+        windParticleProgram,
+        windParticleFragmentShader
+    );
+
+    gl.linkProgram(
+        windParticleProgram
+    );
+
+    if (
+        !gl.getProgramParameter(
+            windParticleProgram,
+            gl.LINK_STATUS
+        )
+    ) {
+        throw new Error(
+            gl.getProgramInfoLog(
+                windParticleProgram
+            )
+        );
+    }
+
+    const windParticlePosition =
+        gl.getAttribLocation(
+            windParticleProgram,
+            "position"
+        );
+
+    const windParticleOffset =
+        gl.getAttribLocation(
+            windParticleProgram,
+            "particleOffset"
+        );
+
+    const windParticleMapOrigin =
+        gl.getUniformLocation(
+            windParticleProgram,
+            "mapOrigin"
+        );
+
+    const windParticleMapScale =
+        gl.getUniformLocation(
+            windParticleProgram,
+            "mapScale"
+        );
+
+    const windParticleWorldOffset =
+        gl.getUniformLocation(
+            windParticleProgram,
+            "worldOffset"
+        );
+
     // -------------------------
     // Find shader attributes
     // -------------------------
@@ -1738,6 +2177,7 @@ gl.viewport(
     let windRenderMode = 1;
     let weatherOpacity = 1.0;
     let windVisible = false;
+    let windParticlesVisible = false;
     let indexBuffer = null;
     let temperatureDataTexture = null;
     let precipitationDataTexture = null;
@@ -1821,6 +2261,332 @@ gl.viewport(
     let coastlineVertexCount = 0;
 
     let coastlineVisible = true;
+
+    let windDirectionBuffer = null;
+
+    let windDirectionVertexCount = 0;
+
+    let windDirectionVisible = true;
+
+    let windParticleBuffer = null;
+
+    let windParticleVertexCount = 0;
+
+    const windParticleCount = 3000;
+
+    const windParticlePositions = [];
+
+    let windParticleAnimationFrame = null;
+
+    let windParticleLastTime = 0;
+
+    let particleMapScaleX = 1;
+    let particleMapScaleY = 1;
+
+    function sampleParticleWind(longitude, mercatorY) {
+
+        const latitude =
+            (2 * Math.atan(
+                Math.exp(mercatorY * Math.PI / 180)
+            ) - Math.PI / 2) * 180 / Math.PI;
+
+        if (
+            !windU ||
+            !windV ||
+            Math.abs(latitude) > 85
+        ) {
+            return null;
+        }
+
+        const row = (90 - latitude) / 0.25;
+
+        const column =
+            ((longitude + 180) / 0.25 + 1440) % 1440;
+
+        const row0 = Math.floor(row);
+        const row1 = Math.min(row0 + 1, 720);
+
+        const col0 = Math.floor(column) % 1440;
+        const col1 = (col0 + 1) % 1440;
+
+        const fy = row - row0;
+        const fx = column - Math.floor(column);
+
+        const i00 = row0 * 1440 + col0;
+        const i10 = row0 * 1440 + col1;
+        const i01 = row1 * 1440 + col0;
+        const i11 = row1 * 1440 + col1;
+
+        function interpolate(data) {
+
+            const top =
+                data[i00] * (1 - fx) +
+                data[i10] * fx;
+
+            const bottom =
+                data[i01] * (1 - fx) +
+                data[i11] * fx;
+
+            return top * (1 - fy) + bottom * fy;
+        }
+
+        const u = interpolate(windU);
+        const v = interpolate(windV);
+        const speed = Math.hypot(u, v);
+
+        if (
+            !Number.isFinite(speed) ||
+            speed < 0.5
+        ) {
+            return null;
+        }
+
+        return { u, v, speed };
+    }
+
+    function resetWindParticle(particle) {
+
+        particle.longitude =
+            -180 + Math.random() * 360;
+
+        particle.mercatorY =
+            -179 + Math.random() * 358;
+
+        particle.age = Math.random() * 100;
+    }
+
+    function updateWindParticles(deltaTime) {
+
+const vertices = [];
+
+const movementScale = 0.012;
+const dashLength = 20.0;
+const halfWidthPixels = 1.0;
+
+const canvasWidth = Math.max(canvas.clientWidth, 1);
+const canvasHeight = Math.max(canvas.clientHeight, 1);
+
+function latitudeFromMercatorY(y) {
+    return (
+        2 * Math.atan(
+            Math.exp(y * Math.PI / 180)
+        ) - Math.PI / 2
+    ) * 180 / Math.PI;
+}
+
+function addParticleQuad(
+    startLongitude,
+    startY,
+    endLongitude,
+    endY
+) {
+    const startLatitude =
+        latitudeFromMercatorY(startY);
+
+    const endLatitude =
+        latitudeFromMercatorY(endY);
+
+    const startMercator =
+        Math.log(
+            Math.tan(
+                Math.PI / 4 +
+                startLatitude * Math.PI / 360
+            )
+        );
+
+    const endMercator =
+        Math.log(
+            Math.tan(
+                Math.PI / 4 +
+                endLatitude * Math.PI / 360
+            )
+        );
+
+    const dxPixels =
+        (
+            (endLongitude - startLongitude) / 180
+        ) * particleMapScaleX * canvasWidth / 2;
+
+    const dyPixels =
+        (endMercator - startMercator) *
+        particleMapScaleY * canvasHeight / 2;
+
+    const length = Math.hypot(dxPixels, dyPixels);
+
+    if (length < 0.001) {
+        return;
+    }
+
+    const offsetX =
+        (-dyPixels / length) *
+        halfWidthPixels * 2 / canvasWidth;
+
+    const offsetY =
+        (dxPixels / length) *
+        halfWidthPixels * 2 / canvasHeight;
+
+    function vertex(longitude, latitude, side) {
+        vertices.push(
+            longitude,
+            latitude,
+            offsetX * side,
+            offsetY * side
+        );
+    }
+
+    // Two triangles forming one thick dash.
+    vertex(startLongitude, startLatitude, 1);
+    vertex(startLongitude, startLatitude, -1);
+    vertex(endLongitude, endLatitude, 1);
+
+    vertex(endLongitude, endLatitude, 1);
+    vertex(startLongitude, startLatitude, -1);
+    vertex(endLongitude, endLatitude, -1);
+}
+
+        for (const particle of windParticlePositions) {
+
+            const wind = sampleParticleWind(
+                particle.longitude,
+                particle.mercatorY
+            );
+
+            if (!wind) {
+                resetWindParticle(particle);
+                continue;
+            }
+
+            const speedFactor =
+                Math.min(wind.speed, 30);
+
+            const dx =
+                wind.u / wind.speed *
+                speedFactor *
+                movementScale *
+                deltaTime;
+
+            const dy =
+                wind.v / wind.speed *
+                speedFactor *
+                movementScale *
+                deltaTime;
+
+            particle.longitude += dx;
+            particle.mercatorY += dy;
+            particle.age += deltaTime;
+
+            const particleLatitude =
+                (2 * Math.atan(
+                    Math.exp(particle.mercatorY * Math.PI / 180)
+                ) - Math.PI / 2) * 180 / Math.PI;
+
+            if (
+                particle.longitude < -180 ||
+                particle.longitude > 180 ||
+                Math.abs(particleLatitude) > 85 ||
+                particle.age > 180
+            ) {
+                resetWindParticle(particle);
+                continue;
+            }
+
+        const trailSpeedFactor =
+            Math.sqrt(Math.max(wind.speed, 1));
+
+        const tailLongitude =
+            particle.longitude - dx * dashLength / trailSpeedFactor;
+
+        const tailMercatorY =
+            particle.mercatorY - dy * dashLength / trailSpeedFactor;
+
+        addParticleQuad(
+            tailLongitude,
+            tailMercatorY,
+            particle.longitude,
+            particle.mercatorY
+        );
+        }
+
+        gl.bindBuffer(
+            gl.ARRAY_BUFFER,
+            windParticleBuffer
+        );
+
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(vertices),
+            gl.DYNAMIC_DRAW
+        );
+
+        windParticleVertexCount =
+            vertices.length / 4;
+    }
+
+    function animateWindParticles(timestamp) {
+
+        windParticleAnimationFrame = null;
+
+        if (
+            !windParticlesVisible ||
+            !windU ||
+            !windV ||
+            !windParticleBuffer
+        ) {
+            return;
+        }
+
+        if (windParticleLastTime === 0) {
+            windParticleLastTime = timestamp;
+        }
+
+        const deltaTime = Math.min(
+            (timestamp - windParticleLastTime) / 16.67,
+            3
+        );
+
+        windParticleLastTime = timestamp;
+
+        updateWindParticles(deltaTime);
+
+        draw();
+
+        windParticleAnimationFrame =
+            requestAnimationFrame(
+                animateWindParticles
+            );
+    }
+
+    function startWindParticleAnimation() {
+
+        if (
+            windParticleAnimationFrame === null &&
+            windParticlesVisible &&
+            windU &&
+            windV &&
+            windParticleBuffer
+        ) {
+            windParticleLastTime = 0;
+
+            windParticleAnimationFrame =
+                requestAnimationFrame(
+                    animateWindParticles
+                );
+        }
+    }
+
+    function stopWindParticleAnimation() {
+
+        if (windParticleAnimationFrame !== null) {
+
+            cancelAnimationFrame(
+                windParticleAnimationFrame
+            );
+
+            windParticleAnimationFrame = null;
+        }
+
+        windParticleLastTime = 0;
+    }
 
     function draw() {
 
@@ -1976,6 +2742,9 @@ gl.viewport(
                     projectedOrigin.y) /
                 height
             ) * 2 * 57.295779513;
+
+        particleMapScaleX = mapScaleX;
+        particleMapScaleY = mapScaleY;
 
         gl.uniform2f(
             mapOrigin,
@@ -2190,6 +2959,173 @@ gl.viewport(
             );
         }
 
+        if (
+            windDirectionVisible &&
+            windDirectionBuffer &&
+            windDirectionVertexCount > 0
+        ) {
+            gl.useProgram(coastlineProgram);
+
+            gl.bindBuffer(
+                gl.ARRAY_BUFFER,
+                windDirectionBuffer
+            );
+
+            gl.enableVertexAttribArray(
+                coastlinePosition
+            );
+
+            gl.vertexAttribPointer(
+                coastlinePosition,
+                2,
+                gl.FLOAT,
+                false,
+                0,
+                0
+            );
+
+            gl.uniform2f(
+                coastlineMapOrigin,
+                mapOriginX,
+                mapOriginY
+            );
+
+            gl.uniform2f(
+                coastlineMapScale,
+                mapScaleX,
+                mapScaleY
+            );
+
+            gl.uniform4f(
+                coastlineLineColor,
+                0.45,
+                0.45,
+                0.45,
+                0.55
+            );
+
+            gl.uniform1f(
+                coastlineWorldOffset,
+                -worldWidth
+            );
+
+            gl.drawArrays(
+                gl.LINES,
+                0,
+                windDirectionVertexCount
+            );
+
+            gl.uniform1f(
+                coastlineWorldOffset,
+                0.0
+            );
+
+            gl.drawArrays(
+                gl.LINES,
+                0,
+                windDirectionVertexCount
+            );
+
+            gl.uniform1f(
+                coastlineWorldOffset,
+                worldWidth
+            );
+
+            gl.drawArrays(
+                gl.LINES,
+                0,
+                windDirectionVertexCount
+            );
+        }
+
+        // -------------------------
+        // Draw wind particle dashes
+        // -------------------------
+
+        if (
+            windParticlesVisible &&
+            windParticleBuffer &&
+            windParticleVertexCount > 0
+        ) {
+            gl.useProgram(windParticleProgram);
+
+            gl.bindBuffer(
+                gl.ARRAY_BUFFER,
+                windParticleBuffer
+            );
+
+            gl.enableVertexAttribArray(
+                windParticlePosition
+            );
+
+            gl.vertexAttribPointer(
+                windParticlePosition,
+                2,
+                gl.FLOAT,
+                false,
+                16,
+                0
+            );
+
+            gl.enableVertexAttribArray(
+                windParticleOffset
+            );
+
+            gl.vertexAttribPointer(
+                windParticleOffset,
+                2,
+                gl.FLOAT,
+                false,
+                16,
+                8
+            );
+
+            gl.uniform2f(
+                windParticleMapOrigin,
+                mapOriginX,
+                mapOriginY
+            );
+
+            gl.uniform2f(
+                windParticleMapScale,
+                mapScaleX,
+                mapScaleY
+            );
+
+            gl.uniform1f(
+                windParticleWorldOffset,
+                -worldWidth
+            );
+
+            gl.drawArrays(
+                gl.TRIANGLES,
+                0,
+                windParticleVertexCount
+            );
+
+            gl.uniform1f(
+                windParticleWorldOffset,
+                0.0
+            );
+
+            gl.drawArrays(
+                gl.TRIANGLES,
+                0,
+                windParticleVertexCount
+            );
+
+            gl.uniform1f(
+                windParticleWorldOffset,
+                worldWidth
+            );
+
+            gl.drawArrays(
+                gl.TRIANGLES,
+                0,
+                windParticleVertexCount
+            );
+        }
+
         if (coastlineVisible && coastlineBuffer) {
 
             gl.useProgram(
@@ -2224,6 +3160,14 @@ gl.viewport(
                 coastlineMapScale,
                 mapScaleX,
                 mapScaleY
+            );
+
+            gl.uniform4f(
+                coastlineLineColor,
+                0.05,
+                0.05,
+                0.05,
+                0.55
             );
 
             gl.uniform1f(
@@ -2379,6 +3323,23 @@ gl.viewport(
 
         setWindVisible: (visible) => {
             windVisible = visible;
+            draw();
+        },
+
+        setWindParticlesVisible: (visible) => {
+            windParticlesVisible = visible;
+
+            if (visible) {
+                startWindParticleAnimation();
+            } else {
+                stopWindParticleAnimation();
+            }
+
+            draw();
+        },
+
+        setWindDirectionVisible: (visible) => {
+            windDirectionVisible = visible;
             draw();
         },
 
