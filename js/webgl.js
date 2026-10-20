@@ -3333,6 +3333,14 @@ function addParticleQuad(
                 startWindParticleAnimation();
             } else {
                 stopWindParticleAnimation();
+
+                gl.disableVertexAttribArray(
+                    windParticlePosition
+                );
+
+                gl.disableVertexAttribArray(
+                    windParticleOffset
+                );
             }
 
             draw();
