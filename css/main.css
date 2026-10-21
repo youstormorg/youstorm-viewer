@@ -577,7 +577,9 @@ z-index:10000;
     background: #426b87;
 }
 
-#layersToggle.active {
+#layersToggle.active,
+#legendToggle.active,
+#probeToggle.active {
     background: white;
     color: black;
 }

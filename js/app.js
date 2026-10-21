@@ -806,6 +806,40 @@ console.log(
 );
 await loadPrecipitationData();
 
+// Load wind data for overlays even when wind speed is hidden.
+if (
+    getTemperatureModel() === "ECMWF" &&
+    (
+        document.getElementById(
+            "webglWindToggle"
+        ).checked ||
+        document.getElementById(
+            "webglStreamlinesToggle"
+        ).checked ||
+        document.getElementById(
+            "webglWindParticlesToggle"
+        ).checked
+    )
+) {
+    const windData =
+        findMetadataByValidTime(
+            getECMWFWindMetadata()
+        );
+
+    if (windData) {
+        webgl.loadWind(
+            windData.forecast_hour,
+            updateFixedProbeReadout
+        );
+
+        webgl.setWindVisible(
+            document.getElementById(
+                "webglWindToggle"
+            ).checked
+        );
+    }
+}
+
 // Initialise forecast legends.
 createTemperatureLegend();
 createWindLegend();
@@ -974,36 +1008,52 @@ if (
     }
 
 }
-
-if (
+const windSpeedEnabled =
     document.getElementById(
         "webglWindToggle"
-    ).checked
-) {
+    ).checked;
 
+const streamlinesEnabled =
+    document.getElementById(
+        "webglStreamlinesToggle"
+    ).checked;
+
+const windParticlesEnabled =
+    document.getElementById(
+        "webglWindParticlesToggle"
+    ).checked;
+
+if (
+    getTemperatureModel() === "ECMWF" &&
+    (
+        windSpeedEnabled ||
+        streamlinesEnabled ||
+        windParticlesEnabled
+    )
+) {
     const windData =
         findMetadataByValidTime(
             getECMWFWindMetadata()
         );
 
     if (windData) {
-
         webgl.loadWind(
             windData.forecast_hour,
             updateFixedProbeReadout
         );
 
-        webgl.setWindVisible(true);
-
+        webgl.setWindVisible(
+            windSpeedEnabled
+        );
     } else {
-
         webgl.setWindVisible(false);
 
         console.warn(
             "No ECMWF wind forecast matches the selected time."
         );
-
     }
+} else {
+    webgl.setWindVisible(false);
 }
 
     // Update the slider label

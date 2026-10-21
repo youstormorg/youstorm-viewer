@@ -64,7 +64,7 @@ export function initialiseUI(map) {
                 ).checked ||
                 document.getElementById(
                     "webglPrecipitationMode5Toggle"
-                ).checked
+                )?.checked
                     ? "block"
                     : "none";
             // Show wind legend only when ECMWF wind is enabled.
