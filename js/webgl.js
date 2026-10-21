@@ -1393,7 +1393,6 @@ function loadWebGLPrecipitation(
         });
 }
 
-
 function loadWebGLWind(
     forecastHour,
     onLoaded = null
@@ -1500,6 +1499,15 @@ function loadWebGLWind(
 
             windParticlePositions.push(particle);
         }
+
+        // Disable particle attributes before replacing their buffer.
+        gl.disableVertexAttribArray(
+            windParticlePosition
+        );
+
+        gl.disableVertexAttribArray(
+            windParticleOffset
+        );
 
         if (windParticleBuffer) {
             gl.deleteBuffer(windParticleBuffer);
