@@ -736,6 +736,8 @@ const coastlineFragmentShaderSource = `
 const windParticleVertexShaderSource = `
     attribute vec2 position;
     attribute vec2 particleOffset;
+    attribute float particleFade;
+    varying float vParticleFade;
 
     uniform vec2 mapOrigin;
     uniform vec2 mapScale;
@@ -766,7 +768,7 @@ const windParticleVertexShaderSource = `
 
         screenPosition.x += worldOffset;
         screenPosition += particleOffset;
-
+        vParticleFade = particleFade;
         gl_Position =
             vec4(screenPosition, 0.0, 1.0);
     }
@@ -775,13 +777,15 @@ const windParticleVertexShaderSource = `
 const windParticleFragmentShaderSource = `
     precision mediump float;
 
+    varying float vParticleFade;
+
     void main() {
         gl_FragColor =
             vec4(
                 0.90,
                 0.95,
                 1.00,
-                0.95
+                0.95 * vParticleFade
             );
     }
 `;
@@ -949,6 +953,71 @@ function prepareWindDirectionVertexData(
     const stepLength = 0.7;
     const maximumSteps = 28;
 
+    // Track accepted streamlines to reduce crowding.
+    const occupancyCellSize = 1.5;
+    const occupancyRadius = 0.8;
+    const occupiedCells = new Set();
+
+    function occupancyKey(longitude, y) {
+        const wrappedLongitude =
+            ((longitude + 180) % 360 + 360) % 360;
+
+        const cellX = Math.floor(
+            wrappedLongitude / occupancyCellSize
+        );
+
+        const cellY = Math.floor(
+            y / occupancyCellSize
+        );
+
+        return `${cellX},${cellY}`;
+    }
+
+    function isOccupied(longitude, y) {
+        const cellX = Math.floor(
+            (((longitude + 180) % 360 + 360) % 360) /
+            occupancyCellSize
+        );
+
+        const cellY = Math.floor(
+            y / occupancyCellSize
+        );
+
+        const radiusInCells = Math.ceil(
+            occupancyRadius / occupancyCellSize
+        );
+
+        for (
+            let offsetY = -radiusInCells;
+            offsetY <= radiusInCells;
+            offsetY++
+        ) {
+            for (
+                let offsetX = -radiusInCells;
+                offsetX <= radiusInCells;
+                offsetX++
+            ) {
+                const key =
+                    `${(cellX + offsetX + 240) % 240},` +
+                    `${cellY + offsetY}`;
+
+                if (occupiedCells.has(key)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    function markOccupied(points) {
+        for (const [longitude, y] of points) {
+            occupiedCells.add(
+                occupancyKey(longitude, y)
+            );
+        }
+    }
+
     function latitudeFromMercatorY(y) {
         return (
             2 * Math.atan(
@@ -1029,6 +1098,37 @@ function prepareWindDirectionVertexData(
         let longitude = startLongitude;
         let y = startY;
 
+        function approachesEarlierPath(nextLongitude, nextY) {
+            // Ignore the most recent points; they are naturally close.
+            for (
+                let i = 0;
+                i < points.length - 4;
+                i++
+            ) {
+                const [oldLongitude, oldY] = points[i];
+
+                let longitudeDifference =
+                    Math.abs(nextLongitude - oldLongitude);
+
+                longitudeDifference = Math.min(
+                    longitudeDifference,
+                    360 - longitudeDifference
+                );
+
+                const yDifference = nextY - oldY;
+
+                if (
+                    longitudeDifference * longitudeDifference +
+                    yDifference * yDifference <
+                    0.8 * 0.8
+                ) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         for (let step = 0; step < maximumSteps; step++) {
             const wind1 = sampleWind(longitude, y);
 
@@ -1080,7 +1180,9 @@ function prepareWindDirectionVertexData(
             ) {
                 break;
             }
-
+            if (approachesEarlierPath(longitude, y)) {
+                break;
+            }
             points.push([longitude, y]);
         }
 
@@ -1117,7 +1219,10 @@ function prepareWindDirectionVertexData(
         ) {
             const longitude = -180 + column * 0.25;
 
-            if (!sampleWind(longitude, seedY)) {
+            if (
+                !sampleWind(longitude, seedY) ||
+                isOccupied(longitude, seedY)
+            ) {
                 continue;
             }
 
@@ -1136,6 +1241,9 @@ function prepareWindDirectionVertexData(
             backward.reverse();
 
             addStreamline(
+                backward.concat(forward.slice(1))
+            );
+            markOccupied(
                 backward.concat(forward.slice(1))
             );
         }
@@ -1507,6 +1615,10 @@ function loadWebGLWind(
 
         gl.disableVertexAttribArray(
             windParticleOffset
+        );
+
+        gl.disableVertexAttribArray(
+            windParticleFade
         );
 
         if (windParticleBuffer) {
@@ -2052,7 +2164,11 @@ gl.viewport(
             )
         );
     }
-
+    const windParticleFade =
+        gl.getAttribLocation(
+            windParticleProgram,
+            "particleFade"
+        );
     const windParticlePosition =
         gl.getAttribLocation(
             windParticleProgram,
@@ -2433,23 +2549,29 @@ function addParticleQuad(
         (dxPixels / length) *
         halfWidthPixels * 2 / canvasHeight;
 
-    function vertex(longitude, latitude, side) {
+    function vertex(
+        longitude,
+        latitude,
+        side,
+        fade
+    ) {
         vertices.push(
             longitude,
             latitude,
             offsetX * side,
-            offsetY * side
+            offsetY * side,
+            fade
         );
     }
 
-    // Two triangles forming one thick dash.
-    vertex(startLongitude, startLatitude, 1);
-    vertex(startLongitude, startLatitude, -1);
-    vertex(endLongitude, endLatitude, 1);
+    // Transparent tail, gradually fading in towards the leading end.
+    vertex(startLongitude, startLatitude,  1, 0.0);
+    vertex(startLongitude, startLatitude, -1, 0.0);
+    vertex(endLongitude,   endLatitude,    1, 1.0);
 
-    vertex(endLongitude, endLatitude, 1);
-    vertex(startLongitude, startLatitude, -1);
-    vertex(endLongitude, endLatitude, -1);
+    vertex(endLongitude,   endLatitude,    1, 1.0);
+    vertex(startLongitude, startLatitude, -1, 0.0);
+    vertex(endLongitude,   endLatitude,   -1, 1.0);
 }
 
         for (const particle of windParticlePositions) {
@@ -2527,7 +2649,7 @@ function addParticleQuad(
         );
 
         windParticleVertexCount =
-            vertices.length / 4;
+            vertices.length / 5;
     }
 
     function animateWindParticles(timestamp) {
@@ -3006,10 +3128,10 @@ function addParticleQuad(
 
             gl.uniform4f(
                 coastlineLineColor,
-                0.45,
-                0.45,
-                0.45,
-                0.55
+                0.72,
+                0.62,
+                0.92,
+                0.75
             );
 
             gl.uniform1f(
@@ -3071,7 +3193,7 @@ function addParticleQuad(
                 2,
                 gl.FLOAT,
                 false,
-                16,
+                20,
                 0
             );
 
@@ -3084,8 +3206,21 @@ function addParticleQuad(
                 2,
                 gl.FLOAT,
                 false,
-                16,
+                20,
                 8
+            );
+
+            gl.enableVertexAttribArray(
+                windParticleFade
+            );
+
+            gl.vertexAttribPointer(
+                windParticleFade,
+                1,
+                gl.FLOAT,
+                false,
+                20,
+                16
             );
 
             gl.uniform2f(
@@ -3349,6 +3484,11 @@ function addParticleQuad(
                 gl.disableVertexAttribArray(
                     windParticleOffset
                 );
+
+                gl.disableVertexAttribArray(
+                    windParticleFade
+                );
+
             }
 
             draw();
