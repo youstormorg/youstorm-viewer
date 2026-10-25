@@ -124,7 +124,7 @@ href="css/main.css">
                 type="checkbox"
                 id="webglWindToggle"
             >
-            Wind speed (EC)
+            Wind
         </label>
 
         <button
@@ -166,14 +166,28 @@ href="css/main.css">
             Precipitation
         </label>
 
-        <select
-            id="precipitationTypeSelect"
-            aria-label="Precipitation accumulation type"
-            title="Choose precipitation accumulation type"
-        >
-            <option value="threeHourFromTotal">3-hour (from total)</option>
-            <option value="total">Total</option>
-        </select>
+        <div class="precipitationMenu">
+            <button
+                type="button"
+                id="precipitationMenuToggle"
+                class="precipitationMenuToggle"
+                aria-label="Choose precipitation accumulation"
+                aria-expanded="false"
+                aria-controls="precipitationTypeSelect"
+                title="Choose precipitation accumulation"
+            >
+                <span aria-hidden="true">▾</span>
+            </button>
+
+            <select
+                id="precipitationTypeSelect"
+                aria-label="Precipitation accumulation type"
+                title="Choose precipitation accumulation type"
+            >
+                <option value="threeHourFromTotal">3-hour</option>
+                <option value="total">Total</option>
+            </select>
+        </div>
 
         <button
             type="button"

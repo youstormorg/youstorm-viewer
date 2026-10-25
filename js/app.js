@@ -635,12 +635,50 @@ function updateWebGLCanvasVisibility() {
 
         }
     );
+// Get the precipitation menu elements.
+const precipitationMenuForArrow =
+    document.querySelector(
+        ".precipitationMenu"
+    );
 
+const precipitationMenuToggleForArrow =
+    document.getElementById(
+        "precipitationMenuToggle"
+    );
+
+// Open or close the dropdown when the arrow is clicked.
+precipitationMenuToggleForArrow.addEventListener(
+    "click",
+    () => {
+
+        const isOpen =
+            precipitationMenuForArrow.classList.toggle(
+                "open"
+            );
+
+        precipitationMenuToggleForArrow.setAttribute(
+            "aria-expanded",
+            String(isOpen)
+        );
+    }
+);
+
+// Handle changes to the precipitation accumulation type.
 document.getElementById(
     "precipitationTypeSelect"
 ).addEventListener(
     "change",
     (event) => {
+
+        // Close the menu after a selection is made.
+        precipitationMenuForArrow.classList.remove(
+            "open"
+        );
+
+        precipitationMenuToggleForArrow.setAttribute(
+            "aria-expanded",
+            "false"
+        );
 
         // The accumulation selector applies only to ECMWF.
         if (selectedModel !== "ECMWF") {
@@ -683,6 +721,29 @@ document.getElementById(
         updateWeatherReadoutVisibility();
         updateWeatherReadout();
         updateFixedProbeReadout();
+    }
+);
+
+// Close the menu when the user clicks outside it.
+document.addEventListener(
+    "click",
+    (event) => {
+
+        if (
+            !precipitationMenuForArrow.contains(
+                event.target
+            )
+        ) {
+
+            precipitationMenuForArrow.classList.remove(
+                "open"
+            );
+
+            precipitationMenuToggleForArrow.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+        }
     }
 );
 
@@ -921,6 +982,17 @@ const precipitationTypeSelect =
         "precipitationTypeSelect"
     );
 
+// Get the wrapper containing the precipitation arrow and dropdown.
+const precipitationMenu =
+    document.querySelector(
+        ".precipitationMenu"
+    );
+
+// Show the menu only when ECMWF is selected.
+precipitationMenu.hidden =
+    selectedModel !== "ECMWF";
+
+// Keep the selector's existing model-dependent visibility.
 precipitationTypeSelect.hidden =
     selectedModel !== "ECMWF";
 

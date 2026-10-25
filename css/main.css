@@ -183,6 +183,9 @@ display:flex;
 .weatherLayerRow label {
     flex: 1;
     min-width: 0;
+
+    /* Reduce vertical spacing between weather layers. */
+    margin: 2px 0;
 }
 
 .renderModeToggle {
@@ -201,12 +204,37 @@ display:flex;
     cursor: pointer;
 }
 
-.weatherLayerRow select {
+/* Compact arrow control beside the Precipitation label. */
+.precipitationMenu {
+    position: relative;
+    flex: 0 0 20px;
+    width: 20px;
+    height: 24px;
+}
+
+/* Small arrow that opens the accumulation selector. */
+.precipitationMenuToggle {
+    width: 20px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* Keep the existing selector hidden until the arrow is clicked. */
+.precipitationMenu select {
+    display: none;
+    position: absolute;
+    top: 24px;
+    right: 0;
+    z-index: 1000;
+    width: 90px;
     max-width: 90px;
     min-width: 0;
     height: 24px;
-    position: relative;
-    top: 20px;
     padding: 2px 4px;
     box-sizing: border-box;
     background: #333;
@@ -214,6 +242,17 @@ display:flex;
     border: 1px solid #666;
     border-radius: 3px;
     font-size: 12px;
+}
+
+/* Show the existing selector when the menu is open. */
+.precipitationMenu.open select {
+    display: block;
+}
+
+/* Hide the arrow when the existing selector is disabled for a model. */
+.weatherLayerRow:has(#precipitationTypeSelect[hidden])
+.precipitationMenuToggle {
+    display: none;
 }
 
 .renderModeToggle:hover {

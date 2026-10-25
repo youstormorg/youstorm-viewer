@@ -995,6 +995,21 @@ function prepareMSLContourVertexData(
         Math.floor(maximum / contourInterval) *
         contourInterval;
 
+    function addSegment(
+        ax, ay,
+        bx, by
+    ) {
+        // Avoid a line spanning the map at the dateline.
+        if (Math.abs(ax - bx) > 180) {
+            return;
+        }
+
+        vertices.push(
+            ax, ay,
+            bx, by
+        );
+    }
+
     for (
         let level = firstLevel;
         level <= lastLevel;
@@ -1009,13 +1024,18 @@ function prepareMSLContourVertexData(
                 continue;
             }
 
+            const row = y * width;
+            const nextRow = (y + 1) * width;
+
             for (let x = 0; x < width; x++) {
                 const nextX = (x + 1) % width;
+                const nextGridX =
+                    nextX === 0 ? width : nextX;
 
-                const i00 = y * width + x;
-                const i10 = y * width + nextX;
-                const i01 = (y + 1) * width + x;
-                const i11 = (y + 1) * width + nextX;
+                const i00 = row + x;
+                const i10 = row + nextX;
+                const i01 = nextRow + x;
+                const i11 = nextRow + nextX;
 
                 const v00 = pressure[i00];
                 const v10 = pressure[i10];
@@ -1031,76 +1051,197 @@ function prepareMSLContourVertexData(
                     continue;
                 }
 
-                const intersections = [];
+                // Test each cell edge without creating arrays.
+                const crossesTop =
+                    (v00 < level && v10 >= level) ||
+                    (v10 < level && v00 >= level);
 
-                const edges = [
-                    addIntersection(
-                        level, x, y, v00,
-                        nextX === 0 ? width : nextX, y, v10
-                    ),
-                    addIntersection(
-                        level, nextX, y, v10,
-                        nextX, y + 1, v11
-                    ),
-                    addIntersection(
-                        level, x, y + 1, v01,
-                        nextX === 0 ? width : nextX, y + 1, v11
-                    ),
-                    addIntersection(
-                        level, x, y, v00,
-                        x, y + 1, v01
-                    )
-                ];
+                const crossesRight =
+                    (v10 < level && v11 >= level) ||
+                    (v11 < level && v10 >= level);
 
-                const crossedEdges = [];
+                const crossesBottom =
+                    (v01 < level && v11 >= level) ||
+                    (v11 < level && v01 >= level);
 
-                for (let edge = 0; edge < 4; edge++) {
-                    if (edges[edge] !== null) {
-                        crossedEdges.push(edge);
+                const crossesLeft =
+                    (v00 < level && v01 >= level) ||
+                    (v01 < level && v00 >= level);
+
+                let topX = 0;
+                let topY = 0;
+                let rightX = 0;
+                let rightY = 0;
+                let bottomX = 0;
+                let bottomY = 0;
+                let leftX = 0;
+                let leftY = 0;
+
+                if (crossesTop) {
+                    const fraction =
+                        (level - v00) / (v10 - v00);
+
+                    topX =
+                        -180 +
+                        (x + fraction * (nextGridX - x)) *
+                        0.25;
+
+                    topY = 90 - y * 0.25;
+                }
+
+                if (crossesRight) {
+                    const fraction =
+                        (level - v10) / (v11 - v10);
+
+                    rightX =
+                        -180 +
+                        (nextX + fraction * 0) *
+                        0.25;
+
+                    rightY =
+                        90 - (y + fraction) * 0.25;
+                }
+
+                if (crossesBottom) {
+                    const fraction =
+                        (level - v01) / (v11 - v01);
+
+                    bottomX =
+                        -180 +
+                        (x + fraction * (nextGridX - x)) *
+                        0.25;
+
+                    bottomY =
+                        90 - (y + 1) * 0.25;
+                }
+
+                if (crossesLeft) {
+                    const fraction =
+                        (level - v00) / (v01 - v00);
+
+                    leftX = -180 + x * 0.25;
+                    leftY =
+                        90 - (y + fraction) * 0.25;
+                }
+
+                // Record the two crossing edges, if there are two.
+                let crossedCount = 0;
+                let firstEdge = -1;
+                let secondEdge = -1;
+
+                if (crossesTop) {
+                    firstEdge = 0;
+                    crossedCount++;
+                }
+
+                if (crossesRight) {
+                    if (crossedCount === 0) {
+                        firstEdge = 1;
+                    } else {
+                        secondEdge = 1;
                     }
+
+                    crossedCount++;
                 }
 
-                function addSegment(edgeA, edgeB) {
-                    const a = edges[edgeA];
-                    const b = edges[edgeB];
+                if (crossesBottom) {
+                    if (crossedCount === 0) {
+                        firstEdge = 2;
+                    } else {
+                        secondEdge = 2;
+                    }
 
-                    if (!a || !b) return;
-
-                    // Avoid a line spanning the map at the dateline.
-                    if (Math.abs(a[0] - b[0]) > 180) return;
-
-                    vertices.push(
-                        a[0], a[1],
-                        b[0], b[1]
-                    );
+                    crossedCount++;
                 }
 
-                if (crossedEdges.length === 2) {
-                    addSegment(crossedEdges[0], crossedEdges[1]);
+                if (crossesLeft) {
+                    if (crossedCount === 0) {
+                        firstEdge = 3;
+                    } else {
+                        secondEdge = 3;
+                    }
 
-                } else if (crossedEdges.length === 4) {
+                    crossedCount++;
+                }
+
+                if (crossedCount === 2) {
+                    let ax;
+                    let ay;
+                    let bx;
+                    let by;
+
+                    switch (firstEdge) {
+                        case 0:
+                            ax = topX;
+                            ay = topY;
+                            break;
+                        case 1:
+                            ax = rightX;
+                            ay = rightY;
+                            break;
+                        case 2:
+                            ax = bottomX;
+                            ay = bottomY;
+                            break;
+                        default:
+                            ax = leftX;
+                            ay = leftY;
+                    }
+
+                    switch (secondEdge) {
+                        case 0:
+                            bx = topX;
+                            by = topY;
+                            break;
+                        case 1:
+                            bx = rightX;
+                            by = rightY;
+                            break;
+                        case 2:
+                            bx = bottomX;
+                            by = bottomY;
+                            break;
+                        default:
+                            bx = leftX;
+                            by = leftY;
+                    }
+
+                    addSegment(ax, ay, bx, by);
+
+                } else if (crossedCount === 4) {
                     // Resolve saddle cells using the cell-centre pressure.
-                    const centre = (v00 + v10 + v01 + v11) / 4;
+                    const centre =
+                        (v00 + v10 + v01 + v11) / 4;
+
                     const targetIsLow = centre >= level;
 
-                    // Edge pairs surrounding each corner:
-                    // top-left, top-right, right-bottom, bottom-left.
-                    const cornerPairs = [
-                        { value: v00, edges: [0, 3] },
-                        { value: v10, edges: [0, 1] },
-                        { value: v11, edges: [1, 2] },
-                        { value: v01, edges: [2, 3] }
-                    ];
+                    // Preserve the original corner-pairing rules.
+                    if ((v00 < level) === targetIsLow) {
+                        addSegment(
+                            topX, topY,
+                            leftX, leftY
+                        );
+                    }
 
-                    for (const corner of cornerPairs) {
-                        const isLow = corner.value < level;
+                    if ((v10 < level) === targetIsLow) {
+                        addSegment(
+                            topX, topY,
+                            rightX, rightY
+                        );
+                    }
 
-                        if (isLow === targetIsLow) {
-                            addSegment(
-                                corner.edges[0],
-                                corner.edges[1]
-                            );
-                        }
+                    if ((v11 < level) === targetIsLow) {
+                        addSegment(
+                            rightX, rightY,
+                            bottomX, bottomY
+                        );
+                    }
+
+                    if ((v01 < level) === targetIsLow) {
+                        addSegment(
+                            bottomX, bottomY,
+                            leftX, leftY
+                        );
                     }
                 }
             }
@@ -1890,9 +2031,12 @@ function loadWebGLMSLContours(
     forecastHour,
     onLoaded = null
 ) {
-    const requestId = ++mslContourLoadRequest;
+const requestId = ++mslContourLoadRequest;
 
-    // Never display old contours while a new hour loads.
+// Keep the existing contours visible while the next
+// ECMWF forecast hour is loading. Clear them only when
+// ECMWF is no longer the selected model.
+if (currentModel !== "ECMWF") {
     mslContourForecastHour = null;
     mslContourVertexCount = 0;
 
@@ -1902,11 +2046,8 @@ function loadWebGLMSLContours(
     }
 
     draw();
-
-    if (currentModel !== "ECMWF") {
-        draw();
-        return;
-    }
+    return;
+}
 
     const hour = String(forecastHour).padStart(3, "0");
 
