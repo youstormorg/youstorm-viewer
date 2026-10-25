@@ -53,6 +53,14 @@ jobs:
             done
           done
 
+          for hour in $(seq 0 3 144); do
+            curl -fL "https://youstormorg.github.io/youstorm-viewer/data/ecmwf/ecmwf_msl_f$(printf '%03d' $hour).bin" \
+              -o "_site/data/ecmwf/ecmwf_msl_f$(printf '%03d' $hour).bin"
+          done
+
+          curl -fL https://youstormorg.github.io/youstorm-viewer/data/ecmwf/ecmwf_msl_metadata.json \
+            -o _site/data/ecmwf/ecmwf_msl_metadata.json
+
           curl -fL https://youstormorg.github.io/youstorm-viewer/data/ecmwf/ecmwf_wind_metadata.json \
             -o _site/data/ecmwf/ecmwf_wind_metadata.json
 
