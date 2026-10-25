@@ -51,14 +51,13 @@ export const TEMPERATURE_SCALE = [
 ];
 
 export const PRECIPITATION_SCALE = [
-    { colour: "#ffffff", label: "< 0.1 mm" },
-    { colour: "#dcf5ff", label: "0.1–1 mm" },
-    { colour: "#aadcfa", label: "1–2.5 mm" },
-    { colour: "#64b4f0", label: "2.5–5 mm" },
-    { colour: "#1e82dc", label: "5–10 mm" },
-    { colour: "#14aa64", label: "10–20 mm" },
-    { colour: "#ffe63c", label: "20–30 mm" },
-    { colour: "#ff961e", label: "30–50 mm" },
-    { colour: "#f03c1e", label: "50–75 mm" },
-    { colour: "#b40000", label: "≥ 75 mm" }
+    { colour: "#dcf5ff", label: "0.2–1" },
+    { colour: "#aadcfa", label: "1–2.5" },
+    { colour: "#64b4f0", label: "2.5–5" },
+    { colour: "#1e82dc", label: "5–10" },
+    { colour: "#14aa64", label: "10–20" },
+    { colour: "#ffe63c", label: "20–30" },
+    { colour: "#ff961e", label: "30–50" },
+    { colour: "#f03c1e", label: "50–75" },
+    { colour: "#b40000", label: "≥ 75" }
 ];

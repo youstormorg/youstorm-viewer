@@ -1005,7 +1005,13 @@ createPrecipitationLegend(
 // Hide legends for inactive forecast layers on initial load.
 document.getElementById(
     "precipitationLegend"
-).style.display = "none";
+).style.display =
+    document.getElementById(
+        "webglPrecipitationToggle"
+    ).checked &&
+    selectedModel === "ECMWF"
+        ? "block"
+        : "none";
 
 document.getElementById(
     "windLegend"
@@ -1189,8 +1195,14 @@ if (
         webgl.setWindVisible(
             windSpeedEnabled
         );
+
+        webgl.setWindParticlesVisible(
+            windParticlesEnabled
+        );
     } else {
         webgl.setWindVisible(false);
+
+        webgl.setWindParticlesVisible(false);
 
         console.warn(
             "No ECMWF wind forecast matches the selected time."

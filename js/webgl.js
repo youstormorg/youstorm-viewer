@@ -334,10 +334,10 @@ const fragmentShaderSource = `
             baseCell + vec2(1.0, 1.0)
         );
 
-        float wetA = a >= 0.1 ? 1.0 : 0.0;
-        float wetB = b >= 0.1 ? 1.0 : 0.0;
-        float wetC = c >= 0.1 ? 1.0 : 0.0;
-        float wetD = d >= 0.1 ? 1.0 : 0.0;
+        float wetA = a >= 0.2 ? 1.0 : 0.0;
+        float wetB = b >= 0.2 ? 1.0 : 0.0;
+        float wetC = c >= 0.2 ? 1.0 : 0.0;
+        float wetD = d >= 0.2 ? 1.0 : 0.0;
 
         wetMask = mix(
             mix(wetA, wetB, fraction.x),
@@ -371,7 +371,7 @@ const fragmentShaderSource = `
         if (wetMask >= 0.5) {
             precipitationValue = max(
                 precipitationValue,
-                0.1
+                0.2
             );
         }
     }
@@ -531,7 +531,7 @@ if (weatherField < 0.5) {
     }
 } else if (weatherField < 1.5) {
 
-    if (precipitationValue < 0.1) {
+    if (precipitationValue < 0.2) {
 
         colour =
             vec3(
@@ -707,7 +707,7 @@ if (weatherField < 0.5) {
             alpha = wetMask >= 0.5
                 ? weatherOpacity
                 : 0.0;
-        } else if (precipitationValue < 0.1) {
+        } else if (precipitationValue < 0.2) {
             alpha = 0.0;
         }
     }
@@ -2811,7 +2811,7 @@ gl.viewport(
 
     let windDirectionVertexCount = 0;
 
-    let windDirectionVisible = true;
+    let windDirectionVisible = false;
 
     // ECMWF mean sea-level pressure contours.
 
@@ -3648,13 +3648,13 @@ function addParticleQuad(
                 mapScaleY
             );
 
-            // Light, readable isobars over the filled layers.
+            // Brown SLP contours over the filled layers.
             gl.uniform4f(
                 coastlineLineColor,
-                0.96,
-                0.96,
-                0.91,
-                0.88
+                0.65,
+                0.42,
+                0.25,
+                0.95
             );
 
             gl.uniform1f(

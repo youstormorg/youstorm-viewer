@@ -531,8 +531,8 @@ export function createPrecipitationLegend(
 
     const legendUnit =
         precipitationType === "total"
-            ? "Total accumulated"
-            : "3-hour accumulation";
+            ? "Total (mm)"
+            : "3-hour (mm)";
 
     legend.innerHTML = `
         <div class="legendTitle">
