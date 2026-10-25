@@ -942,6 +942,174 @@ function prepareCoastlineVertexData(
 
 }
 
+function prepareMSLContourVertexData(
+    pressure,
+    contourInterval = 4
+) {
+    const width = 1440;
+    const height = 721;
+    const vertices = [];
+
+    function addIntersection(
+        level,
+        x0, y0, v0,
+        x1, y1, v1
+    ) {
+        if (
+            (v0 < level && v1 >= level) ||
+            (v1 < level && v0 >= level)
+        ) {
+            const fraction =
+                (level - v0) / (v1 - v0);
+
+            return [
+                -180 + (x0 + fraction * (x1 - x0)) * 0.25,
+                90 - (y0 + fraction * (y1 - y0)) * 0.25
+            ];
+        }
+
+        return null;
+    }
+
+    let minimum = Infinity;
+    let maximum = -Infinity;
+
+    for (let i = 0; i < pressure.length; i++) {
+        const value = pressure[i];
+
+        if (Number.isFinite(value)) {
+            minimum = Math.min(minimum, value);
+            maximum = Math.max(maximum, value);
+        }
+    }
+
+    if (!Number.isFinite(minimum)) {
+        return new Float32Array(0);
+    }
+
+    const firstLevel =
+        Math.ceil(minimum / contourInterval) *
+        contourInterval;
+
+    const lastLevel =
+        Math.floor(maximum / contourInterval) *
+        contourInterval;
+
+    for (
+        let level = firstLevel;
+        level <= lastLevel;
+        level += contourInterval
+    ) {
+        for (let y = 0; y < height - 1; y++) {
+            const latitude = 90 - y * 0.25;
+
+            // Avoid the extreme latitudes where the
+            // Mercator map projection becomes unstable.
+            if (Math.abs(latitude) > 85) {
+                continue;
+            }
+
+            for (let x = 0; x < width; x++) {
+                const nextX = (x + 1) % width;
+
+                const i00 = y * width + x;
+                const i10 = y * width + nextX;
+                const i01 = (y + 1) * width + x;
+                const i11 = (y + 1) * width + nextX;
+
+                const v00 = pressure[i00];
+                const v10 = pressure[i10];
+                const v01 = pressure[i01];
+                const v11 = pressure[i11];
+
+                if (
+                    !Number.isFinite(v00) ||
+                    !Number.isFinite(v10) ||
+                    !Number.isFinite(v01) ||
+                    !Number.isFinite(v11)
+                ) {
+                    continue;
+                }
+
+                const intersections = [];
+
+                const edges = [
+                    addIntersection(
+                        level, x, y, v00,
+                        nextX === 0 ? width : nextX, y, v10
+                    ),
+                    addIntersection(
+                        level, nextX, y, v10,
+                        nextX, y + 1, v11
+                    ),
+                    addIntersection(
+                        level, x, y + 1, v01,
+                        nextX === 0 ? width : nextX, y + 1, v11
+                    ),
+                    addIntersection(
+                        level, x, y, v00,
+                        x, y + 1, v01
+                    )
+                ];
+
+                const crossedEdges = [];
+
+                for (let edge = 0; edge < 4; edge++) {
+                    if (edges[edge] !== null) {
+                        crossedEdges.push(edge);
+                    }
+                }
+
+                function addSegment(edgeA, edgeB) {
+                    const a = edges[edgeA];
+                    const b = edges[edgeB];
+
+                    if (!a || !b) return;
+
+                    // Avoid a line spanning the map at the dateline.
+                    if (Math.abs(a[0] - b[0]) > 180) return;
+
+                    vertices.push(
+                        a[0], a[1],
+                        b[0], b[1]
+                    );
+                }
+
+                if (crossedEdges.length === 2) {
+                    addSegment(crossedEdges[0], crossedEdges[1]);
+
+                } else if (crossedEdges.length === 4) {
+                    // Resolve saddle cells using the cell-centre pressure.
+                    const centre = (v00 + v10 + v01 + v11) / 4;
+                    const targetIsLow = centre >= level;
+
+                    // Edge pairs surrounding each corner:
+                    // top-left, top-right, right-bottom, bottom-left.
+                    const cornerPairs = [
+                        { value: v00, edges: [0, 3] },
+                        { value: v10, edges: [0, 1] },
+                        { value: v11, edges: [1, 2] },
+                        { value: v01, edges: [2, 3] }
+                    ];
+
+                    for (const corner of cornerPairs) {
+                        const isLow = corner.value < level;
+
+                        if (isLow === targetIsLow) {
+                            addSegment(
+                                corner.edges[0],
+                                corner.edges[1]
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return new Float32Array(vertices);
+}
+
 function prepareWindDirectionVertexData(
     uData,
     vData
@@ -1718,6 +1886,118 @@ function loadWebGLWind(
 }
 
 
+function loadWebGLMSLContours(
+    forecastHour,
+    onLoaded = null
+) {
+    const requestId = ++mslContourLoadRequest;
+
+    // Never display old contours while a new hour loads.
+    mslContourForecastHour = null;
+    mslContourVertexCount = 0;
+
+    if (mslContourBuffer) {
+        gl.deleteBuffer(mslContourBuffer);
+        mslContourBuffer = null;
+    }
+
+    draw();
+
+    if (currentModel !== "ECMWF") {
+        draw();
+        return;
+    }
+
+    const hour = String(forecastHour).padStart(3, "0");
+
+    const filename =
+        `data/ecmwf/ecmwf_msl_f${hour}.bin`;
+
+    fetch(filename)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(
+                    `MSL pressure file not found: ${filename}`
+                );
+            }
+
+            return response.arrayBuffer();
+        })
+        .then(buffer => {
+            // Ignore results from superseded requests or a model switch.
+            if (
+                requestId !== mslContourLoadRequest ||
+                currentModel !== "ECMWF"
+            ) {
+                return;
+            }
+
+            if (buffer.byteLength !== 1440 * 721 * 2) {
+                throw new Error(
+                    `Unexpected MSL pressure file size: ${buffer.byteLength}`
+                );
+            }
+
+            const encoded = new Int16Array(buffer);
+            const pressure = new Float32Array(encoded.length);
+
+            // Binary values are signed int16 in tenths of hPa.
+            for (let i = 0; i < encoded.length; i++) {
+                pressure[i] = encoded[i] / 10;
+            }
+
+            const vertices =
+                prepareMSLContourVertexData(pressure, 4);
+
+            const newBuffer = gl.createBuffer();
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, newBuffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                vertices,
+                gl.STATIC_DRAW
+            );
+
+            // Recheck before replacing the current buffer.
+            if (
+                requestId !== mslContourLoadRequest ||
+                currentModel !== "ECMWF"
+            ) {
+                gl.deleteBuffer(newBuffer);
+                return;
+            }
+
+            if (mslContourBuffer) {
+                gl.deleteBuffer(mslContourBuffer);
+            }
+
+            mslContourBuffer = newBuffer;
+            mslContourVertexCount = vertices.length / 2;
+            mslContourForecastHour = forecastHour;
+
+            draw();
+
+            if (typeof onLoaded === "function") {
+                onLoaded();
+            }
+
+            console.log(
+                "Loaded ECMWF MSL contours:",
+                forecastHour,
+                "vertices:",
+                mslContourVertexCount
+            );
+        })
+        .catch(error => {
+            if (requestId === mslContourLoadRequest) {
+                console.error(
+                    "Failed to load ECMWF MSL contours:",
+                    error
+                );
+            }
+        });
+}
+
 function loadWebGLForecast(
     forecastHour,
     model = "GFS",
@@ -2392,6 +2672,18 @@ gl.viewport(
 
     let windDirectionVisible = true;
 
+    // ECMWF mean sea-level pressure contours.
+
+    let mslContourBuffer = null;
+
+    let mslContourVertexCount = 0;
+
+    let mslContoursVisible = false;
+
+    let mslContourLoadRequest = 0;
+
+    let mslContourForecastHour = null;
+
     let windParticleBuffer = null;
 
     let windParticleVertexCount = 0;
@@ -2722,7 +3014,11 @@ function addParticleQuad(
 
         if (
             !temperatures &&
-            !precipitationDataTexture
+            !precipitationDataTexture &&
+            !(
+                mslContoursVisible &&
+                currentModel === "ECMWF"
+            )
         ) {
             return;
         }
@@ -3168,6 +3464,92 @@ function addParticleQuad(
             );
         }
 
+
+        // -------------------------
+        // Draw MSL pressure contours
+        // -------------------------
+
+        if (
+            mslContoursVisible &&
+            currentModel === "ECMWF" &&
+            mslContourBuffer &&
+            mslContourVertexCount > 0
+        ) {
+            gl.useProgram(coastlineProgram);
+
+            gl.bindBuffer(
+                gl.ARRAY_BUFFER,
+                mslContourBuffer
+            );
+
+            gl.enableVertexAttribArray(
+                coastlinePosition
+            );
+
+            gl.vertexAttribPointer(
+                coastlinePosition,
+                2,
+                gl.FLOAT,
+                false,
+                0,
+                0
+            );
+
+            gl.uniform2f(
+                coastlineMapOrigin,
+                mapOriginX,
+                mapOriginY
+            );
+
+            gl.uniform2f(
+                coastlineMapScale,
+                mapScaleX,
+                mapScaleY
+            );
+
+            // Light, readable isobars over the filled layers.
+            gl.uniform4f(
+                coastlineLineColor,
+                0.96,
+                0.96,
+                0.91,
+                0.88
+            );
+
+            gl.uniform1f(
+                coastlineWorldOffset,
+                -worldWidth
+            );
+
+            gl.drawArrays(
+                gl.LINES,
+                0,
+                mslContourVertexCount
+            );
+
+            gl.uniform1f(
+                coastlineWorldOffset,
+                0.0
+            );
+
+            gl.drawArrays(
+                gl.LINES,
+                0,
+                mslContourVertexCount
+            );
+
+            gl.uniform1f(
+                coastlineWorldOffset,
+                worldWidth
+            );
+
+            gl.drawArrays(
+                gl.LINES,
+                0,
+                mslContourVertexCount
+            );
+        }
+
         // -------------------------
         // Draw wind particle dashes
         // -------------------------
@@ -3412,7 +3794,7 @@ function addParticleQuad(
     return {
         gl: gl,
         loadForecast: loadWebGLForecast,
-
+        loadMSLContours: loadWebGLMSLContours,
         loadPrecipitation:
             loadWebGLPrecipitation,
         loadWind: loadWebGLWind,
@@ -3496,6 +3878,13 @@ function addParticleQuad(
 
         setWindDirectionVisible: (visible) => {
             windDirectionVisible = visible;
+            draw();
+        },
+
+        setMSLContoursVisible: (visible) => {
+            mslContoursVisible =
+                currentModel === "ECMWF" && visible;
+
             draw();
         },
 

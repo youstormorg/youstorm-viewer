@@ -35,6 +35,9 @@ MODEL_SETTINGS = {
         "wind_metadata": "ecmwf_wind_metadata.json",
         "wind_hours": list(range(0, 145, 3)),
         "wind_pattern": "ecmwf_{component}_f{hour:03d}.bin",
+        "msl_metadata": "ecmwf_msl_metadata.json",
+        "msl_hours": list(range(0, 145, 3)),
+        "msl_pattern": "ecmwf_msl_f{hour:03d}.bin",
     },
 }
 
@@ -128,6 +131,12 @@ def validate_model(model):
                         hour=hour,
                     )
                 )
+        for hour in settings["msl_hours"]:
+            expected_files.append(
+                staging / settings["msl_pattern"].format(
+                    hour=hour
+                )
+            )
 
     for filename in (
         settings["temperature_metadata"],
@@ -138,6 +147,9 @@ def validate_model(model):
     if model == "ecmwf":
         expected_files.append(
             staging / settings["wind_metadata"]
+        )
+        expected_files.append(
+            staging / settings["msl_metadata"]
         )
 
     missing = [
@@ -173,6 +185,9 @@ def validate_model(model):
     if model == "ecmwf":
         metadata_checks.append(
             (settings["wind_metadata"], settings["wind_hours"])
+        )
+        metadata_checks.append(
+            (settings["msl_metadata"], settings["msl_hours"])
         )
 
     for metadata_name, expected_hours in metadata_checks:
@@ -290,6 +305,14 @@ def build_ecmwf():
             str(staging),
         ],
     )
+    run_timed_stage(
+        "ECMWF mean sea-level pressure conversion",
+        [
+            sys.executable,
+            "processing/convert_ecmwf_msl.py",
+            str(staging),
+        ],
+    )
 
     run_timed_stage(
         "ECMWF temperature metadata creation",
@@ -314,6 +337,14 @@ def build_ecmwf():
         [
             sys.executable,
             "processing/create_ecmwf_wind_metadata.py",
+            str(staging),
+        ],
+    )
+    run_timed_stage(
+        "ECMWF mean sea-level pressure metadata creation",
+        [
+            sys.executable,
+            "processing/create_ecmwf_msl_metadata.py",
             str(staging),
         ],
     )

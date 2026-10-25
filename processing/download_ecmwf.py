@@ -54,7 +54,27 @@ def download_ecmwf(data_dir="data/ecmwf"):
         print(
             f"ECMWF +{forecast_hour:03d} h download complete"
         )
+        print(
+            f"Downloading ECMWF mean sea-level pressure "
+            f"+{forecast_hour:03d} h"
+        )
 
+        client.retrieve(
+            type="fc",
+            stream="oper",
+            levtype="sfc",
+            param="msl",
+            step=forecast_hour,
+            target=(
+                f"{data_dir}/"
+                f"ecmwf_msl_f{forecast_hour:03d}.grib2"
+            )
+        )
+
+        print(
+            f"ECMWF mean sea-level pressure "
+            f"+{forecast_hour:03d} h download complete"
+        )
         if forecast_hour in precipitation_hours:
 
             print(

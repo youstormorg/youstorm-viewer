@@ -55,6 +55,8 @@ jobs:
           cp data/ecmwf/ecmwf_10u_f*.bin _site/data/ecmwf/
           cp data/ecmwf/ecmwf_10v_f*.bin _site/data/ecmwf/
           cp data/ecmwf/ecmwf_wind_metadata.json _site/data/ecmwf/
+          cp data/ecmwf/ecmwf_msl_f*.bin _site/data/ecmwf/
+          cp data/ecmwf/ecmwf_msl_metadata.json _site/data/ecmwf/
 
       - name: Report Pages site size
         run: |

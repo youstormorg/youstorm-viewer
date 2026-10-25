@@ -433,7 +433,56 @@ document.getElementById(
             useNearest ? "S" : "N";
     }
 );
+function updateWebGLCanvasVisibility() {
 
+    const temperatureEnabled =
+        document.getElementById(
+            "webglTemperatureToggle"
+        ).checked;
+
+    const precipitationEnabled =
+        document.getElementById(
+            "webglPrecipitationToggle"
+        ).checked;
+
+    const windEnabled =
+        document.getElementById(
+            "webglWindToggle"
+        ).checked;
+
+    const streamlinesEnabled =
+        document.getElementById(
+            "webglStreamlinesToggle"
+        ).checked;
+
+    const particlesEnabled =
+        document.getElementById(
+            "webglWindParticlesToggle"
+        ).checked;
+
+    const contoursEnabled =
+        document.getElementById(
+            "webglMSLContoursToggle"
+        ).checked;
+
+    const anyLayerEnabled =
+        temperatureEnabled ||
+        precipitationEnabled ||
+        (
+            selectedModel === "ECMWF" &&
+            (
+                windEnabled ||
+                streamlinesEnabled ||
+                particlesEnabled ||
+                contoursEnabled
+            )
+        );
+
+    document.getElementById(
+        "weatherWebGL"
+    ).style.display =
+        anyLayerEnabled ? "block" : "none";
+}
         document.getElementById(
             "webglTemperatureToggle"
         ).addEventListener(
@@ -462,19 +511,9 @@ document.getElementById(
                         ? "block"
                         : "none";
 
-                    canvas.style.display =
-                        event.target.checked ||
-                        document.getElementById(
-                            "webglPrecipitationToggle"
-                        ).checked ||
-                        (
-                            selectedModel === "ECMWF" &&
-                            document.getElementById(
-                                "webglWindToggle"
-                            ).checked
-                        )
-                            ? "block"
-                            : "none";
+                // Recheck all layer checkboxes so independent overlays
+                // remain visible when temperature is switched off.
+                updateWebGLCanvasVisibility();
 
                 if (event.target.checked) {
 
@@ -586,13 +625,8 @@ document.getElementById(
 
             updateFixedProbeReadout();
 
-            canvas.style.display =
-                event.target.checked ||
-                document.getElementById(
-                    "webglTemperatureToggle"
-                ).checked
-                    ? "block"
-                    : "none";
+            // Keep the shared canvas visible if any enabled layer needs it.
+            updateWebGLCanvasVisibility();
 
             console.log(
                 "WebGL precipitation visibility:",
@@ -714,17 +748,9 @@ document.getElementById(
                 ? "block"
                 : "none";
 
-        canvas.style.display =
-            event.target.checked &&
-            selectedModel === "ECMWF" ||
-            document.getElementById(
-                "webglTemperatureToggle"
-            ).checked ||
-            document.getElementById(
-                "webglPrecipitationToggle"
-            ).checked
-                ? "block"
-                : "none";
+        // Recheck canvas visibility so streamlines, particles,
+        // and MSLP contours can remain visible without temperature.
+        updateWebGLCanvasVisibility();
 
         updateFixedProbeReadout();
         console.log(
@@ -734,6 +760,9 @@ document.getElementById(
     }
 );
 
+// Show or hide the wind-direction streamlines independently
+// of the temperature layer, and keep the shared canvas visible
+// whenever another enabled layer needs it.
 document.getElementById(
     "webglStreamlinesToggle"
 ).addEventListener(
@@ -744,9 +773,49 @@ document.getElementById(
             event.target.checked
         );
 
+        // Recheck visibility after the streamlines setting changes.
+        updateWebGLCanvasVisibility();
+
     }
 );
 
+document.getElementById(
+    "webglMSLContoursToggle"
+).addEventListener(
+    "change",
+    (event) => {
+        const visible =
+            event.target.checked &&
+            getTemperatureModel() === "ECMWF";
+
+        webgl.setMSLContoursVisible(visible);
+
+        if (visible) {
+            const forecastIndex =
+                Number(
+                    document.getElementById(
+                        "forecastSlider"
+                    ).value
+                );
+
+            const forecastData =
+                getECMWFMetadata()[forecastIndex];
+
+            if (forecastData) {
+                webgl.loadMSLContours(
+                    forecastData.forecast_hour
+                );
+            }
+            // Keep the canvas visible when contours are enabled,
+            // even if temperature and precipitation are switched off.
+            updateWebGLCanvasVisibility();
+
+        }
+    }
+);
+
+// Show or hide wind particles independently of the other layers.
+// Keep the shared canvas visible while any enabled layer needs it.
 document.getElementById(
     "webglWindParticlesToggle"
 ).addEventListener(
@@ -756,6 +825,9 @@ document.getElementById(
         webgl.setWindParticlesVisible(
             event.target.checked
         );
+
+        // Recheck canvas visibility after the particle setting changes.
+        updateWebGLCanvasVisibility();
 
     }
 );
@@ -1056,6 +1128,24 @@ if (
     webgl.setWindVisible(false);
 }
 
+const mslContoursToggle =
+    document.getElementById(
+        "webglMSLContoursToggle"
+    );
+
+if (
+    getTemperatureModel() === "ECMWF" &&
+    mslContoursToggle.checked
+) {
+    webgl.setMSLContoursVisible(true);
+
+    webgl.loadMSLContours(
+        temperatureData.forecast_hour
+    );
+} else {
+    webgl.setMSLContoursVisible(false);
+}
+
     // Update the slider label
     let displayHour;
 
@@ -1190,7 +1280,26 @@ const firstTemperatureData =
 setCurrentValidTime(
     firstTemperatureData.valid_time
 );
+// MSL pressure contours are available only for ECMWF.
+const mslContoursToggle =
+    document.getElementById(
+        "webglMSLContoursToggle"
+    );
 
+mslContoursToggle.closest(
+    ".weatherLayerRow"
+).hidden = model !== "ECMWF";
+
+if (model !== "ECMWF") {
+    mslContoursToggle.checked = false;
+    webgl.setMSLContoursVisible(false);
+} else if (mslContoursToggle.checked) {
+    webgl.setMSLContoursVisible(true);
+
+    webgl.loadMSLContours(
+        firstTemperatureData.forecast_hour
+    );
+}
 // Wind data is currently available only for ECMWF.
 const windToggle =
     document.getElementById(
