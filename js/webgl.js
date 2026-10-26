@@ -603,8 +603,9 @@ if (weatherField < 0.5) {
                 30.0 / 255.0
             );
 
-    } else if (precipitationValue < 75.0) {
+    } else if (precipitationValue < 100.0) {
 
+        // 50–100 mm: existing red
         colour =
             vec3(
                 240.0 / 255.0,
@@ -612,11 +613,52 @@ if (weatherField < 0.5) {
                 30.0 / 255.0
             );
 
-    } else {
+    } else if (precipitationValue < 200.0) {
 
+        // 100–200 mm: existing dark red
         colour =
             vec3(
                 180.0 / 255.0,
+                0.0,
+                0.0
+            );
+
+    } else if (precipitationValue < 300.0) {
+
+        // 200–300 mm
+        colour =
+            vec3(
+                140.0 / 255.0,
+                0.0,
+                0.0
+            );
+
+    } else if (precipitationValue < 400.0) {
+
+        // 300–400 mm
+        colour =
+            vec3(
+                100.0 / 255.0,
+                0.0,
+                0.0
+            );
+
+    } else if (precipitationValue < 500.0) {
+
+        // 400–500 mm
+        colour =
+            vec3(
+                60.0 / 255.0,
+                0.0,
+                0.0
+            );
+
+    } else {
+
+        // 500 mm and above
+        colour =
+            vec3(
+                32.0 / 255.0,
                 0.0,
                 0.0
             );

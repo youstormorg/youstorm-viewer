@@ -58,6 +58,10 @@ export const PRECIPITATION_SCALE = [
     { colour: "#14aa64", label: "10–20" },
     { colour: "#ffe63c", label: "20–30" },
     { colour: "#ff961e", label: "30–50" },
-    { colour: "#f03c1e", label: "50–75" },
-    { colour: "#b40000", label: "≥ 75" }
+    { colour: "#f03c1e", label: "50–100" },
+    { colour: "#b40000", label: "100–200" },
+    { colour: "#8c0000", label: "200–300" },
+    { colour: "#640000", label: "300–400" },
+    { colour: "#3c0000", label: "400–500" },
+    { colour: "#200000", label: "≥ 500" }
 ];
