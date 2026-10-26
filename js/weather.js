@@ -16,10 +16,6 @@ export function setTemperatureModel(model) {
 
     selectedTemperatureModel = model;
 
-    console.log(
-        `Temperature model set to: ${selectedTemperatureModel}`
-    );
-
 }
 
 export function getTemperatureModel() {
@@ -66,12 +62,6 @@ async function loadForecastMetadata() {
 export async function loadTemperatureData() {
     weatherData = await loadForecastMetadata();
 
-    console.log("First GFS forecast:", weatherData[0]);
-
-    console.log(
-        `Loaded ${weatherData.length} GFS forecast metadata records`
-    );
-
     return weatherData;
 }
 
@@ -111,10 +101,6 @@ export async function loadECMWFMetadata() {
 
     ecmwfMetadata =
         await response.json();
-
-    console.log(
-        `Loaded ${ecmwfMetadata.length} ECMWF forecasts`
-    );
 
     return ecmwfMetadata;
 }
@@ -169,10 +155,6 @@ export async function loadPrecipitationData() {
 
     precipitationData =
         await loadPrecipitationMetadata();
-
-    console.log(
-        `Loaded ${precipitationData.length} precipitation forecast metadata records`
-    );
 
     return precipitationData;
 }

@@ -1,7 +1,5 @@
 export function initialiseUI(map) {
 
-    console.log("UI initialised");
-
     const layersToggle =
         document.getElementById("layersToggle");
 

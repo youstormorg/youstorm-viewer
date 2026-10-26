@@ -808,11 +808,6 @@ export function initialiseWebGL(map) {
             "OES_texture_float"
         );
 
-    console.log(
-        "WebGL floating-point textures:",
-        Boolean(floatTextureExtension)
-    );
-
     const indexExtension =
         gl.getExtension(
             "OES_element_index_uint"
@@ -834,17 +829,6 @@ export function initialiseWebGL(map) {
         return null;
 
     }
-
-console.log(
-    "WebGL is available."
-);
-
-console.log(
-    "WebGL maximum texture size:",
-    gl.getParameter(
-        gl.MAX_TEXTURE_SIZE
-    )
-);
 
 function prepareQuadVertexData() {
 
@@ -1603,11 +1587,6 @@ function loadWebGLCoastline() {
             coastlineVertexCount =
                 coastlineVertices.length / 2;
 
-            console.log(
-                "WebGL coastline vertices:",
-                coastlineVertexCount
-            );
-
         })
         .catch(error => {
 
@@ -1675,12 +1654,6 @@ function loadWebGLPrecipitation(
             String(forecastHour).padStart(3, "0") +
             "_u16.bin";
     }
-
-    console.log(
-        "Loading WebGL precipitation:",
-        filename,
-        previousFilename ? "minus " + previousFilename : ""
-    );
 
     function fetchPackedPrecipitation(file) {
         return fetch(file)
@@ -1765,11 +1738,6 @@ function loadWebGLPrecipitation(
                 precipitation
             );
 
-            console.log(
-                "WebGL error after precipitation texture upload:",
-                gl.getError()
-            );
-
             gl.texParameteri(
                 gl.TEXTURE_2D,
                 gl.TEXTURE_MIN_FILTER,
@@ -1822,12 +1790,6 @@ function loadWebGLWind(
         u: `data/ecmwf/ecmwf_10u_f${hour}.bin`,
         v: `data/ecmwf/ecmwf_10v_f${hour}.bin`
     };
-
-    console.log(
-        "Loading ECMWF wind components:",
-        filenames.u,
-        filenames.v
-    );
 
     Promise.all([
         fetch(filenames.u),
@@ -2003,13 +1965,6 @@ function loadWebGLWind(
 
         gl.activeTexture(gl.TEXTURE0);
 
-        console.log(
-            "ECMWF wind textures uploaded:",
-            "u =", windU.length,
-            "v =", windV.length,
-            "WebGL error =", gl.getError()
-        );
-
         startWindParticleAnimation();
 
         draw();
@@ -2027,29 +1982,87 @@ function loadWebGLWind(
 }
 
 
+
 function loadWebGLMSLContours(
     forecastHour,
     onLoaded = null
 ) {
-const requestId = ++mslContourLoadRequest;
+    const requestId = ++mslContourLoadRequest;
 
-// Keep the existing contours visible while the next
-// ECMWF forecast hour is loading. Clear them only when
-// ECMWF is no longer the selected model.
-if (currentModel !== "ECMWF") {
-    mslContourForecastHour = null;
-    mslContourVertexCount = 0;
+    // Keep the existing contours visible while the next
+    // ECMWF forecast hour is loading. Clear them only when
+    // ECMWF is no longer the selected model.
+    if (currentModel !== "ECMWF") {
+        mslContourForecastHour = null;
+        mslContourVertexCount = 0;
 
-    if (mslContourBuffer) {
-        gl.deleteBuffer(mslContourBuffer);
-        mslContourBuffer = null;
+        if (mslContourBuffer) {
+            gl.deleteBuffer(mslContourBuffer);
+            mslContourBuffer = null;
+        }
+
+        draw();
+        return;
     }
 
-    draw();
-    return;
-}
-
     const hour = String(forecastHour).padStart(3, "0");
+
+    // Nothing to do if this hour is already displayed.
+    if (
+        mslContourBuffer &&
+        mslContourForecastHour !== null &&
+        String(mslContourForecastHour).padStart(3, "0") === hour
+    ) {
+        if (typeof onLoaded === "function") {
+            onLoaded();
+        }
+
+        return;
+    }
+
+    // A cache hit avoids fetching and recalculating contours.
+    const cachedVertices =
+        mslContourGeometryCache.get(hour);
+
+    if (cachedVertices) {
+        // Mark this entry as recently used.
+        mslContourGeometryCache.delete(hour);
+        mslContourGeometryCache.set(hour, cachedVertices);
+
+        const newBuffer = gl.createBuffer();
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, newBuffer);
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            cachedVertices,
+            gl.STATIC_DRAW
+        );
+
+        // Never let an obsolete request replace newer contours.
+        if (
+            requestId !== mslContourLoadRequest ||
+            currentModel !== "ECMWF"
+        ) {
+            gl.deleteBuffer(newBuffer);
+            return;
+        }
+
+        if (mslContourBuffer) {
+            gl.deleteBuffer(mslContourBuffer);
+        }
+
+        mslContourBuffer = newBuffer;
+        mslContourVertexCount = cachedVertices.length / 2;
+        mslContourForecastHour = forecastHour;
+
+        draw();
+
+        if (typeof onLoaded === "function") {
+            onLoaded();
+        }
+
+        return;
+    }
 
     const filename =
         `data/ecmwf/ecmwf_msl_f${hour}.bin`;
@@ -2090,6 +2103,41 @@ if (currentModel !== "ECMWF") {
             const vertices =
                 prepareMSLContourVertexData(pressure, 4);
 
+            // Cache the prepared geometry using a bounded
+            // least-recently-used policy.
+            if (mslContourGeometryCache.has(hour)) {
+                const previous =
+                    mslContourGeometryCache.get(hour);
+
+                mslContourGeometryCacheBytes -=
+                    previous.byteLength;
+
+                mslContourGeometryCache.delete(hour);
+            }
+
+            mslContourGeometryCache.set(hour, vertices);
+
+            mslContourGeometryCacheBytes +=
+                vertices.byteLength;
+
+            while (
+                mslContourGeometryCache.size >
+                    MSL_CONTOUR_CACHE_MAX_ENTRIES ||
+                mslContourGeometryCacheBytes >
+                    MSL_CONTOUR_CACHE_MAX_BYTES
+            ) {
+                const oldestHour =
+                    mslContourGeometryCache.keys().next().value;
+
+                const oldestVertices =
+                    mslContourGeometryCache.get(oldestHour);
+
+                mslContourGeometryCache.delete(oldestHour);
+
+                mslContourGeometryCacheBytes -=
+                    oldestVertices.byteLength;
+            }
+
             const newBuffer = gl.createBuffer();
 
             gl.bindBuffer(gl.ARRAY_BUFFER, newBuffer);
@@ -2121,13 +2169,6 @@ if (currentModel !== "ECMWF") {
             if (typeof onLoaded === "function") {
                 onLoaded();
             }
-
-            console.log(
-                "Loaded ECMWF MSL contours:",
-                forecastHour,
-                "vertices:",
-                mslContourVertexCount
-            );
         })
         .catch(error => {
             if (requestId === mslContourLoadRequest) {
@@ -2164,18 +2205,6 @@ function loadWebGLForecast(
             ".bin";
 
     }
-
-    console.log(
-        "Loading WebGL forecast:",
-        filename
-    );
-
-    console.log(
-        "WebGL model:",
-        model,
-        "forecast hour:",
-        forecastHour
-    );    
 
     fetch(filename)
     .then(response => {
@@ -2470,10 +2499,6 @@ gl.viewport(
         );
 
     }
-
-    console.log(
-        "WebGL coastline shader program ready."
-    );
 
     const coastlinePosition =
         gl.getAttribLocation(
@@ -2824,6 +2849,17 @@ gl.viewport(
     let mslContourLoadRequest = 0;
 
     let mslContourForecastHour = null;
+
+    // Cache prepared MSL contour geometry by forecast hour.
+    // Keep the cache bounded to avoid excessive memory use.
+    const mslContourGeometryCache = new Map();
+
+    let mslContourGeometryCacheBytes = 0;
+
+    const MSL_CONTOUR_CACHE_MAX_ENTRIES = 4;
+
+    const MSL_CONTOUR_CACHE_MAX_BYTES =
+        32 * 1024 * 1024;
 
     let windParticleBuffer = null;
 
@@ -3241,11 +3277,6 @@ function addParticleQuad(
             0.0
         );
 
-        console.log(
-            "WebGL layers:",
-            "temperature =", temperatureVisible,
-            "precipitation =", precipitationVisible
-        );
         gl.uniform1f(
             flipLatitudeLocation,
             currentModel === "ECMWF"

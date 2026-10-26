@@ -548,12 +548,6 @@ function updateWebGLCanvasVisibility() {
                             .padStart(3, "0")} h`;
                 }
 
-                console.log(
-                    "WebGL visibility:",
-                    event.target.checked,
-                    canvas.style.display
-                );
-
             }
         );
 
@@ -627,11 +621,6 @@ function updateWebGLCanvasVisibility() {
 
             // Keep the shared canvas visible if any enabled layer needs it.
             updateWebGLCanvasVisibility();
-
-            console.log(
-                "WebGL precipitation visibility:",
-                event.target.checked
-            );
 
         }
     );
@@ -765,10 +754,6 @@ document.getElementById(
 
                 webgl.setWindVisible(false);
 
-                console.log(
-                    "Wind is available only for ECMWF."
-                );
-
             } else {
 
                 const windData =
@@ -814,10 +799,7 @@ document.getElementById(
         updateWebGLCanvasVisibility();
 
         updateFixedProbeReadout();
-        console.log(
-            "WebGL wind visibility:",
-            event.target.checked
-        );
+
     }
 );
 
@@ -931,12 +913,6 @@ currentValidTime =
         ? getECMWFMetadata()[0].valid_time
         : getTemperatureMetadata()[0].valid_time;
 
-console.log(
-    "Temperature metadata:",
-    getTemperatureModel() === "ECMWF"
-        ? getECMWFMetadata()
-        : getTemperatureMetadata()
-);
 await loadPrecipitationData();
 
 // Load wind data for overlays even when wind speed is hidden.
@@ -1025,8 +1001,6 @@ if (temperatureToggle.checked) {
 
 // Set up the forecast slider
 initialiseForecastSlider(map);
-
-console.log("YouStorm started");
 
 }
 
